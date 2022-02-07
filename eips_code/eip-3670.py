@@ -5,7 +5,7 @@ valid_opcodes = [
     *range(0x10, 0x1d + 1),
     0x20,
     *range(0x30, 0x3f + 1),
-    *range(0x40, 0x47 + 1),
+    *range(0x40, 0x48 + 1),
     *range(0x50, 0x5b + 1),
     *range(0x60, 0x6f + 1),
     *range(0x70, 0x7f + 1),
@@ -15,9 +15,11 @@ valid_opcodes = [
     # Note: 0xfe is considered assigned.
     *range(0xf0, 0xf5 + 1), 0xfa, 0xfd, 0xfe, 0xff
 ]
-# STOP, RETURN, REVERT, INVALID
-terminating_opcodes = [ 0x00, 0xf3, 0xfd, 0xfe ]
 
+# STOP, RETURN, REVERT, INVALID, SELFDESTRUCT
+terminating_opcodes = [ 0x00, 0xf3, 0xfd, 0xfe, 0xff ]
+
+# Only for PUSH1..PUSH32
 immediate_sizes = []
 for opcode in range(0x100):
     # PUSH1..PUSH32
@@ -25,7 +27,6 @@ for opcode in range(0x100):
         immediate_sizes.append(opcode - 0x60 + 1)
     else:
         immediate_sizes.append(0)
-
 
 # Fails with assertion on invalid code
 def validate_code(code: bytes):
