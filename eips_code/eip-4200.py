@@ -19,16 +19,11 @@ valid_opcodes = [
 # STOP, RETURN, REVERT, INVALID, SELFDESTRUCT
 terminating_opcodes = [ 0x00, 0xf3, 0xfd, 0xfe, 0xff ]
 
-immediate_sizes = []
-for opcode in range(0x100):
-    # PUSH1..PUSH32
-    if opcode >= 0x60 and opcode <= 0x7f:
-        immediate_sizes.append(opcode - 0x60 + 1)
-    # RJUMP and RJUMPI
-    elif opcode == 0x5c or opcode == 0x5d:
-        immediate_sizes.append(2)
-    else:
-        immediate_sizes.append(0)
+immediate_sizes = 256 * [0]
+immediate_sizes[0x5c] = 2  # RJUMP
+immediate_sizes[0x5d] = 2  # RJUMPI
+for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
+    immediate_sizes[opcode] = opcode - 0x60 + 1
 
 # Fails with assertion on invalid code
 def validate_code(code: bytes):
