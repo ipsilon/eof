@@ -20,13 +20,9 @@ valid_opcodes = [
 terminating_opcodes = [ 0x00, 0xf3, 0xfd, 0xfe, 0xff ]
 
 # Only for PUSH1..PUSH32
-immediate_sizes = []
-for opcode in range(0x100):
-    # PUSH1..PUSH32
-    if opcode >= 0x60 and opcode <= 0x7f:
-        immediate_sizes.append(opcode - 0x60 + 1)
-    else:
-        immediate_sizes.append(0)
+immediate_sizes = 256 * [0]
+for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
+    immediate_sizes[opcode] = opcode - 0x60 + 1
 
 # Fails with assertion on invalid code
 def validate_code(code: bytes):
