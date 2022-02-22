@@ -1,4 +1,4 @@
-# The below are ranges as specified in the Yellow Paper.
+# The ranges below are as specified in the Yellow Paper.
 # Note: range(s, e) excludes e, hence the +1
 valid_opcodes = [
     *range(0x00, 0x0b + 1),
