@@ -27,7 +27,7 @@ for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
 # Fails with assertion on invalid code
 def validate_code(code: bytes):
     # Note that EOF1 already asserts this with the code section requirements
-    assert(len(code) > 0)
+    assert len(code) > 0
 
     opcode = 0
     pos = 0
@@ -35,16 +35,16 @@ def validate_code(code: bytes):
         # Ensure the opcode is valid
         opcode = code[pos]
         pos += 1
-        assert(opcode in valid_opcodes)
+        assert opcode in valid_opcodes
 
         # Skip immediates
         pos += immediate_sizes[opcode]
 
     # Ensure last opcode's immediate doesn't go over code end
-    assert(pos == len(code))
+    assert pos == len(code)
 
     # opcode is the *last opcode*
-    assert(opcode in terminating_opcodes)
+    assert opcode in terminating_opcodes
 
 def test_validate_code(code: bytes) -> bool:
     try:
