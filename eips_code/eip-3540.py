@@ -1,5 +1,4 @@
-FORMAT = 0xEF
-MAGIC = 0x00
+MAGIC = b'\xEF\x00'
 VERSION = 0x01
 S_TERMINATOR = 0x00
 S_CODE = 0x01
@@ -8,7 +7,7 @@ S_DATA = 0x02
 
 # Determines if code is in EOF format of any version.
 def is_eof(code: bytes) -> bool:
-    return len(code) >= 2 and code[0] == FORMAT and code[1] == MAGIC
+    return code.startswith(MAGIC)
 
 
 # Validate EOF code.
@@ -64,11 +63,11 @@ def validate_code(code: bytes) -> bool:
 # Legacy contracts
 assert validate_code(b'') == True
 assert validate_code(b'\x00') == True
-assert validate_code(b'\xef') == True  # Magic byte missing
+assert validate_code(b'\xef') == True  # Magic second byte missing
 
-# Any value outside the magic
-for magic in range(1, 256):
-    assert validate_code(bytes((0xEF, magic))) == True
+# Any value outside the magic second byte
+for m in range(1, 256):
+    assert validate_code(bytes((0xEF, m))) == True
 
 # EOF1 contracts
 assert validate_code(b'\xef\x00') == False  # Only magic
