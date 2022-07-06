@@ -71,9 +71,6 @@ def test_validate_code(code: bytes) -> bool:
     except:
         return False
 
-def hex(code: bytes) -> str:
-    return ''.join(format(x, '02x') for x in code)
-
 
 # Some valid opcodes
 assert test_validate_code(b'\x30\x00') == True
@@ -353,14 +350,14 @@ for n in range(1, 33):
         code += [0x00] * n     # push data
         code += [0x00]         # STOP
 
-        assert test_validate_code(code) == False, "code expected to be invalid: " + hex(code)
+        assert test_validate_code(code) == False, "code expected to be invalid: " + bytes(code).hex()
 
         code = [0x60, 0x01, 0x5d, 0x00, offset] # PUSH1 1 RJUMI offset
         code += [0x60 + n - 1] # PUSHn
         code += [0x00] * n     # push data
         code += [0x00]         # STOP
 
-        assert test_validate_code(code) == False, "code expected to be invalid: " +  hex(code)
+        assert test_validate_code(code) == False, "code expected to be invalid: " +  bytes(code).hex()
 
 # RJUMP into RJUMP immediate
 assert test_validate_code(b'\x5c\x00\x01\x5c\x00\x01\x00') == False
