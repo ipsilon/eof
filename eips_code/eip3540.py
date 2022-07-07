@@ -51,46 +51,10 @@ def validate_eof(code: bytes):
 
 
 # Validates any code
-def validate_code(code: bytes) -> bool:
+def is_valid_container(code: bytes) -> bool:
     if is_eof(code):
         try:
             validate_eof(code)
         except:
             return False
     return True
-
-
-# Legacy contracts
-assert validate_code(b'') == True
-assert validate_code(b'\x00') == True
-assert validate_code(b'\xef') == True  # Magic second byte missing
-
-# Any value outside the magic second byte
-for m in range(1, 256):
-    assert validate_code(bytes((0xEF, m))) == True
-
-# EOF1 contracts
-assert validate_code(b'\xef\x00') == False  # Only magic
-assert validate_code(b'\xef\x00\x01') == False  # Only version
-assert validate_code(b'\xef\x00\x00') == False  # Wrong version
-assert validate_code(b'\xef\x00\x02\x01\x00\x01\x00\xfe') == False  # Valid except version
-assert validate_code(b'\xef\x00\x01\x00') == False  # Only terminator
-assert validate_code(b'\xef\x00\x01\x00\x000') == False  # Trailing bytes
-assert validate_code(b'\xef\x00\x01\x01') == False  # Truncated section header
-assert validate_code(b'\xef\x00\x01\x02') == False  # Truncated section header
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x02') == False  # Truncated section header
-assert validate_code(b'\xef\x00\x01\x03') == False  # Invalid section id
-assert validate_code(b'\xef\x00\x01\x01\x00') == False  # Truncated code section size
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x02\x00') == False  # Truncated data section size
-assert validate_code(b'\xef\x00\x01\x01\x00\x00\x00') == False  # Empty code section size
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x02\x00\x00\x00\xfe') == False  # Empty data section
-assert validate_code(b'\xef\x00\x01\x01\x00\x01') == False  # No terminator after section
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x00') == False  # Missing section contents
-assert validate_code(b'\xef\x00\x01\x02\x00\x01\x00\xaa') == False  # Only data section
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x01\x00\x01\x00\xfe\xfe') == False  # Multiple code sections
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x02\x00\x01\x02\x00\x01\x00\xfe\xaa\xbb') == False  # Multiple data sections
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x01\x00\x01\x02\x00\x01\x02\x00\x01\x00\xfe\xfe\xaa\xbb') == False  # Multiple code and data sections
-assert validate_code(b'\xef\x00\x01\x02\x00\x01\x01\x00\x01\x00\xaa\xfe') == False  # Data section before code section
-
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x00\xfe') == True  # Valid format with 1-byte of code
-assert validate_code(b'\xef\x00\x01\x01\x00\x01\x02\x00\x01\x00\xfe\xaa') == True  # Code and data section
