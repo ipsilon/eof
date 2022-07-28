@@ -161,3 +161,7 @@ def test_unreachable():
     assert validate_function(0, bytes((OP_ADDRESS, OP_POP, OP_RETF, OP_POP, OP_STOP))) == 1
     assert validate_function(0, bytes((OP_ADDRESS, OP_POP, OP_RJUMP, 0x00, 0x01, OP_POP, OP_STOP))) == 1
 
+def test_stack_overflow():
+    assert validate_function(0, bytes([OP_NUMBER] * 1022 + [OP_POP] * 1022 + [OP_STOP])) == 1022
+    with pytest.raises(ValidationException, match="max stack above limit"):
+        validate_function(0, bytes([OP_NUMBER] * 1023 + [OP_POP] * 1023 + [OP_STOP]))
