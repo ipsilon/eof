@@ -8,6 +8,10 @@ class FunctionType:
     outputs: int
 
 
+class ValidationException(Exception):
+    pass
+
+
 def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
     assert func_id >= 0
     assert types[func_id].inputs >= 0
@@ -34,7 +38,7 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
             # for all control flow paths reaching this position.
             if pos in stack_heights:
                 if stack_height != stack_heights[pos]:
-                    return -102
+                    raise ValidationException("stack height mismatch for different paths")
                 else:
                     break
             else:
@@ -52,7 +56,7 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
 
             # Detect stack underflow
             if stack_height < stack_height_required:
-                return -101
+                raise ValidationException("stack underflow")
 
             stack_height += stack_height_change
             max_stack_height = max(max_stack_height, stack_height)
@@ -71,7 +75,7 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
             elif info.is_terminating:
                 expected_height = types[func_id].outputs if op == OP_RETF else 0
                 if stack_height != expected_height:
-                    return -103
+                    raise ValidationException("non-empty stack on terminating instruction")
                 break
 
             else:
@@ -79,6 +83,6 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
 
 
     if max_stack_height >= 1023:
-        return -105
+        raise ValidationException("max stack above limit")
 
     return max_stack_height
