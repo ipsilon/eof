@@ -6,12 +6,12 @@ def is_invalid_with_error(code: bytes, error: str, num_code_sections: int = 1):
         validate_code_section(code, num_code_sections)
 
 def test_valid_opcodes():
-    assert is_valid_code(b'\x30\x00') == True
-    assert is_valid_code(b'\x50\x00') == True
-    assert is_valid_code(b'\xfb\x00\x00\x00') == True
-    assert is_valid_code(b'\xfc') == True
-    assert is_valid_code(b'\xfe\x00') == True
-    assert is_valid_code(b'\xff\x00') == True
+    assert is_valid_code(bytes.fromhex("3000")) == True
+    assert is_valid_code(bytes.fromhex("5000")) == True
+    assert is_valid_code(bytes.fromhex("fb000000")) == True
+    assert is_valid_code(bytes.fromhex("fc")) == True
+    assert is_valid_code(bytes.fromhex("fe00")) == True
+    assert is_valid_code(bytes.fromhex("ff00")) == True
 
 def test_push_valid_immediate():
     assert is_valid_code(b'\x60\x00\x00') == True
@@ -49,60 +49,60 @@ def test_push_valid_immediate():
 
 def test_rjump_valid_immediate():
     # offset = 0
-    assert is_valid_code(b'\x5c\x00\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("5c000000")) == True
     # offset = 1
-    assert is_valid_code(b'\x5c\x00\x01\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("5c00010000")) == True
     # offset = 4
-    assert is_valid_code(b'\x5c\x00\x01\x00\x00\x00\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("5c00010000000000")) == True
     # offset = 256
-    assert is_valid_code(b'\x5c\x01\x00' + b'\x00' * 256 + b'\x00') == True
+    assert is_valid_code(bytes.fromhex("5c0100") + b'\x00' * 256 + b'\x00') == True
     # offset = 32767
-    assert is_valid_code(b'\x5c\x7f\xff' + b'\x00' * 32767 + b'\x00') == True
+    assert is_valid_code(bytes.fromhex("5c7fff") + b'\x00' * 32767 + b'\x00') == True
     # offset = -3
-    assert is_valid_code(b'\x5c\xff\xfd\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("5cfffd0000")) == True
     # offset = -4
-    assert is_valid_code(b'\x00\x5c\xff\xfc\x00') == True
+    assert is_valid_code(bytes.fromhex("005cfffc00")) == True
     # offset = -256
-    assert is_valid_code(b'\x00' * 253 + b'\x5c\xff\x00\x00') == True
+    assert is_valid_code(b'\x00' * 253 + bytes.fromhex("5cff0000")) == True
     # offset = -32768
-    assert is_valid_code(b'\x00' * 32765 + b'\x5c\x80\x01\x00') == True
+    assert is_valid_code(b'\x00' * 32765 + bytes.fromhex("5c800100")) == True
 
 def test_rjumpi_valid_immediate():
     # offset = 0
-    assert is_valid_code(b'\x60\x01\x5d\x00\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("60015d000000")) == True
     # offset = 1
-    assert is_valid_code(b'\x60\x01\x5d\x00\x01\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("60015d00010000")) == True
     # offset = 4
-    assert is_valid_code(b'\x60\x01\x5d\x00\x01\x00\x00\x00\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("60015d00010000000000")) == True
     # offset = 256
-    assert is_valid_code(b'\x60\x01\x5d\x01\x00' + b'\x00' * 256 + b'\x00') == True
+    assert is_valid_code(bytes.fromhex("60015d0100") + b'\x00' * 256 + b'\x00') == True
     # offset = 32767
-    assert is_valid_code(b'\x60\x01\x5d\x7f\xff' + b'\x00' * 32767 + b'\x00') == True
+    assert is_valid_code(bytes.fromhex("60015d7fff") + b'\x00' * 32767 + b'\x00') == True
     # offset = -3
-    assert is_valid_code(b'\x60\x01\x5d\xff\xfd\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("60015dfffd0000")) == True
     # offset = -5
-    assert is_valid_code(b'\x60\x01\x5d\xff\xfb\x00') == True
+    assert is_valid_code(bytes.fromhex("60015dfffb00")) == True
     # offset = -256
-    assert is_valid_code(b'\x00' * 252 + b'\x60\x01\x5d\xff\x00\x00') == True
+    assert is_valid_code(b'\x00' * 252 + bytes.fromhex("60015dff0000")) == True
     # offset = -32768
-    assert is_valid_code(b'\x00' * 32763 + b'\x60\x01\x5d\x80\x01\x00') == True
+    assert is_valid_code(b'\x00' * 32763 + bytes.fromhex("60015d800100")) == True
     # RJUMP without PUSH before - still valid
-    assert is_valid_code(b'\x5d\x00\x00\x00') == True
+    assert is_valid_code(bytes.fromhex("5d000000")) == True
 
 def test_callf_valid_immediate():
-    assert is_valid_code(b'\xfb\x00\x00\x00') == True
-    assert is_valid_code(b'\xfb\x00\x01\x00', 2) == True
-    assert is_valid_code(b'\xfb\x00\x00\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x01\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x02\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x03\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x04\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x05\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x06\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x07\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x08\x00', 10) == True
-    assert is_valid_code(b'\xfb\x00\x09\x00', 10) == True
-    assert is_valid_code(b'\xfb\xff\xff\x00', 65536) == True
+    assert is_valid_code(bytes.fromhex("fb000000")) == True
+    assert is_valid_code(bytes.fromhex("fb000100"), 2) == True
+    assert is_valid_code(bytes.fromhex("fb000000"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000100"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000200"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000300"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000400"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000500"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000600"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000700"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000800"), 10) == True
+    assert is_valid_code(bytes.fromhex("fb000900"), 10) == True
+    assert is_valid_code(bytes.fromhex("fbffff00"), 65536) == True
 
 
 def test_valid_code_terminator():
@@ -118,128 +118,128 @@ def test_invalid_code():
     assert is_valid_code(b'') == False
 
     # Valid opcode, but invalid as terminator
-    is_invalid_with_error(b'\x5b', "no terminating instruction")
-    is_invalid_with_error(b'\xfb\x00\x00', "no terminating instruction")
+    is_invalid_with_error(bytes.fromhex("5b"), "no terminating instruction")
+    is_invalid_with_error(bytes.fromhex("fb0000"), "no terminating instruction")
     # Invalid opcodes
-    is_invalid_with_error(b'\x0c\x00', "undefined instruction")
-    is_invalid_with_error(b'\x0d\x00', "undefined instruction")
-    is_invalid_with_error(b'\x0e\x00', "undefined instruction")
-    is_invalid_with_error(b'\x0f\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("0c00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("0d00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("0e00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("0f00"), "undefined instruction")
 
-    is_invalid_with_error(b'\x1e\x00', "undefined instruction")
-    is_invalid_with_error(b'\x1f\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("1e00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("1f00"), "undefined instruction")
 
-    is_invalid_with_error(b'\x21\x00', "undefined instruction")
-    is_invalid_with_error(b'\x22\x00', "undefined instruction")
-    is_invalid_with_error(b'\x23\x00', "undefined instruction")
-    is_invalid_with_error(b'\x24\x00', "undefined instruction")
-    is_invalid_with_error(b'\x25\x00', "undefined instruction")
-    is_invalid_with_error(b'\x26\x00', "undefined instruction")
-    is_invalid_with_error(b'\x27\x00', "undefined instruction")
-    is_invalid_with_error(b'\x28\x00', "undefined instruction")
-    is_invalid_with_error(b'\x29\x00', "undefined instruction")
-    is_invalid_with_error(b'\x2a\x00', "undefined instruction")
-    is_invalid_with_error(b'\x2b\x00', "undefined instruction")
-    is_invalid_with_error(b'\x2c\x00', "undefined instruction")
-    is_invalid_with_error(b'\x2d\x00', "undefined instruction")
-    is_invalid_with_error(b'\x2e\x00', "undefined instruction")
-    is_invalid_with_error(b'\x2f\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2100"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2200"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2300"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2400"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2500"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2700"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2800"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2a00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2b00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2c00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2d00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2e00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("2f00"), "undefined instruction")
 
-    is_invalid_with_error(b'\x49\x00', "undefined instruction")
-    is_invalid_with_error(b'\x4a\x00', "undefined instruction")
-    is_invalid_with_error(b'\x4b\x00', "undefined instruction")
-    is_invalid_with_error(b'\x4c\x00', "undefined instruction")
-    is_invalid_with_error(b'\x4d\x00', "undefined instruction")
-    is_invalid_with_error(b'\x4e\x00', "undefined instruction")
-    is_invalid_with_error(b'\x4f\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("4900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("4a00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("4b00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("4c00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("4d00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("4e00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("4f00"), "undefined instruction")
 
-    is_invalid_with_error(b'\x5e\x00', "undefined instruction")
-    is_invalid_with_error(b'\x5f\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("5e00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("5f00"), "undefined instruction")
 
-    is_invalid_with_error(b'\xa5\x00', "undefined instruction")
-    is_invalid_with_error(b'\xa6\x00', "undefined instruction")
-    is_invalid_with_error(b'\xa7\x00', "undefined instruction")
-    is_invalid_with_error(b'\xa8\x00', "undefined instruction")
-    is_invalid_with_error(b'\xa9\x00', "undefined instruction")
-    is_invalid_with_error(b'\xaa\x00', "undefined instruction")
-    is_invalid_with_error(b'\xab\x00', "undefined instruction")
-    is_invalid_with_error(b'\xac\x00', "undefined instruction")
-    is_invalid_with_error(b'\xad\x00', "undefined instruction")
-    is_invalid_with_error(b'\xae\x00', "undefined instruction")
-    is_invalid_with_error(b'\xaf\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("a500"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("a600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("a700"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("a800"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("a900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("aa00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ab00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ac00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ad00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ae00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("af00"), "undefined instruction")
 
-    is_invalid_with_error(b'\xb0\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb1\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb2\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb3\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb4\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb5\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb6\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb7\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb8\x00', "undefined instruction")
-    is_invalid_with_error(b'\xb9\x00', "undefined instruction")
-    is_invalid_with_error(b'\xba\x00', "undefined instruction")
-    is_invalid_with_error(b'\xbb\x00', "undefined instruction")
-    is_invalid_with_error(b'\xbc\x00', "undefined instruction")
-    is_invalid_with_error(b'\xbd\x00', "undefined instruction")
-    is_invalid_with_error(b'\xbe\x00', "undefined instruction")
-    is_invalid_with_error(b'\xbf\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b000"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b100"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b200"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b300"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b400"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b500"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b700"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b800"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("b900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ba00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("bb00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("bc00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("bd00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("be00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("bf00"), "undefined instruction")
 
-    is_invalid_with_error(b'\xc0\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc1\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc2\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc3\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc4\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc5\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc6\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc7\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc8\x00', "undefined instruction")
-    is_invalid_with_error(b'\xc9\x00', "undefined instruction")
-    is_invalid_with_error(b'\xca\x00', "undefined instruction")
-    is_invalid_with_error(b'\xcb\x00', "undefined instruction")
-    is_invalid_with_error(b'\xcc\x00', "undefined instruction")
-    is_invalid_with_error(b'\xcd\x00', "undefined instruction")
-    is_invalid_with_error(b'\xce\x00', "undefined instruction")
-    is_invalid_with_error(b'\xcf\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c000"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c100"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c200"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c300"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c400"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c500"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c700"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c800"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("c900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ca00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("cb00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("cc00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("cd00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ce00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("cf00"), "undefined instruction")
 
-    is_invalid_with_error(b'\xd0\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd1\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd2\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd3\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd4\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd5\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd6\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd7\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd8\x00', "undefined instruction")
-    is_invalid_with_error(b'\xd9\x00', "undefined instruction")
-    is_invalid_with_error(b'\xda\x00', "undefined instruction")
-    is_invalid_with_error(b'\xdb\x00', "undefined instruction")
-    is_invalid_with_error(b'\xdc\x00', "undefined instruction")
-    is_invalid_with_error(b'\xdd\x00', "undefined instruction")
-    is_invalid_with_error(b'\xde\x00', "undefined instruction")
-    is_invalid_with_error(b'\xdf\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d000"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d100"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d200"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d300"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d400"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d500"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d700"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d800"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("d900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("da00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("db00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("dc00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("dd00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("de00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("df00"), "undefined instruction")
 
-    is_invalid_with_error(b'\xe0\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe1\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe2\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe3\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe4\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe5\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe6\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe7\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe8\x00', "undefined instruction")
-    is_invalid_with_error(b'\xe9\x00', "undefined instruction")
-    is_invalid_with_error(b'\xea\x00', "undefined instruction")
-    is_invalid_with_error(b'\xeb\x00', "undefined instruction")
-    is_invalid_with_error(b'\xec\x00', "undefined instruction")
-    is_invalid_with_error(b'\xed\x00', "undefined instruction")
-    is_invalid_with_error(b'\xee\x00', "undefined instruction")
-    is_invalid_with_error(b'\xef\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e000"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e100"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e200"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e300"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e400"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e500"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e700"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e800"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("e900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ea00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("eb00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ec00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ed00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ee00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("ef00"), "undefined instruction")
 
-    is_invalid_with_error(b'\xf6\x00', "undefined instruction")
-    is_invalid_with_error(b'\xf7\x00', "undefined instruction")
-    is_invalid_with_error(b'\xf8\x00', "undefined instruction")
-    is_invalid_with_error(b'\xf9\x00', "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("f600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("f700"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("f800"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("f900"), "undefined instruction")
 
 def test_push_truncated_immediate():
     is_invalid_with_error(b'\x60', "truncated immediate")
@@ -276,30 +276,26 @@ def test_push_truncated_immediate():
     is_invalid_with_error(b'\x7f' + b'\x00' * 31, "truncated immediate")
 
 def test_rjump_truncated_immediate():
-    is_invalid_with_error(b'\x5c', "truncated relative jump offset")
-    is_invalid_with_error(b'\x5c\x00', "truncated relative jump offset")
-    is_invalid_with_error(b'\x5c\x00\x00', "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5c"), "truncated relative jump offset")
+    is_invalid_with_error(bytes.fromhex("5c00"), "truncated relative jump offset")
+    is_invalid_with_error(bytes.fromhex("5c0000"), "relative jump destination out of bounds")
 
 def test_rjumpi_truncated_immediate():
-    is_invalid_with_error(b'\x60\x01\x5d', "truncated relative jump offset")
-    is_invalid_with_error(b'\x60\x01\x5d\x00', "truncated relative jump offset")
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x00', "relative jump destination out of bounds")
-
-def test_callf_truncated_immediate():
-    is_invalid_with_error(b'\xfb', "truncated CALLF immediate")
-    is_invalid_with_error(b'\xfb\x00', "truncated CALLF immediate")
+    is_invalid_with_error(bytes.fromhex("60015d"), "truncated relative jump offset")
+    is_invalid_with_error(bytes.fromhex("60015d00"), "truncated relative jump offset")
+    is_invalid_with_error(bytes.fromhex("60015d0000"), "relative jump destination out of bounds")
 
 def test_rjumps_out_of_bounds():
     # RJUMP destination out of bounds
     # offset = 1
-    is_invalid_with_error(b'\x5c\x00\x01\x00', "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5c000100"), "relative jump destination out of bounds")
     # offset = -4
-    is_invalid_with_error(b'\x5c\xff\xfc\x00', "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5cfffc00"), "relative jump destination out of bounds")
     # RJUMPI destination out of bounds
     # offset = 1
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x01\x00', "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015d000100"), "relative jump destination out of bounds")
     # offset = -6
-    is_invalid_with_error(b'\x60\x01\x5d\xff\xfa\x00', "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015dfffa00"), "relative jump destination out of bounds")
 
 def test_rjumps_into_immediate():
     for n in range(1, 33):
@@ -319,56 +315,53 @@ def test_rjumps_into_immediate():
             is_invalid_with_error(code, "relative jump destination targets immediate")
 
     # RJUMP into RJUMP immediate
-    is_invalid_with_error(b'\x5c\x00\x01\x5c\x00\x00\x00', "relative jump destination targets immediate")
-    is_invalid_with_error(b'\x5c\x00\x02\x5c\x00\x00\x00', "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c00015c000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c00025c000000"), "relative jump destination targets immediate")
     # RJUMPI into RJUMP immediate
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x01\x5c\x00\x00\x00', "relative jump destination targets immediate")
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x02\x5c\x00\x00\x00', "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d00015c000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d00025c000000"), "relative jump destination targets immediate")
     # RJUMP into RJUMPI immediate
-    is_invalid_with_error(b'\x5c\x00\x03\x60\x01\x5d\x00\x00\x00', "relative jump destination targets immediate")
-    is_invalid_with_error(b'\x5c\x00\x04\x60\x01\x5d\x00\x00\x00', "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c000360015d000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c000460015d000000"), "relative jump destination targets immediate")
     # RJUMPI into RJUMPI immediate
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x03\x60\x01\x5d\x00\x00\x00', "relative jump destination targets immediate")
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x04\x60\x01\x5d\x00\x00\x00', "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d000360015d000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d000460015d000000"), "relative jump destination targets immediate")
     # RJUMP into CALLF immediate
-    is_invalid_with_error(b'\x5c\x00\x01\xfb\x00\x00\x00', "relative jump destination targets immediate")
-    is_invalid_with_error(b'\x5c\x00\x02\xfb\x00\x00\x00', "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c0001fb000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c0002fb000000"), "relative jump destination targets immediate")
     # RJUMPI into CALLF immediate
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x01\xfb\x00\x00\x00', "relative jump destination targets immediate")
-    is_invalid_with_error(b'\x60\x01\x5d\x00\x01\xfb\x00\x00\x00', "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "relative jump destination targets immediate")
 
 def test_callf_invalid_section_id():
-    is_invalid_with_error(b'\xfb\x00\x01\x00', "invalid section id", 1)
-    is_invalid_with_error(b'\xfb\x00\x02\x00', "invalid section id", 1)
-    is_invalid_with_error(b'\xfb\x00\x0a\x00', "invalid section id", 1)
-    is_invalid_with_error(b'\xfb\xff\xff\x00', "invalid section id", 1)
-    is_invalid_with_error(b'\xfb\x00\x0a\x00', "invalid section id", 10)
-    is_invalid_with_error(b'\xfb\xff\xff\x00', "invalid section id", 65535)
+    is_invalid_with_error(bytes.fromhex("fb000100"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("fb000200"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("fb000a00"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("fbffff00"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("fb000a00"), "invalid section id", 10)
+    is_invalid_with_error(bytes.fromhex("fbffff00"), "invalid section id", 65535)
 
 def test_immediate_contains_opcode():
     # 0x5c byte which could be interpreted a RJUMP, but it's not because it's in PUSH data
-    assert is_valid_code(b'\x60\x5c\x00\x10\x00') == True
-    assert is_valid_code(b'\x61\x00\x5c\x00\x10\x00') == True
+    assert is_valid_code(bytes.fromhex("605c001000")) == True
+    assert is_valid_code(bytes.fromhex("61005c001000")) == True
     # 0x5d byte which could be interpreted a RJUMPI, but it's not because it's in PUSH data
-    assert is_valid_code(b'\x60\x5d\x00\x10\x00') == True
-    assert is_valid_code(b'\x61\x00\x5d\x00\x10\x00') == True
-    # 0xfb byte which could be interpreted a CALLF, but it's not because it's in PUSH data
-    assert is_valid_code(b'\x60\xfb\x00\x10\x00') == True
-    assert is_valid_code(b'\x61\x00\xfb\x00\x10\x00') == True
+    assert is_valid_code(bytes.fromhex("605d001000")) == True
+    assert is_valid_code(bytes.fromhex("61005d001000")) == True
 
     # 0x60 byte which could be interpreted as PUSH, but it's not because it's in RJUMP data
     # offset = -160
-    assert is_valid_code(b'0x00' * 160 + b'\x5c\xff\x60\x00') == True
+    assert is_valid_code(b'0x00' * 160 + bytes.fromhex("5cff6000")) == True
     # 0x60 byte which could be interpreted as PUSH, but it's not because it's in RJUMPI data
     # offset = -160
-    assert is_valid_code(b'0x00' * 160 + b'\x5d\xff\x60\x00') == True
+    assert is_valid_code(b'0x00' * 160 + bytes.fromhex("5dff6000")) == True
     # 0x60 byte which could be interpreted as PUSH, but it's not because it's in CALLF data
     # section_id = 96
-    assert is_valid_code(b'\xfb\x00\x60\x00', 97) == True
+    assert is_valid_code(bytes.fromhex("fb006000"), 97) == True
 
     # 0x5c byte which could be interpreted a RJUMP, but it's not because it's in CALLF data
     # section_id = 92
-    assert is_valid_code(b'\xfb\x00\x5c\x00\x00', 93) == True
+    assert is_valid_code(bytes.fromhex("fb005c0000"), 93) == True
     # 0x5d byte which could be interpreted a RJUMPI, but it's not because it's in CALLF data
     # section_id = 93
-    assert is_valid_code(b'\xfb\x00\x5d\x00\x00', 94) == True
+    assert is_valid_code(bytes.fromhex("fb005d0000"), 94) == True
