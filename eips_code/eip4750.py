@@ -1,3 +1,10 @@
+MAGIC = b'\xEF\x00'
+VERSION = 0x01
+S_TERMINATOR = 0x00
+S_CODE = 0x01
+S_DATA = 0x02
+S_TYPE = 0x03
+
 # The ranges below are as specified in the Yellow Paper.
 # Note: range(s, e) excludes e, hence the +1
 valid_opcodes = [
@@ -28,6 +35,86 @@ for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
 
 class ValidationException(Exception):
     pass
+
+# Validate EOF code.
+# Raises ValidationException on invalid code
+def validate_eof(code: bytes):
+    # Check version
+    if len(code) < 3 or code[2] != VERSION:
+        raise ValidationException("invalid version")
+
+    # Process section headers
+    section_sizes = {S_TYPE: [], S_CODE: [], S_DATA: []}
+    pos = 3
+    while True:
+        # Terminator not found
+        if pos >= len(code):
+            raise ValidationException("no section terminator")            
+
+        section_id = code[pos]
+        pos += 1
+        if section_id == S_TERMINATOR:
+            break
+
+        # Disallow unknown sections
+        if not section_id in section_sizes:
+            raise ValidationException("invalid section id")
+
+        # Data section preceding code section (i.e. code section following data section)
+        if section_id == S_CODE and len(section_sizes[S_DATA]) != 0:
+            raise ValidationException("data section preceding code section")
+
+        # Code section or data section preceding type section
+        if section_id == S_TYPE and (len(section_sizes[S_CODE]) != 0 or len(section_sizes[S_DATA]) != 0):
+            raise ValidationException("code or data section preceding type section")            
+
+        # Multiple type or data sections
+        if section_id == S_TYPE and len(section_sizes[S_TYPE]) != 0:
+            raise ValidationException("multiple type sections")
+        if section_id == S_DATA and len(section_sizes[S_DATA]) != 0:
+            raise ValidationException("multiple data sections")
+
+        # Truncated section size
+        if (pos + 1) >= len(code):
+            raise ValidationException("truncated section size")
+        section_sizes[section_id].append((code[pos] << 8) | code[pos + 1])
+        pos += 2
+
+        # Empty section
+        if section_sizes[section_id][-1] == 0:
+            raise ValidationException("empty section")
+
+    # Code section cannot be absent
+    if len(section_sizes[S_CODE]) == 0:
+        raise ValidationException("no code section")
+
+    # Not more than 1024 code sections
+    if len(section_sizes[S_CODE]) > 1024:
+        raise ValidationException("more than 1024 code sections")
+
+    # Type section can be absent only if single code section is present
+    if len(section_sizes[S_TYPE]) == 0 and len(section_sizes[S_CODE]) != 1:
+        raise ValidationException("no obligatory type section")
+
+    # Type section, if present, has size corresponding to number of code sections
+    if len(section_sizes[S_TYPE]) != 0 and section_sizes[S_TYPE][0] != len(section_sizes[S_CODE]) * 2:
+        raise ValidationException("invalid type section size")                
+
+    # The entire container must be scanned
+    if len(code) != (pos + sum(section_sizes[S_TYPE]) + sum(section_sizes[S_CODE]) + sum(section_sizes[S_DATA])):
+        raise ValidationException("container size not equal to sum of section sizes")        
+
+    # First type section, if present, has 0 inputs and 0 outputs
+    if len(section_sizes[S_TYPE]) > 0 and (code[pos] != 0 or code[pos + 1] != 0):
+        raise ValidationException("invalid type of section 0")        
+
+# Validates any code
+def is_valid_eof(code: bytes) -> bool:
+    try:
+        validate_eof(code)
+    except:
+        return False
+    return True
 
 # Raises ValidationException on invalid code
 def validate_code_section(code: bytes, num_code_sections: int):
