@@ -1,9 +1,84 @@
-from eip4750 import is_valid_code, validate_code_section, ValidationException
+from eip4750 import is_valid_code, is_valid_eof, validate_eof, validate_code_section, ValidationException
 import pytest
+
+def is_invalid_eof_with_error(code: bytes, error: str):
+    with pytest.raises(ValidationException, match=error):
+        validate_eof(code)
 
 def is_invalid_with_error(code: bytes, error: str, num_code_sections: int = 1):
     with pytest.raises(ValidationException, match=error):
         validate_code_section(code, num_code_sections)
+
+def test_eof1_container():
+    is_invalid_eof_with_error(bytes.fromhex('ef00'), "invalid version")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001'), "no section terminator")
+    is_invalid_eof_with_error(bytes.fromhex('ef0000'), "invalid version")
+    is_invalid_eof_with_error(bytes.fromhex('ef0002 010001 00 fe'), "invalid version") # Valid except version
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 00'), "no code section") # Only terminator
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00 fe aabbccdd'), "container size not equal to sum of section sizes") # Trailing bytes
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 01'), "truncated section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 02'), "truncated section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 03'), "truncated section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 02'), "truncated section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 040002 010001 00 0000 fe'), "invalid section id")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 0100'), "truncated section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 0200'), "truncated section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010000 00'), "empty section")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 020000 00 fe'), "empty section")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001'), "no section terminator")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00'), "container size not equal to sum of section sizes") # Missing section contents
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 020001 00 aa'), "no code section") # Only data section
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010001 00 fe fe'), "no obligatory type section") # Multiple code sections without type section
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 020001 020001 00 fe aa bb'), "multiple data sections") # Multiple data sections
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010001 020001 020001 00 fe fe aa bb'), "multiple data sections") # Multiple code and data sections
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 020001 010001 00 aa fe'), "data section preceding code section")
+
+    assert is_valid_eof(bytes.fromhex('ef000101000100fe')) == True  # Valid format with 1-byte of code
+    assert is_valid_eof(bytes.fromhex('ef000101000102000100feaa')) == True  # Code and data section
+
+def test_eof_type_section():
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 03'), "truncated section size")  # Truncated type section header
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 0300'), "truncated section size")  # Truncated type section size
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030000 010001 00 fe'), "empty section")  # 0 type section size
+
+    # Valid with one code section and implicit type section
+    assert is_valid_eof(bytes.fromhex('ef0001 010001 00 fe')) == True
+    # Valid with one code section and explicit type section
+    assert is_valid_eof(bytes.fromhex('ef0001 030002 010001 00 0000 fe')) == True
+    # Valid with two code sections, 2nd code sections has 0 inputs and 1 output
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 6000fc')) == True
+    # Valid with two code sections, 2nd code sections has 2 inputs and 0 outputs
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 5050fc')) == True
+    # Valid with two code sections, 2nd code sections has 2 inputs and 1 output
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 00 00000201 fe 50fc')) == True
+    # Valid with two code sections and one data section
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 020004 00 00000201 fe 50fc aabbccdd')) == True
+
+    # Invalid with two code sections and no type section
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010003 00 fe 6000fc'), "no obligatory type section")
+    # Invalid with two code sections, second one following data section
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010001 020004 010002 00 00000201 fe aabbccdd 50fc'), "data section preceding code section")
+    # Invalid with multiple type sections
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030002 030002 010001 010002 00 0000 0201 fe 50fc'), "multiple type sections")
+    # Invalid with type section after code sections (but before data section)
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010002 030004 020004 00 fe 50fc 00000201 aabbccdd'), "code or data section preceding type section")
+    # Invalid with type section after code sections and data section
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010002 020004 030004 00 fe 50fc aabbccdd 00000201'), "code or data section preceding type section")
+    # Invalid with incorrect type section size
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030002 010001 010002 020004 00 0000 fe 50fc aabbccdd'), "invalid type section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030006 010001 010002 020004 00 000002010000 fe 50fc aabbccdd'), "invalid type section size")
+    # Invalid with type section without code section
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 020004 00 00000201 aabbccdd'), "no code section")
+    # Invalid with first code code sections not having 0 inputs 0 outputs
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010003 010001 020004 00 00010000 6000fc fe aabbccdd'), "invalid type of section 0")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010003 010001 020004 00 02000000 505000 fe aabbccdd'), "invalid type of section 0")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010002 010001 020004 00 02010000 50fc fe aabbccdd'), "invalid type of section 0")
+
+    # Valid with 1024 code sections
+    assert is_valid_eof(bytes.fromhex('ef0001 030800') + b'\x01\x00\x01' * 1024 + b'\x00' + b'\x00\x00' * 1024 + b'\xfe' * 1024) == True
+    # Invalid with 1025 code sections
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030802') + b'\x01\x00\x01' * 1025 + b'\x00' + b'\x00\x00' * 1025 + b'\xfe' * 1025, "more than 1024 code sections")
+
 
 def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("3000")) == True
