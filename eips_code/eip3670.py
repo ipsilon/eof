@@ -24,10 +24,7 @@ immediate_sizes = 256 * [0]
 for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
 
-class ValidationException(Exception):
-    pass
-
-# Raises ValidationException on invalid code
+# Raises AssertionError on invalid code
 def validate_code(code: bytes):
     # Note that EOF1 already asserts this with the code section requirements
     assert len(code) > 0
@@ -38,19 +35,16 @@ def validate_code(code: bytes):
         # Ensure the opcode is valid
         opcode = code[pos]
         pos += 1
-        if not opcode in valid_opcodes:
-            raise ValidationException("undefined instruction")
+        assert (opcode in valid_opcodes), "undefined instruction"
 
         # Skip immediates
         pos += immediate_sizes[opcode]
 
     # Ensure last opcode's immediate doesn't go over code end
-    if pos != len(code):        
-        raise ValidationException("truncated immediate")
+    assert (pos == len(code)), "truncated immediate"
 
     # opcode is the *last opcode*
-    if not opcode in terminating_opcodes:
-        raise ValidationException("no terminating instruction")
+    assert (opcode in terminating_opcodes), "no terminating instruction"
 
 def is_valid_code(code: bytes) -> bool:
     try:

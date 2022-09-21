@@ -1,8 +1,8 @@
-from eip3670 import is_valid_code, validate_code, ValidationException
+from eip3670 import is_valid_code, validate_code
 import pytest
 
 def is_invalid_with_error(code: bytes, error: str):
-    with pytest.raises(ValidationException, match=error):
+    with pytest.raises(AssertionError, match=error):
         validate_code(code)
 
 def test_valid_opcodes():
