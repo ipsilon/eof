@@ -9,22 +9,17 @@ S_DATA = 0x02
 def is_eof(code: bytes) -> bool:
     return code.startswith(MAGIC)
 
-class ValidationException(Exception):
-    pass
-
-# Raises ValidationException on invalid code
+# Raises AssertionError on invalid code
 def validate_eof(code: bytes):
     # Check version
-    if len(code) < 3 or code[2] != VERSION:
-        raise ValidationException("invalid version")
+    assert (len(code) > 2 and code[2] == VERSION), "invalid version"
 
     # Process section headers
     section_sizes = {S_CODE: 0, S_DATA: 0}
     pos = 3
     while True:
         # Terminator not found
-        if pos >= len(code):
-            raise ValidationException("no section terminator")            
+        assert (pos < len(code)), "no section terminator"
         
         section_id = code[pos]
         pos += 1
@@ -32,34 +27,28 @@ def validate_eof(code: bytes):
             break
 
         # Disallow unknown sections
-        if not section_id in section_sizes:
-            raise ValidationException("invalid section id")
+        assert (section_id in section_sizes), "invalid section id"
 
         # Data section preceding code section
-        if section_id == S_DATA and section_sizes[S_CODE] == 0:
-            raise ValidationException("data section preceding code section")
+        if section_id == S_DATA:
+            assert (section_sizes[S_CODE] != 0), "data section preceding code section"
 
         # Multiple sections with the same id
-        if section_sizes[section_id] != 0:
-            raise ValidationException("multiple sections with same id")
+        assert (section_sizes[section_id] == 0), "multiple sections with same id"
 
         # Truncated section size
-        if (pos + 1) >= len(code):
-            raise ValidationException("truncated section size")
+        assert ((pos + 1) < len(code)), "truncated section size"
         section_sizes[section_id] = (code[pos] << 8) | code[pos + 1]
         pos += 2
 
         # Empty section
-        if section_sizes[section_id] == 0:
-            raise ValidationException("empty section")
+        assert  (section_sizes[section_id] != 0), "empty section"
 
     # Code section cannot be absent
-    if section_sizes[S_CODE] == 0:
-        raise ValidationException("no code section")
+    assert (section_sizes[S_CODE] != 0), "no code section"
 
     # The entire container must be scanned
-    if len(code) != (pos + section_sizes[S_CODE] + section_sizes[S_DATA]):
-        raise ValidationException("container size not equal to sum of section sizes")
+    assert (len(code) == (pos + section_sizes[S_CODE] + section_sizes[S_DATA])), "container size not equal to sum of section sizes"
 
 
 # Validates any code

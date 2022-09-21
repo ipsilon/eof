@@ -1,8 +1,8 @@
-from eip3540 import is_valid_container, validate_eof, ValidationException
+from eip3540 import is_valid_container, validate_eof
 import pytest
 
 def is_invalid_with_error(code: bytes, error: str):
-    with pytest.raises(ValidationException, match=error):
+    with pytest.raises(AssertionError, match=error):
         validate_eof(code)
 
 def test_legacy_contracts():
