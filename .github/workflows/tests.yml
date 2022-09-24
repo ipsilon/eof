@@ -16,5 +16,5 @@ jobs:
       - name: Install pytest
         run: pip3 install pytest
 
-      - name: Run tests
-        run: find eips_code -name \*.py -type f -print0 | xargs -0 -n1 python3
+      - name: Run pytest
+        run: pytest
