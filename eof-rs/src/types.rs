@@ -1,16 +1,6 @@
-// TODO use serde
 use serde::{Deserialize, Serialize, Serializer};
-use serde_bytes_repr::{ByteFmtDeserializer, ByteFmtSerializer};
 
 pub type EOFVersion = u8;
-
-fn serialize_bytes<S, T>(x: T, s: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-    T: AsRef<[u8]>,
-{
-    s.serialize_str(&hex::encode(x.as_ref()))
-}
 
 #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct EOFContainer {
@@ -22,6 +12,7 @@ pub struct EOFContainer {
 pub enum EOFSection {
     #[serde(serialize_with = "serialize_bytes")]
     Code(Vec<u8>),
+    #[serde(serialize_with = "serialize_bytes")]
     Data(Vec<u8>),
     Type(Vec<EOFTypeSectionEntry>),
 }
@@ -42,11 +33,12 @@ impl EOFSection {
     }
 }
 
-impl EOFContainer {
-    pub fn serialize_eof(&self) -> Result<Vec<u8>, ()> {
-        let mut ret = vec![1u8];
-        Ok(ret)
-    }
+fn serialize_bytes<S, T>(x: T, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: AsRef<[u8]>,
+{
+    s.serialize_str(&hex::encode(x.as_ref()))
 }
 
 #[cfg(test)]
@@ -62,18 +54,6 @@ mod tests {
 
         let serialized = serde_json::to_string(&container).unwrap();
         println!("{}", serialized);
-        assert_eq!(serialized, "{\"version\":1,\"sections\":[{\"Code\":[0]}]}");
-    }
-
-    #[test]
-    fn encode_eof() {
-        let container = EOFContainer {
-            version: 1,
-            sections: vec![EOFSection::Code(vec![00])],
-        };
-
-        let serialized = container.serialize_eof().unwrap();
-        println!("{:?}", serialized);
-        assert_eq!(serialized, vec![1u8]);
+        assert_eq!(serialized, "{\"version\":1,\"sections\":[{\"Code\":\"00\"}]}");
     }
 }
