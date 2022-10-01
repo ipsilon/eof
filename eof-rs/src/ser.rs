@@ -1,9 +1,7 @@
 use super::error::{Error, Result};
-use serde::ser;
+use super::types::*;
 
 // TODO: implement complete serde serialiser (see ciborium for an example)
-
-use crate::types::*;
 
 struct HeaderEntry {
     pub kind: u8,
@@ -40,7 +38,6 @@ impl Encoder {
             //                .map(|type_entry| vec![type_entry.inputs, type_entry.outputs])
             //                .flatten()
             //                .collect(),
-            _ => unimplemented!(),
         };
         let content_len = content.len();
         self.contents.push(content);
@@ -85,7 +82,7 @@ pub fn to_bytes(value: EOFContainer) -> Result<Vec<u8>> {
         contents: vec![],
     };
     for section in value.sections {
-        encoder.push_section(section);
+        encoder.push_section(section)?;
     }
     encoder.finalize()
 }
