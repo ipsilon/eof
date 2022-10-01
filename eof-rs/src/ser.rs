@@ -16,7 +16,17 @@ struct Encoder {
     contents: Vec<Vec<u8>>,
 }
 
+// TODO: use proper encoder and not typecasting
+
 impl Encoder {
+    fn encode_types(types: Vec<EOFTypeSectionEntry>) -> Vec<u8> {
+        types
+            .into_iter()
+            .map(|type_entry| vec![type_entry.inputs, type_entry.outputs])
+            .flatten()
+            .collect()
+    }
+
     pub fn push_section(&mut self, section: EOFSection) -> Result<()> {
         let section_kind = section.kind();
 
@@ -24,7 +34,12 @@ impl Encoder {
         let content = match section {
             EOFSection::Code(code) => code,
             EOFSection::Data(data) => data,
-            EOFSection::Type(types) => unimplemented!(),
+            EOFSection::Type(types) => Self::encode_types(types),
+            //            EOFSection::Type(types) => types
+            //                .into_iter()
+            //                .map(|type_entry| vec![type_entry.inputs, type_entry.outputs])
+            //                .flatten()
+            //                .collect(),
             _ => unimplemented!(),
         };
         let content_len = content.len();
@@ -34,7 +49,6 @@ impl Encoder {
         self.headers.push(HeaderEntry {
             kind: section_kind,
             size: content_len as u16,
-            //       size: u16::try_from(content.len())?
         });
 
         Ok(())
@@ -85,6 +99,17 @@ mod tests {
         let container = EOFContainer {
             version: 1,
             sections: vec![
+                EOFSection::Type(vec![
+                    EOFTypeSectionEntry {
+                        inputs: 0,
+                        outputs: 0,
+                    },
+                    EOFTypeSectionEntry {
+                        inputs: 1,
+                        outputs: 1,
+                    },
+                ]),
+                EOFSection::Code(vec![0xfe]),
                 EOFSection::Code(vec![0xfe]),
                 EOFSection::Data(vec![0, 1, 2, 3, 4]),
             ],
@@ -92,6 +117,9 @@ mod tests {
 
         let serialized = to_bytes(container).unwrap();
         println!("{:?}", serialized);
-        assert_eq!(hex::encode(serialized), hex::encode("00")); //"{\"version\":1,\"sections\":[{\"Code\":[0]}]}");
+        assert_eq!(
+            hex::encode(serialized),
+            "ef00010300040100010100010200050000000101fefe0001020304"
+        );
     }
 }
