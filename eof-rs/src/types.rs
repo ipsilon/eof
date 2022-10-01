@@ -1,16 +1,26 @@
 // TODO use serde
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
+use serde_bytes_repr::{ByteFmtDeserializer, ByteFmtSerializer};
 
 pub type EOFVersion = u8;
 
+fn serialize_bytes<S, T>(x: T, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: AsRef<[u8]>,
+{
+    s.serialize_str(&hex::encode(x.as_ref()))
+}
+
 #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct EOFContainer {
-    version: EOFVersion,
-    sections: Vec<EOFSection>,
+    pub version: EOFVersion,
+    pub sections: Vec<EOFSection>,
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum EOFSection {
+    #[serde(serialize_with = "serialize_bytes")]
     Code(Vec<u8>),
     Data(Vec<u8>),
     Type(Vec<EOFTypeSectionEntry>),
@@ -18,8 +28,8 @@ pub enum EOFSection {
 
 #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct EOFTypeSectionEntry {
-    inputs: u8,
-    outputs: u8,
+    pub inputs: u8,
+    pub outputs: u8,
 }
 
 impl EOFSection {
