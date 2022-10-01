@@ -1,7 +1,5 @@
 // TODO use serde
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
-use serde::ser::Error;
 
 pub type EOFVersion = u8;
 
@@ -35,9 +33,8 @@ impl EOFSection {
 }
 
 impl EOFContainer {
-    pub fn serialize_eof(&self) -> Result<Vec<u8>> {
+    pub fn serialize_eof(&self) -> Result<Vec<u8>, ()> {
         let mut ret = vec![1u8];
-        
         Ok(ret)
     }
 }
