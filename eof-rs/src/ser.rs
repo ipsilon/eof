@@ -349,6 +349,7 @@ struct HeaderEntry {
     pub size: u16,
 }
 
+#[derive(Default)]
 struct Encoder {
     version: u8,
     headers: Vec<HeaderEntry>,
@@ -403,26 +404,12 @@ impl Encoder {
     }
 }
 
-fn encode_types(types: Vec<EOFTypeSectionEntry>) -> Vec<u8> {
-    unimplemented!()
-}
-
 pub fn to_bytes(value: EOFContainer) -> Result<Vec<u8>> {
-    let mut ret = vec![value.version];
-    let mut encoded_sections = value
-        .sections
-        .into_iter()
-        .map(|section| match section {
-            EOFSection::Code(code) => code,
-            EOFSection::Data(data) => data,
-            EOFSection::Type(types) => encode_types(types),
-            _ => unimplemented!(),
-        })
-        .flatten()
-        .collect();
-    ret.append(&mut encoded_sections);
-    ret.push(0); // S_TERMINATOR
-    Ok(ret)
+    let mut encoder = Encoder { version: value.version, headers: vec![], contents: vec![] };
+    for section in value.sections {
+        encoder.push_section(section);
+    }
+    encoder.finalize()
 }
 
 #[cfg(test)]
