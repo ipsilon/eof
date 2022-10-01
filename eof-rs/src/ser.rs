@@ -349,7 +349,6 @@ struct HeaderEntry {
     pub size: u16,
 }
 
-#[derive(Default)]
 struct Encoder {
     version: u8,
     headers: Vec<HeaderEntry>,
@@ -393,7 +392,7 @@ impl Encoder {
             })
             .flatten()
             .collect();
-        let mut encoded_contents: Vec<u8> = vec![]; //self.contents.iter().flatten().collect();
+        let mut encoded_contents: Vec<u8> = self.contents.iter().flatten().collect();
 
         let mut ret = vec![0xef, 0x00, self.version];
         ret.append(&mut encoded_headers);
