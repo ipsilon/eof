@@ -73,7 +73,7 @@ mod tests {
         println!("{}", serialized);
         assert_eq!(
             serialized,
-            "{\"version\":1,\"sections\":[{\"Code\":\"00\"}]}"
+            "{\"version\":1,\"sections\":[{\"Type\":[{\"inputs\":0,\"outputs\":0},{\"inputs\":1,\"outputs\":1}]},{\"Code\":\"fe\"},{\"Code\":\"fe\"},{\"Data\":\"0001020304\"}]}"
         );
     }
 }
