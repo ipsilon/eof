@@ -1,6 +1,6 @@
-mod types;
-mod ser;
 mod error;
+mod ser;
+mod types;
 
-pub use types::*;
 pub use ser::*;
+pub use types::*;
