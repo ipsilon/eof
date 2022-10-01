@@ -341,6 +341,24 @@ where
 //    Ok(dump(&result))
 }
 
+// TODO: implement complete serde serialiser
+
+use crate::types::*;
+
+pub fn to_bytes(value: EOFContainer) -> Result<Vec<u8>>
+{
+//  unimplemented!()
+    let mut ret = vec![value.version];
+//    let mut encoded_sections: Vec<u8> = value.sections.into_iter().map(|section| vec![1u8]).collect();
+//    let encoded_sections: Vec<Vec<u8>> = value.sections.into_iter().fold(vec![], |buf, section| buf.push(1u8));
+//    let encoded_sections = value.sections.into_iter().map(|section| vec![1u8]);
+//    let mut encoded_sections = encoded_sections.flatten().collect();
+    let mut encoded_sections = value.sections.into_iter().map(|section| vec![1u8]).flatten().collect();
+    ret.append(&mut encoded_sections);
+//    ret.extend_from_slice(value.sections.);
+    Ok(ret)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -355,5 +373,17 @@ mod tests {
         let serialized = to_string(&container).unwrap();
         println!("{}", serialized);
         assert_eq!(serialized, "{\"version\":1,\"sections\":[{\"Code\":[0]}]}");
+    }
+
+    #[test]
+    fn encode_eof_bytes() {
+        let container = EOFContainer {
+            version: 1,
+            sections: vec![EOFSection::Code(vec![0xfe]), EOFSection::Data(vec![0,1,2,3,4])],
+        };
+
+        let serialized = to_bytes(container).unwrap();
+        println!("{:?}", serialized);
+        assert_eq!(hex::encode(serialized), hex::encode("00")); //"{\"version\":1,\"sections\":[{\"Code\":[0]}]}");
     }
 }
