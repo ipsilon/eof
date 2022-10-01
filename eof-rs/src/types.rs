@@ -51,9 +51,29 @@ mod tests {
             version: 1,
             sections: vec![EOFSection::Code(vec![00])],
         };
-
+        let container = EOFContainer {
+            version: 1,
+            sections: vec![
+                EOFSection::Type(vec![
+                    EOFTypeSectionEntry {
+                        inputs: 0,
+                        outputs: 0,
+                    },
+                    EOFTypeSectionEntry {
+                        inputs: 1,
+                        outputs: 1,
+                    },
+                ]),
+                EOFSection::Code(vec![0xfe]),
+                EOFSection::Code(vec![0xfe]),
+                EOFSection::Data(vec![0, 1, 2, 3, 4]),
+            ],
+        };
         let serialized = serde_json::to_string(&container).unwrap();
         println!("{}", serialized);
-        assert_eq!(serialized, "{\"version\":1,\"sections\":[{\"Code\":\"00\"}]}");
+        assert_eq!(
+            serialized,
+            "{\"version\":1,\"sections\":[{\"Code\":\"00\"}]}"
+        );
     }
 }

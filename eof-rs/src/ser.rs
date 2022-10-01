@@ -112,8 +112,9 @@ mod tests {
             ],
         };
 
+        println!("{:?}", container);
         let serialized = to_bytes(container).unwrap();
-        println!("{:?}", serialized);
+        println!("{:?}", hex::encode(&serialized));
         assert_eq!(
             hex::encode(serialized),
             "ef00010300040100010100010200050000000101fefe0001020304"
