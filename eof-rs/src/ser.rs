@@ -340,9 +340,62 @@ where
     //    Ok(dump(&result))
 }
 
-// TODO: implement complete serde serialiser
+// TODO: implement complete serde serialiser (see ciborium for an example)
 
 use crate::types::*;
+
+struct HeaderEntry {
+    pub kind: u8,
+    pub size: u16,
+}
+
+struct Encoder {
+    headers: Vec<HeaderEntry>,
+    contents: Vec<Vec<u8>>,
+}
+
+impl Encoder {
+//   pub fn push_section(&mut self, data: &[u8]) -> Result<()> {
+  // }
+
+
+   pub fn push_section(&mut self, section: EOFSection) -> Result<()> {
+     let section_kind = section.kind();
+   
+     // Encode content
+    let content = match section {
+            EOFSection::Code(code) => code,
+            EOFSection::Data(data) => data,
+            EOFSection::Type(types) => unimplemented!(),
+            _ => unimplemented!(),
+     };
+     let content_len = content.len();
+     self.contents.push(content);
+
+     // Store header
+     self.headers.push(HeaderEntry {
+       kind: section_kind,
+       size: content_len as u16,
+//       size: u16::try_from(content.len())?
+     });
+     unimplemented!()
+   }
+
+   pub fn finalize(&mut self) -> Result<Vec<u8>> {
+     let mut encoded_headers = self.headers.iter().map(|header| vec![header.kind, (header.size >> 8) as u8, (header.size & 0xff) as u8]).flatten().collect();
+     let mut encoded_contents: Vec<u8> = self.contents.iter().flatten().collect();
+
+     let mut ret = Vec::<u8>::new();
+     ret.append(&mut encoded_headers);
+     ret.push(0); // terminator
+
+     Ok(ret)
+   }
+}
+
+fn encode_types(types: Vec<EOFTypeSectionEntry>) -> Vec<u8> {
+   unimplemented!()
+}
 
 pub fn to_bytes(value: EOFContainer) -> Result<Vec<u8>> {
     let mut ret = vec![value.version];
@@ -350,13 +403,15 @@ pub fn to_bytes(value: EOFContainer) -> Result<Vec<u8>> {
         .sections
         .into_iter()
         .map(|section| match section {
-            EOFSection::Code(code) => vec![1u8],
-            EOFSection::Data(data) => vec![1u8],
+            EOFSection::Code(code) => code,
+            EOFSection::Data(data) => data,
+            EOFSection::Type(types) => encode_types(types),
             _ => unimplemented!(),
         })
         .flatten()
         .collect();
     ret.append(&mut encoded_sections);
+    ret.push(0); // S_TERMINATOR
     Ok(ret)
 }
 

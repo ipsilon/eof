@@ -33,7 +33,7 @@ pub struct EOFTypeSectionEntry {
 }
 
 impl EOFSection {
-    fn kind(&self) -> u8 {
+    pub fn kind(&self) -> u8 {
         match self {
             EOFSection::Code(_) => 1,
             EOFSection::Data(_) => 2,
