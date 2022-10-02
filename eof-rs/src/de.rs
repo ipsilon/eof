@@ -32,13 +32,11 @@ impl ExactReader for &[u8] {
     }
 }
 
-#[derive(Debug)]
 struct HeaderEntry {
     pub kind: u8,
     pub size: u16,
 }
 
-#[derive(Debug)]
 struct Decoder {
     version: u8,
     headers: Vec<HeaderEntry>,
@@ -63,10 +61,6 @@ impl Decoder {
         if (reader.read_u8()?) != 1 {
             return Err(Error::UnsupportedVersion);
         }
-        let container = EOFContainer {
-            version: 1,
-            sections: vec![],
-        };
         // TODO: rewrite this to be more idiomatic
         loop {
             let section_kind = reader.read_u8()?;
@@ -83,7 +77,6 @@ impl Decoder {
             self.contents
                 .push(reader.read_bytes(self.headers[i].size as usize)?);
         }
-        println!("{:?}", self);
         Ok(())
     }
 
@@ -106,7 +99,7 @@ impl Decoder {
             } else if kind == 3 {
                 let mut reader = &self.contents[i][..];
                 let mut tmp: Vec<EOFTypeSectionEntry> = vec![];
-                for k in 0..(reader.len() / 2) {
+                for _ in 0..(reader.len() / 2) {
                     tmp.push(EOFTypeSectionEntry {
                         inputs: reader.read_u8()?,
                         outputs: reader.read_u8()?,
@@ -123,7 +116,7 @@ impl Decoder {
 
 pub fn from_slice(value: &[u8]) -> Result<EOFContainer> {
     let mut decoder = Decoder::new();
-    decoder.read(value);
+    decoder.read(value)?;
     decoder.finalize()
 }
 
