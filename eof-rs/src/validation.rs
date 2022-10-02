@@ -7,7 +7,7 @@ pub trait EOFValidator {
 
 impl EOFValidator for EOFContainer {
     fn is_valid_eof(&self) -> Result<()> {
-        if self.version != 1 {
+        if self.version != EOF_VERSION_1 {
             return Err(Error::UnsupportedVersion);
         }
 

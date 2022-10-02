@@ -54,16 +54,16 @@ impl Decoder {
 
     fn read(&mut self, v: &[u8]) -> Result<()> {
         let mut reader = v;
-        if (reader.read_u16()?) != 0xef00 {
+        if (reader.read_u16()?) != EOF_MAGIC {
             return Err(Error::InvalidMagic);
         }
-        if (reader.read_u8()?) != 1 {
+        if (reader.read_u8()?) != EOF_VERSION_1 {
             return Err(Error::UnsupportedVersion);
         }
         // TODO: rewrite this to be more idiomatic
         loop {
             let section_kind = reader.read_u8()?;
-            if section_kind == 0 {
+            if section_kind == EOF_SECTION_TERMINATOR {
                 break;
             }
             let section_size = reader.read_u16()?;
@@ -87,15 +87,15 @@ impl Decoder {
         // TODO: make this idiomatic
         for i in 0..self.headers.len() {
             let kind = self.headers[i].kind;
-            if kind == 1 {
+            if kind == EOF_SECTION_CODE {
                 container
                     .sections
                     .push(EOFSection::Code(self.contents[i].to_vec()));
-            } else if kind == 2 {
+            } else if kind == EOF_SECTION_DATA {
                 container
                     .sections
                     .push(EOFSection::Data(self.contents[i].to_vec()));
-            } else if kind == 3 {
+            } else if kind == EOF_SECTION_TYPE {
                 let mut reader = &self.contents[i][..];
                 let mut tmp: Vec<EOFTypeSectionEntry> = vec![];
                 for _ in 0..(reader.len() / 2) {

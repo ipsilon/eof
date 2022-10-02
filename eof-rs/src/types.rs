@@ -1,5 +1,12 @@
 use serde::{Deserialize, Serialize, Serializer};
 
+pub const EOF_MAGIC: u16 = 0xef00;
+pub const EOF_VERSION_1: u8 = 1;
+pub const EOF_SECTION_TERMINATOR: u8 = 0;
+pub const EOF_SECTION_CODE: u8 = 1;
+pub const EOF_SECTION_DATA: u8 = 2;
+pub const EOF_SECTION_TYPE: u8 = 3;
+
 pub type EOFVersion = u8;
 
 #[derive(Eq, PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -26,9 +33,9 @@ pub struct EOFTypeSectionEntry {
 impl EOFSection {
     pub fn kind(&self) -> u8 {
         match self {
-            EOFSection::Code(_) => 1,
-            EOFSection::Data(_) => 2,
-            EOFSection::Type(_) => 3,
+            EOFSection::Code(_) => EOF_SECTION_CODE,
+            EOFSection::Data(_) => EOF_SECTION_DATA,
+            EOFSection::Type(_) => EOF_SECTION_TYPE,
         }
     }
 

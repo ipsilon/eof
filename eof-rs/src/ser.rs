@@ -59,9 +59,10 @@ impl Encoder {
             .collect();
         let mut encoded_contents: Vec<u8> = self.contents.into_iter().flatten().collect();
 
-        let mut ret = vec![0xef, 0x00, self.version];
+        let mut ret = EOF_MAGIC.to_be_bytes().to_vec();
+        ret.push(self.version);
         ret.append(&mut encoded_headers);
-        ret.push(0); // terminator
+        ret.push(EOF_SECTION_TERMINATOR);
         ret.append(&mut encoded_contents);
 
         Ok(ret)
