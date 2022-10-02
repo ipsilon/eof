@@ -6,27 +6,27 @@ use std::io::Read;
 // TODO: implement complete serde serialiser (see ciborium for an example)
 
 trait ExactReader {
-    fn read_u8(&mut self) -> Result<u8>;
-    fn read_u16(&mut self) -> Result<u16>;
-    fn read_bytes(&mut self, len: usize) -> Result<Vec<u8>>;
+    fn read_u8(&mut self) -> std::io::Result<u8>;
+    fn read_u16(&mut self) -> std::io::Result<u16>;
+    fn read_bytes(&mut self, len: usize) -> std::io::Result<Vec<u8>>;
 }
 
-impl ExactReader for [u8] {
-    fn read_u8(&mut self) -> Result<u8> {
+impl ExactReader for &[u8] {
+    fn read_u8(&mut self) -> std::io::Result<u8> {
         let mut tmp = [0u8];
         self.read_exact(&mut tmp)?;
         Ok(tmp[0])
     }
 
-    fn read_u16(&mut self) -> Result<u16> {
+    fn read_u16(&mut self) -> std::io::Result<u16> {
         let mut tmp = [0u8; 2];
         self.read_exact(&mut tmp)?;
-        Ok(((tmp[0] << 8) | tmp[1]) as u16)
+        Ok(u16::from_be_bytes(tmp))
     }
 
-    fn read_bytes(&mut self, len: usize) -> Result<Vec<u8>> {
+    fn read_bytes(&mut self, len: usize) -> std::io::Result<Vec<u8>> {
         let mut tmp = Vec::with_capacity(len);
-        self.read_exact(&mut tmp)?;
+        self.read_exact(&mut tmp[..])?;
         Ok(tmp)
     }
 }
@@ -78,10 +78,12 @@ impl Decoder {
     }
 
     pub fn read(&mut self, v: &[u8]) -> Result<()> {
-        if (v.read_u16()?) != 0xef00 {
+        //let reader = std::io::Cursor::new(&v);
+        let mut reader = v;
+        if (reader.read_u16()?) != 0xef00 {
             return Err(Error::InvalidMagic);
         }
-        if (v.read_u8()?) != 1 {
+        if (reader.read_u8()?) != 1 {
             return Err(Error::UnsupportedVersion);
         }
         let container = EOFContainer {
@@ -90,18 +92,18 @@ impl Decoder {
         };
         // TODO: rewrite this to be more idiomatic
         loop {
-            let section_kind = v.read_u8()?;
+            let section_kind = reader.read_u8()?;
             if section_kind == 0 {
                 break;
             }
-            let section_size = v.read_u16()?;
+            let section_size = reader.read_u16()?;
             self.headers.push(HeaderEntry {
                 kind: section_kind,
                 size: section_size,
             });
         }
         for i in 1..self.headers.len() {
-            self.contents.push(v.read_bytes(self.headers[i].size)?);
+            self.contents.push(reader.read_bytes(self.headers[i].size as usize)?);
         }
         /*
                     if section_kind == 1 {
