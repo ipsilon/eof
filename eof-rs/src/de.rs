@@ -53,7 +53,6 @@ impl Decoder {
     }
 
     pub fn read(&mut self, v: &[u8]) -> Result<()> {
-        //let reader = std::io::Cursor::new(&v);
         let mut reader = v;
         if (reader.read_u16()?) != 0xef00 {
             return Err(Error::InvalidMagic);
@@ -73,7 +72,7 @@ impl Decoder {
                 size: section_size,
             });
         }
-        for i in 0..(self.headers.len()) {
+        for i in 0..self.headers.len() {
             self.contents
                 .push(reader.read_bytes(self.headers[i].size as usize)?);
         }

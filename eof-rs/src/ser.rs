@@ -20,8 +20,7 @@ impl Encoder {
     fn encode_types(types: Vec<EOFTypeSectionEntry>) -> Vec<u8> {
         types
             .into_iter()
-            .map(|type_entry| vec![type_entry.inputs, type_entry.outputs])
-            .flatten()
+            .flat_map(|type_entry| vec![type_entry.inputs, type_entry.outputs])
             .collect()
     }
 
@@ -55,14 +54,13 @@ impl Encoder {
         let mut encoded_headers: Vec<u8> = self
             .headers
             .iter()
-            .map(|header| {
+            .flat_map(|header| {
                 vec![
                     header.kind,
                     (header.size >> 8) as u8,
                     (header.size & 0xff) as u8,
                 ]
             })
-            .flatten()
             .collect();
         let mut encoded_contents: Vec<u8> = self.contents.into_iter().flatten().collect();
 
