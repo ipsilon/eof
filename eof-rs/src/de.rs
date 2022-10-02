@@ -31,32 +31,6 @@ impl ExactReader for &[u8] {
     }
 }
 
-/*
-fn read_exact(&mut self, buf: &mut [u8]) -> Result<()> { ... }
-
-struct ExactReader<'a>(&'a [u8]);
-
-impl<'a> ExactReader<'a> {
-    fn read_u8(&'a mut self) -> Result<u8> {
-        let mut tmp = [0u8];
-        self.0.read_exact(&mut tmp)?;
-        Ok(tmp[0])
-    }
-
-    fn read_u16(&'a mut self) -> Result<u16> {
-        let mut tmp = [0u8; 2];
-        self.0.read_exact(&mut tmp)?;
-        Ok(((tmp[0] << 8) | tmp[1]) as u16)
-    }
-
-    fn read_bytes(&'a mut self, len: u16) -> Result<Vec<u8>> {
-        let mut tmp = Vec::with_capacity(len as usize);
-        self.0.read_exact(&mut tmp)?;
-        Ok(tmp)
-    }
-}
-*/
-
 struct HeaderEntry {
     pub kind: u8,
     pub size: u16,
