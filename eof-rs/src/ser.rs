@@ -4,8 +4,8 @@ use super::types::*;
 // TODO: implement complete serde serialiser (see ciborium for an example)
 
 struct HeaderEntry {
-    pub kind: u8,
-    pub size: u16,
+    kind: u8,
+    size: u16,
 }
 
 struct Encoder {
@@ -24,7 +24,7 @@ impl Encoder {
             .collect()
     }
 
-    pub fn push_section(&mut self, section: EOFSection) -> Result<()> {
+    fn push_section(&mut self, section: EOFSection) -> Result<()> {
         let section_kind = section.kind();
 
         // Encode content
@@ -32,11 +32,6 @@ impl Encoder {
             EOFSection::Code(code) => code,
             EOFSection::Data(data) => data,
             EOFSection::Type(types) => Self::encode_types(types),
-            //            EOFSection::Type(types) => types
-            //                .into_iter()
-            //                .map(|type_entry| vec![type_entry.inputs, type_entry.outputs])
-            //                .flatten()
-            //                .collect(),
         };
         let content_len = content.len();
         self.contents.push(content);
@@ -50,7 +45,7 @@ impl Encoder {
         Ok(())
     }
 
-    pub fn finalize(self) -> Result<Vec<u8>> {
+    fn finalize(self) -> Result<Vec<u8>> {
         let mut encoded_headers: Vec<u8> = self
             .headers
             .iter()

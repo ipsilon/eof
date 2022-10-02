@@ -33,8 +33,8 @@ impl ExactReader for &[u8] {
 }
 
 struct HeaderEntry {
-    pub kind: u8,
-    pub size: u16,
+    kind: u8,
+    size: u16,
 }
 
 struct Decoder {
@@ -44,7 +44,7 @@ struct Decoder {
 }
 
 impl Decoder {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             version: 1,
             headers: vec![],
@@ -52,7 +52,7 @@ impl Decoder {
         }
     }
 
-    pub fn read(&mut self, v: &[u8]) -> Result<()> {
+    fn read(&mut self, v: &[u8]) -> Result<()> {
         let mut reader = v;
         if (reader.read_u16()?) != 0xef00 {
             return Err(Error::InvalidMagic);
@@ -79,7 +79,7 @@ impl Decoder {
         Ok(())
     }
 
-    pub fn finalize(self) -> Result<EOFContainer> {
+    fn finalize(self) -> Result<EOFContainer> {
         let mut container = EOFContainer {
             version: self.version,
             sections: vec![],
