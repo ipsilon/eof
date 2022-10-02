@@ -11,23 +11,28 @@ impl EOFValidator for EOFContainer {
             return Err(Error::UnsupportedVersion);
         }
 
-        let mut code_found = false;
-        let mut type_found = false;
+        if self.sections.len() == 0 {
+            return Err(Error::NoSections);
+        }
 
+        let mut code_found = false;
+        let mut type_found: Option<usize> = None;
         let mut last_section_priority = 0u8;
+
         for i in 0..self.sections.len() {
             let current_priority = self.sections[i].priority();
             if last_section_priority > current_priority {
                 return Err(Error::InvalidSectionOrder);
-            } else if last_section_priority == current_priority {
-                return Err(Error::DuplicateSection);
             }
-            last_section_priority = self.sections[i].kind();
+            last_section_priority = self.sections[i].priority();
 
             if let EOFSection::Code(_) = self.sections[i] {
                 code_found = true;
-                //            } else if EOFSection::Type(_) = self.sections[i] {
-                //                type_found = true;
+            } else if let EOFSection::Type(_) = self.sections[i] {
+                if type_found.is_some() {
+                    return Err(Error::DuplicateTypeSection);
+                }
+                type_found = Some(i);
             }
         }
 
@@ -35,23 +40,22 @@ impl EOFValidator for EOFContainer {
             return Err(Error::MissingCodeSection);
         }
 
-        /*
-                if self
-                    .sections
-                    .iter()
-                    .filter(|section| section.kind() == 1)
-                    .collect()
-                    .len()
-                    != self
-                        .sections
-                        .iter()
-                        .filter(|section| section.kind() == 3)
-                        .collect::<EOFSection>()
-                        .len()
-                {
-                    return Err(Error::MismatchingCodeAndTypeSections);
-                }
-        */
+        if type_found.is_some() {
+            let code_sections: Vec<&EOFSection> = self
+                .sections
+                .iter()
+                .filter(|section| section.kind() == 1)
+                .collect();
+            let type_count = if let EOFSection::Type(ref types) = self.sections[type_found.unwrap()]
+            {
+                types.len()
+            } else {
+                panic!()
+            };
+            if code_sections.len() != type_count {
+                return Err(Error::MismatchingCodeAndTypeSections);
+            }
+        }
 
         Ok(())
     }
@@ -62,7 +66,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn valid_container() {
+    fn complex_container() {
         let container = EOFContainer {
             version: 1,
             sections: vec![
@@ -85,10 +89,23 @@ mod tests {
     }
 
     #[test]
-    fn valid_simple_container() {
+    fn only_code() {
         let container = EOFContainer {
             version: 1,
             sections: vec![EOFSection::Code(vec![0xfe])],
+        };
+        assert!(container.is_valid_eof().is_ok());
+    }
+
+    #[test]
+    fn valid_data_container() {
+        let container = EOFContainer {
+            version: 1,
+            sections: vec![
+                EOFSection::Code(vec![0xfe]),
+                EOFSection::Data(vec![0, 1, 2, 3, 4]),
+                EOFSection::Data(vec![0, 1, 2, 3, 4]),
+            ],
         };
         assert!(container.is_valid_eof().is_ok());
     }
@@ -163,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn more_type_than_code() {
+    fn multiple_type_sections() {
         let container = EOFContainer {
             version: 1,
             sections: vec![
@@ -175,6 +192,30 @@ mod tests {
                     inputs: 1,
                     outputs: 1,
                 }]),
+                EOFSection::Code(vec![0xfe]),
+            ],
+        };
+        assert_eq!(
+            container.is_valid_eof().err(),
+            Some(Error::DuplicateTypeSection)
+        );
+    }
+
+    #[test]
+    fn more_type_than_code() {
+        let container = EOFContainer {
+            version: 1,
+            sections: vec![
+                EOFSection::Type(vec![
+                    EOFTypeSectionEntry {
+                        inputs: 0,
+                        outputs: 0,
+                    },
+                    EOFTypeSectionEntry {
+                        inputs: 1,
+                        outputs: 1,
+                    },
+                ]),
                 EOFSection::Code(vec![0xfe]),
             ],
         };

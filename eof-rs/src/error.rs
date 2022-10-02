@@ -11,9 +11,9 @@ pub enum Error {
     UnsupportedSectionKind,
     NoSections,
     InvalidSectionOrder,
-    DuplicateSection,
-    MismatchingCodeAndTypeSections,
     MissingCodeSection,
+    MismatchingCodeAndTypeSections,
+    DuplicateTypeSection,
 }
 
 impl ser::Error for Error {
@@ -39,11 +39,11 @@ impl Display for Error {
             UnsupportedSectionKind => write!(f, "Unsupported section kind"),
             NoSections => write!(f, "No sections"),
             InvalidSectionOrder => write!(f, "Invalid section order"),
-            DuplicateSection => write!(f, "Duplicate section"),
+            MissingCodeSection => write!(f, "Missing Code section"),
             MismatchingCodeAndTypeSections => {
                 write!(f, "Mismatching number of Code and Type sections")
             }
-            MissingCodeSection => write!(f, "Missing Code section"),
+            DuplicateTypeSection => write!(f, "Duplicate Type section"),
         }
     }
 }
