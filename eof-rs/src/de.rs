@@ -31,7 +31,6 @@ impl ExactReader for [u8] {
     }
 }
 
-
 /*
 fn read_exact(&mut self, buf: &mut [u8]) -> Result<()> { ... }
 
@@ -79,11 +78,10 @@ impl Decoder {
     }
 
     pub fn read(&mut self, v: &[u8]) -> Result<()> {
-        let mut reader = ExactReader(&v);
-        if (reader.read_u16()?) != 0xef00 {
+        if (v.read_u16()?) != 0xef00 {
             return Err(Error::InvalidMagic);
         }
-        if (reader.read_u8()?) != 1 {
+        if (v.read_u8()?) != 1 {
             return Err(Error::UnsupportedVersion);
         }
         let container = EOFContainer {
@@ -92,18 +90,18 @@ impl Decoder {
         };
         // TODO: rewrite this to be more idiomatic
         loop {
-            let section_kind = reader.read_u8()?;
+            let section_kind = v.read_u8()?;
             if section_kind == 0 {
                 break;
             }
-            let section_size = reader.read_u16()?;
+            let section_size = v.read_u16()?;
             self.headers.push(HeaderEntry {
                 kind: section_kind,
                 size: section_size,
             });
         }
         for i in 1..self.headers.len() {
-            self.contents.push(reader.read_bytes(self.headers[i].size)?);
+            self.contents.push(v.read_bytes(self.headers[i].size)?);
         }
         /*
                     if section_kind == 1 {
