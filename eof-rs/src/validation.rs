@@ -11,7 +11,7 @@ impl EOFValidator for EOFContainer {
             return Err(Error::UnsupportedVersion);
         }
 
-        if self.sections.len() == 0 {
+        if self.sections.is_empty() {
             return Err(Error::NoSections);
         }
 
@@ -40,20 +40,19 @@ impl EOFValidator for EOFContainer {
             return Err(Error::MissingCodeSection);
         }
 
-        if type_found.is_some() {
-            let code_sections: Vec<&EOFSection> = self
-                .sections
-                .iter()
-                .filter(|section| section.kind() == 1)
-                .collect();
-            let type_count = if let EOFSection::Type(ref types) = self.sections[type_found.unwrap()]
-            {
-                types.len()
+        if let Some(type_found) = type_found {
+            if let EOFSection::Type(ref types) = self.sections[type_found] {
+                let code_sections_count = self
+                    .sections
+                    .iter()
+                    .filter(|section| section.kind() == 1)
+                    .count();
+                let types_count = types.len();
+                if code_sections_count != types_count {
+                    return Err(Error::MismatchingCodeAndTypeSections);
+                }
             } else {
-                panic!()
-            };
-            if code_sections.len() != type_count {
-                return Err(Error::MismatchingCodeAndTypeSections);
+                panic!(); // In case the above logic is wrong.
             }
         }
 
