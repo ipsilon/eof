@@ -3,12 +3,8 @@ use std::fmt::{self, Display};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Types of errors that may occur during serialization/deserialization
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
-    //    IoError(std::io::Error),
-    // One or more variants that can be created by data structures through the
-    // `ser::Error` and `de::Error` traits
     Message(String),
     InvalidMagic,
     UnsupportedVersion,
