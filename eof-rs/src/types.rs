@@ -49,10 +49,6 @@ mod tests {
     fn encode_json() {
         let container = EOFContainer {
             version: 1,
-            sections: vec![EOFSection::Code(vec![00])],
-        };
-        let container = EOFContainer {
-            version: 1,
             sections: vec![
                 EOFSection::Type(vec![
                     EOFTypeSectionEntry {
