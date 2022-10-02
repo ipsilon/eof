@@ -26,16 +26,19 @@ impl ExactReader for &[u8] {
 
     fn read_bytes(&mut self, len: usize) -> std::io::Result<Vec<u8>> {
         let mut tmp = Vec::with_capacity(len);
+        unsafe { tmp.set_len(len) };
         self.read_exact(&mut tmp[..])?;
         Ok(tmp)
     }
 }
 
+#[derive(Debug)]
 struct HeaderEntry {
     pub kind: u8,
     pub size: u16,
 }
 
+#[derive(Debug)]
 struct Decoder {
     version: u8,
     headers: Vec<HeaderEntry>,
@@ -76,26 +79,45 @@ impl Decoder {
                 size: section_size,
             });
         }
-        for i in 1..self.headers.len() {
-            self.contents.push(reader.read_bytes(self.headers[i].size as usize)?);
+        for i in 0..(self.headers.len()) {
+            self.contents
+                .push(reader.read_bytes(self.headers[i].size as usize)?);
         }
-        /*
-                    if section_kind == 1 {
-                    container.sections.push(read_code_section(&mut self));
-                    } else if section_kind == 2 {
-                    container.sections.push(read_code_section(&mut self));
-                    } else if section_kind == 3 {
-                    container.sections.push(read_code_section(&mut self));
-                    } else {
-                        return Err(Error::UnsupportedSectionKind);
-                    }
-                }
-        */
+        println!("{:?}", self);
         Ok(())
     }
 
     pub fn finalize(self) -> Result<EOFContainer> {
-        unimplemented!()
+        let mut container = EOFContainer {
+            version: self.version,
+            sections: vec![],
+        };
+        // TODO: make this idiomatic
+        for i in 0..self.headers.len() {
+            let kind = self.headers[i].kind;
+            if kind == 1 {
+                container
+                    .sections
+                    .push(EOFSection::Code(self.contents[i].to_vec()));
+            } else if kind == 2 {
+                container
+                    .sections
+                    .push(EOFSection::Data(self.contents[i].to_vec()));
+            } else if kind == 3 {
+                let mut reader = &self.contents[i][..];
+                let mut tmp: Vec<EOFTypeSectionEntry> = vec![];
+                for k in 0..(reader.len() / 2) {
+                    tmp.push(EOFTypeSectionEntry {
+                        inputs: reader.read_u8()?,
+                        outputs: reader.read_u8()?,
+                    });
+                }
+                container.sections.push(EOFSection::Type(tmp));
+            } else {
+                return Err(Error::UnsupportedSectionKind);
+            }
+        }
+        Ok(container)
     }
 }
 
