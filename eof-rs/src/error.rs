@@ -9,6 +9,11 @@ pub enum Error {
     InvalidMagic,
     UnsupportedVersion,
     UnsupportedSectionKind,
+    NoSections,
+    InvalidSectionOrder,
+    DuplicateSection,
+    MismatchingCodeAndTypeSections,
+    MissingCodeSection,
 }
 
 impl ser::Error for Error {
@@ -32,6 +37,13 @@ impl Display for Error {
             InvalidMagic => write!(f, "Invalid magic"),
             UnsupportedVersion => write!(f, "Unsupporetd version"),
             UnsupportedSectionKind => write!(f, "Unsupported section kind"),
+            NoSections => write!(f, "No sections"),
+            InvalidSectionOrder => write!(f, "Invalid section order"),
+            DuplicateSection => write!(f, "Duplicate section"),
+            MismatchingCodeAndTypeSections => {
+                write!(f, "Mismatching number of Code and Type sections")
+            }
+            MissingCodeSection => write!(f, "Missing Code section"),
         }
     }
 }

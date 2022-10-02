@@ -31,6 +31,14 @@ impl EOFSection {
             EOFSection::Type(_) => 3,
         }
     }
+
+    pub(crate) fn priority(&self) -> u8 {
+        match self {
+            EOFSection::Code(_) => 2,
+            EOFSection::Data(_) => 3,
+            EOFSection::Type(_) => 1,
+        }
+    }
 }
 
 fn serialize_bytes<S, T>(x: T, s: S) -> Result<S::Ok, S::Error>
