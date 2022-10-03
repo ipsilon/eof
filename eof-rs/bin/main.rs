@@ -1,9 +1,8 @@
-
 use std::io;
 
-use std::path::PathBuf;
 use std::fs::File;
 use std::io::BufReader;
+use std::path::PathBuf;
 
 use eof_rs::*;
 
@@ -14,20 +13,26 @@ fn validate(input: Option<&String>) -> io::Result<()> {
     let reader: Result<EOFContainer, serde_json::Error> = if let Some(path) = input {
         serde_json::from_reader(BufReader::new(File::open(path)?))
     } else {
-	serde_json::from_reader(io::stdin())
+        serde_json::from_reader(io::stdin())
     };
-    println!("{:?}", reader);
-    if let Ok(container) = reader {
-        println!("{:?}", container.is_valid_eof());
-    }
+    reader
+/*
+    let container = reader?;
+
+    println!("{:?}", container);
+    //    if let Ok(container) = reader {
+    println!("{:?}", container.is_valid_eof());
+    //    }
+    //    container.is_valid_eof()?;
     Ok(())
-//    unimplemented!()
+    //    unimplemented!()
+*/
 }
 
 fn convert(input: Option<&String>, fmt: &str) -> io::Result<()> {
     println!("{}", fmt);
     let a = Vec::new();
-    eof_rs::from_slice(&a);
+    let container = eof_rs::from_slice(&a).unwrap(); // FIXME: translate error
     unimplemented!()
 }
 
@@ -51,7 +56,6 @@ fn main() -> io::Result<()> {
         let fmt = matches.get_one::<String>("fmt").expect("ensurde by clap");
         convert(matches.get_one::<String>("input"), fmt)?
     }
-
 
     Ok(())
 }
