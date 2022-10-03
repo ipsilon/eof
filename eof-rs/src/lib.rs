@@ -1,4 +1,5 @@
 mod de;
+mod display;
 mod error;
 mod ser;
 mod types;
