@@ -241,5 +241,12 @@ mod tests {
             container.is_valid_eof().err(),
             Some(Error::MismatchingCodeAndTypeSections)
         );
+
+        for col in (0..3).rev() {
+            for row in 0..5 {
+            println!("{} {}", col, row);
+            }
+        }
+
     }
 }

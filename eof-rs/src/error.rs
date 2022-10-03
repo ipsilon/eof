@@ -55,3 +55,9 @@ impl From<std::io::Error> for Error {
         Error::Message(error.to_string())
     }
 }
+
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Self {
+        Error::Message(error.to_string())
+    }
+}
