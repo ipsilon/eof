@@ -13,19 +13,21 @@ valid_opcodes = [
     *range(0x90, 0x9f + 1),
     *range(0xa0, 0xa4 + 1),
     # Note: 0xfe is considered assigned.
-    *range(0xf0, 0xf5 + 1), 0xfa, 0xfd, 0xfe, 0xff
+    0xf0, 0xf1, 0xf3, 0xf4, 0xf5, 0xfa, 0xfd, 0xfe
 ]
 
-# STOP, RETURN, REVERT, INVALID, SELFDESTRUCT
-terminating_opcodes = [ 0x00, 0xf3, 0xfd, 0xfe, 0xff ]
+# STOP, RETURN, REVERT, INVALID
+terminating_opcodes = [0x00, 0xf3, 0xfd, 0xfe]
 
 # Only for PUSH1..PUSH32
 immediate_sizes = 256 * [0]
 for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
 
+
 class ValidationException(Exception):
     pass
+
 
 # Raises ValidationException on invalid code
 def validate_code(code: bytes):
@@ -45,12 +47,13 @@ def validate_code(code: bytes):
         pos += immediate_sizes[opcode]
 
     # Ensure last opcode's immediate doesn't go over code end
-    if pos != len(code):        
+    if pos != len(code):
         raise ValidationException("truncated immediate")
 
     # opcode is the *last opcode*
     if not opcode in terminating_opcodes:
         raise ValidationException("no terminating instruction")
+
 
 def is_valid_code(code: bytes) -> bool:
     try:

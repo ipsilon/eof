@@ -9,7 +9,7 @@ def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("3000")) == True
     assert is_valid_code(bytes.fromhex("5000")) == True
     assert is_valid_code(bytes.fromhex("fe00")) == True
-    assert is_valid_code(bytes.fromhex("ff00")) == True
+    assert is_valid_code(bytes.fromhex("0000")) == True
 
 def test_push_valid_immediate():
     assert is_valid_code(b'\x60\x00\x00') == True
