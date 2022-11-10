@@ -20,11 +20,11 @@ valid_opcodes = [
     *range(0x90, 0x9f + 1),
     *range(0xa0, 0xa4 + 1),
     # Note: 0xfe is considered assigned.
-    *range(0xf0, 0xf5 + 1), *range(0xfa, 0xff + 1),
+    0xf0, 0xf1, 0xf3, 0xf4, 0xf5, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe
 ]
 
-# STOP, RETURN, RETF, REVERT, INVALID, SELFDESTRUCT
-terminating_opcodes = [ 0x00, 0xf3, 0xfc, 0xfd, 0xfe, 0xff ]
+# STOP, RETURN, REVERT, INVALID
+terminating_opcodes = [0x00, 0xf3, 0xfc, 0xfd, 0xfe]
 
 immediate_sizes = 256 * [0]
 immediate_sizes[0x5c] = 2  # RJUMP
@@ -49,7 +49,7 @@ def validate_eof(code: bytes):
     while True:
         # Terminator not found
         if pos >= len(code):
-            raise ValidationException("no section terminator")            
+            raise ValidationException("no section terminator")
 
         section_id = code[pos]
         pos += 1
@@ -66,7 +66,7 @@ def validate_eof(code: bytes):
 
         # Code section or data section preceding type section
         if section_id == S_TYPE and (len(section_sizes[S_CODE]) != 0 or len(section_sizes[S_DATA]) != 0):
-            raise ValidationException("code or data section preceding type section")            
+            raise ValidationException("code or data section preceding type section")
 
         # Multiple type or data sections
         if section_id == S_TYPE and len(section_sizes[S_TYPE]) != 0:
@@ -98,15 +98,15 @@ def validate_eof(code: bytes):
 
     # Type section, if present, has size corresponding to number of code sections
     if len(section_sizes[S_TYPE]) != 0 and section_sizes[S_TYPE][0] != len(section_sizes[S_CODE]) * 2:
-        raise ValidationException("invalid type section size")                
+        raise ValidationException("invalid type section size")
 
     # The entire container must be scanned
     if len(code) != (pos + sum(section_sizes[S_TYPE]) + sum(section_sizes[S_CODE]) + sum(section_sizes[S_DATA])):
-        raise ValidationException("container size not equal to sum of section sizes")        
+        raise ValidationException("container size not equal to sum of section sizes")
 
     # First type section, if present, has 0 inputs and 0 outputs
     if len(section_sizes[S_TYPE]) > 0 and (code[pos] != 0 or code[pos + 1] != 0):
-        raise ValidationException("invalid type of section 0")        
+        raise ValidationException("invalid type of section 0")
 
 # Validates any code
 def is_valid_eof(code: bytes) -> bool:
@@ -156,7 +156,7 @@ def validate_code_section(code: bytes, num_code_sections: int):
         pos += immediate_sizes[opcode]
 
     # Ensure last opcode's immediate doesn't go over code end
-    if pos != len(code):        
+    if pos != len(code):
         raise ValidationException("truncated immediate")
 
     # opcode is the *last opcode*

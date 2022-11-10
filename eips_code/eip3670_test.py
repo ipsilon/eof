@@ -1,15 +1,18 @@
 from eip3670 import is_valid_code, validate_code, ValidationException
 import pytest
 
+
 def is_invalid_with_error(code: bytes, error: str):
     with pytest.raises(ValidationException, match=error):
         validate_code(code)
+
 
 def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("3000")) == True
     assert is_valid_code(bytes.fromhex("5000")) == True
     assert is_valid_code(bytes.fromhex("fe00")) == True
-    assert is_valid_code(bytes.fromhex("ff00")) == True
+    assert is_valid_code(bytes.fromhex("0000")) == True
+
 
 def test_push_valid_immediate():
     assert is_valid_code(bytes.fromhex("600000")) == True
@@ -45,11 +48,13 @@ def test_push_valid_immediate():
     assert is_valid_code(b'\x7e' + b'\x00' * 31 + b'\x00') == True
     assert is_valid_code(b'\x7f' + b'\x00' * 32 + b'\x00') == True
 
+
 def test_valid_code_terminator():
     assert is_valid_code(b'\x00') == True
     assert is_valid_code(b'\xf3') == True
     assert is_valid_code(b'\xfd') == True
     assert is_valid_code(b'\xfe') == True
+
 
 def test_invalid_code():
     # Empty code
@@ -181,6 +186,15 @@ def test_invalid_code():
     is_invalid_with_error(bytes.fromhex("f900"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("fb00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("fc00"), "undefined instruction")
+
+
+def test_invalid_callcode():
+    is_invalid_with_error(bytes.fromhex("f200"), "undefined instruction")
+
+
+def test_invalid_selfdestruct():
+    is_invalid_with_error(bytes.fromhex("ff00"), "undefined instruction")
+
 
 def test_push_truncated_immediate():
     is_invalid_with_error(b'\x60', "truncated immediate")
