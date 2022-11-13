@@ -3,6 +3,7 @@ from eip3540 import ValidationException
 from eip4750 import validate_code_section, immediate_sizes
 from eip5450_table import TABLE, OP_RJUMP, OP_RJUMPI, OP_CALLF, OP_RETF
 
+
 @dataclass
 class FunctionType:
     inputs: int
@@ -26,7 +27,7 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
         pos, stack_height = worklist.pop(0)
         while True:
             # Assuming code ends with a terminating instruction due to previous validation in validate_code_section()
-            assert pos < len(code), "code is invalid" 
+            assert pos < len(code), "code is invalid"
             op = code[pos]
             info = TABLE[op]
 
@@ -39,7 +40,6 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
                     break
             else:
                 stack_heights[pos] = stack_height
-
 
             stack_height_required = info.stack_height_required
             stack_height_change = info.stack_height_change
@@ -77,8 +77,105 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
             else:
                 pos += info.immediate_size + 1
 
-
     if max_stack_height >= 1023:
         raise ValidationException("max stack above limit")
 
+    return max_stack_height
+
+
+@dataclass
+class InstrInfo:
+    changed: bool
+    stack_height: int
+
+
+def validate_function_jvm(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
+    # Collect instruction offsets.
+    instr_offsets = []
+    i = 0
+    while i < len(code):
+        instr_offsets.append(i)
+        opcode = code[i]
+        i += TABLE[opcode].immediate_size + 1
+
+    # Validate immediate data
+    for offset in instr_offsets:
+        opcode = code[offset]
+
+        imm_len = TABLE[opcode].immediate_size
+        if offset + imm_len > len(code):
+            raise ValidationException("incomplete instruction")
+
+        if opcode in (OP_RJUMP, OP_RJUMPI):
+            target_offset = int.from_bytes(code[offset + 1:offset + 3], byteorder="big", signed=True)
+            target = offset + target_offset + 3
+            if target not in instr_offsets:
+                raise ValidationException("invalid static jump")
+
+        if opcode == OP_CALLF:
+            fid = int.from_bytes(code[offset + 1:offset + 3], byteorder="big", signed=True)
+            if fid >= len(types):
+                raise ValidationException("invalid func id")
+
+    # Dataflow analysis
+    analysis = []
+    for i in range(len(code)):
+        analysis.append(InstrInfo(False, -1))
+    analysis[0] = InstrInfo(True, types[func_id].inputs)
+    while True:
+        i = -1
+        a = None
+        for ii, aa in enumerate(analysis):
+            if aa.changed:
+                i = ii
+                a = aa
+                aa.changed = False
+                break
+        if i == -1:
+            break
+
+        opcode = code[i]
+        stack_height_required = TABLE[opcode].stack_height_required
+        stack_height_change = TABLE[opcode].stack_height_change
+        if opcode == OP_CALLF:
+            fid = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+            stack_height_required = types[fid].inputs
+            stack_height_change = types[fid].outputs - stack_height_required
+
+        if a.stack_height < stack_height_required:
+            raise ValidationException("stack underflow")
+
+        successors = []
+        if opcode != OP_RJUMP and not TABLE[opcode].is_terminating:
+            next = i + TABLE[opcode].immediate_size + 1
+            if next >= len(code):
+                raise ValidationException("not terminated")
+            successors.append(next)
+
+        if opcode in (OP_RJUMP, OP_RJUMPI):
+            target_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+            target = i + target_offset + 3
+            successors.append(target)
+
+        stack_height = a.stack_height + stack_height_change
+
+        for s in successors:
+            sa = analysis[s]
+            if sa.stack_height == -1:  # visited first time
+                sa.stack_height = stack_height
+                sa.changed = True
+            else:
+                if sa.stack_height != stack_height:
+                    raise ValidationException("stack height mismatch for different paths")
+
+        if opcode == OP_RETF and stack_height != types[func_id].outputs:
+            raise ValidationException("non-empty stack on terminating instruction")
+        if opcode != OP_RETF and TABLE[opcode].is_terminating and stack_height != 0:
+            raise ValidationException("non-empty stack on terminating instruction")
+
+    max_stack_height = -1
+    for a in analysis:
+        max_stack_height = max(max_stack_height, a.stack_height)
+    if max_stack_height >= 1023:
+        raise ValidationException("max stack above limit")
     return max_stack_height

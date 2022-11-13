@@ -1,10 +1,30 @@
-from eip5450 import validate_function, FunctionType, ValidationException
+from eip5450 import validate_function, validate_function_jvm, FunctionType, ValidationException
 from eip5450_table import *
 import pytest
 
 
-def _validate_function(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]):
-    return validate_function(func_id, code, types)
+def _validate_function(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
+    ea = None
+    eb = None
+    try:
+        a = validate_function(func_id, code, types)
+    except Exception as e:
+        assert type(e) is ValidationException
+        ea = e
+    try:
+        b = validate_function_jvm(func_id, code, types)
+    except Exception as e:
+        assert type(e) is ValidationException
+        eb = e
+
+    if ea is not None:
+        assert str(eb) == str(ea)
+        raise ea
+    elif eb is not None:
+        assert str(eb) == str(ea)
+
+    assert a == b
+    return a
 
 
 def test_empty():
