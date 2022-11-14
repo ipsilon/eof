@@ -96,7 +96,7 @@ def test_invalid_eof1_container():
     is_invalid_eof_with_error(bytes.fromhex("ef0001 030004 010005 010004 00 00000001 fb00015000 600001fc"), "stack underflow")
 
     is_invalid_eof_with_error(bytes.fromhex("ef0001 010001 00 de"), "undefined instruction")
-
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb8000'), "invalid section id")  # Func index as signed
-
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00 3a'), "TODO")  # Cannot "fall off"
+    # Func index as signed
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb8000'), "invalid section id")
+    # Cannot "fall off"
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00 3a'), "no terminating instruction")

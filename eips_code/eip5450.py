@@ -30,8 +30,6 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
     while worklist:
         pos, stack_height = worklist.pop(0)
         while True:
-            # Assuming code ends with a terminating instruction due to previous validation in validate_code_section()
-            assert pos < len(code), "code is invalid"
             op = code[pos]
             info = TABLE[op]
 
@@ -80,6 +78,9 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
 
             else:
                 pos += info.immediate_size + 1
+
+            if pos >= len(code):
+                raise ValidationException("no terminating instruction")
 
     if max_stack_height >= 1023:
         raise ValidationException("max stack above limit")
@@ -155,7 +156,7 @@ def validate_function_jvm(func_id: int, code: bytes, types: list[FunctionType] =
         if opcode != OP_RJUMP and not TABLE[opcode].is_terminating:
             next = i + TABLE[opcode].immediate_size + 1
             if next >= len(code):
-                raise ValidationException("not terminated")
+                raise ValidationException("no terminating instruction")
             successors.append(next)
 
         if opcode in (OP_RJUMP, OP_RJUMPI):
