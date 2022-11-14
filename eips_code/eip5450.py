@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from eip3540 import ValidationException
-from eip4750 import validate_code_section, immediate_sizes
+from eip4750 import validate_code_section, valid_opcodes
 from eip5450_table import TABLE, OP_RJUMP, OP_RJUMPI, OP_CALLF, OP_RETF
 
 
@@ -96,6 +96,8 @@ def validate_function_jvm(func_id: int, code: bytes, types: list[FunctionType] =
     while i < len(code):
         instr_offsets.append(i)
         opcode = code[i]
+        if opcode not in valid_opcodes:
+            raise ValidationException("undefined instruction")
         i += TABLE[opcode].immediate_size + 1
 
     # Validate immediate data
