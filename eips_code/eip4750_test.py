@@ -48,7 +48,7 @@ def test_eof_type_section():
     # Valid with two code sections, 2nd code sections has 0 inputs and 1 output
     assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 6000b1')) == True
     # Valid with two code sections, 2nd code sections has 2 inputs and 0 outputs
-    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 5050b1')) == True
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000200 fe 5050b1')) == True
     # Valid with two code sections, 2nd code sections has 2 inputs and 1 output
     assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 00 00000201 fe 50b1')) == True
     # Valid with two code sections and one data section
