@@ -46,33 +46,33 @@ def test_eof_type_section():
     # Valid with one code section and explicit type section
     assert is_valid_eof(bytes.fromhex('ef0001 030002 010001 00 0000 fe')) == True
     # Valid with two code sections, 2nd code sections has 0 inputs and 1 output
-    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 6000fc')) == True
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 6000b1')) == True
     # Valid with two code sections, 2nd code sections has 2 inputs and 0 outputs
-    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 5050fc')) == True
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 5050b1')) == True
     # Valid with two code sections, 2nd code sections has 2 inputs and 1 output
-    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 00 00000201 fe 50fc')) == True
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 00 00000201 fe 50b1')) == True
     # Valid with two code sections and one data section
-    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 020004 00 00000201 fe 50fc aabbccdd')) == True
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 020004 00 00000201 fe 50b1 aabbccdd')) == True
 
     # Invalid with two code sections and no type section
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010003 00 fe 6000fc'), "no obligatory type section")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010003 00 fe 6000b1'), "no obligatory type section")
     # Invalid with two code sections, second one following data section
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010001 020004 010002 00 00000201 fe aabbccdd 50fc'), "data section preceding code section")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010001 020004 010002 00 00000201 fe aabbccdd 50b1'), "data section preceding code section")
     # Invalid with multiple type sections
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 030002 030002 010001 010002 00 0000 0201 fe 50fc'), "multiple type sections")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030002 030002 010001 010002 00 0000 0201 fe 50b1'), "multiple type sections")
     # Invalid with type section after code sections (but before data section)
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010002 030004 020004 00 fe 50fc 00000201 aabbccdd'), "code or data section preceding type section")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010002 030004 020004 00 fe 50b1 00000201 aabbccdd'), "code or data section preceding type section")
     # Invalid with type section after code sections and data section
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010002 020004 030004 00 fe 50fc aabbccdd 00000201'), "code or data section preceding type section")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 010002 020004 030004 00 fe 50b1 aabbccdd 00000201'), "code or data section preceding type section")
     # Invalid with incorrect type section size
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 030002 010001 010002 020004 00 0000 fe 50fc aabbccdd'), "invalid type section size")
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 030006 010001 010002 020004 00 000002010000 fe 50fc aabbccdd'), "invalid type section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030002 010001 010002 020004 00 0000 fe 50b1 aabbccdd'), "invalid type section size")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030006 010001 010002 020004 00 000002010000 fe 50b1 aabbccdd'), "invalid type section size")
     # Invalid with type section without code section
     is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 020004 00 00000201 aabbccdd'), "no code section")
     # Invalid with first code code sections not having 0 inputs 0 outputs
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010003 010001 020004 00 00010000 6000fc fe aabbccdd'), "invalid type of section 0")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010003 010001 020004 00 00010000 6000b1 fe aabbccdd'), "invalid type of section 0")
     is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010003 010001 020004 00 02000000 505000 fe aabbccdd'), "invalid type of section 0")
-    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010002 010001 020004 00 02010000 50fc fe aabbccdd'), "invalid type of section 0")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010002 010001 020004 00 02010000 50b1 fe aabbccdd'), "invalid type of section 0")
 
     # Valid with 1024 code sections
     assert is_valid_eof(bytes.fromhex('ef0001 030800') + b'\x01\x00\x01' * 1024 + b'\x00' + b'\x00\x00' * 1024 + b'\xfe' * 1024) == True
@@ -83,8 +83,8 @@ def test_eof_type_section():
 def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("3000")) == True
     assert is_valid_code(bytes.fromhex("5000")) == True
-    assert is_valid_code(bytes.fromhex("fb000000")) == True
-    assert is_valid_code(bytes.fromhex("fc")) == True
+    assert is_valid_code(bytes.fromhex("b0000000")) == True
+    assert is_valid_code(bytes.fromhex("b1")) == True
     assert is_valid_code(bytes.fromhex("fe00")) == True
     assert is_valid_code(bytes.fromhex("0000")) == True
 
@@ -165,25 +165,25 @@ def test_rjumpi_valid_immediate():
     assert is_valid_code(bytes.fromhex("5d000000")) == True
 
 def test_callf_valid_immediate():
-    assert is_valid_code(bytes.fromhex("fb000000")) == True
-    assert is_valid_code(bytes.fromhex("fb000100"), 2) == True
-    assert is_valid_code(bytes.fromhex("fb000000"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000100"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000200"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000300"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000400"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000500"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000600"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000700"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000800"), 10) == True
-    assert is_valid_code(bytes.fromhex("fb000900"), 10) == True
-    assert is_valid_code(bytes.fromhex("fbffff00"), 65536) == True
+    assert is_valid_code(bytes.fromhex("b0000000")) == True
+    assert is_valid_code(bytes.fromhex("b0000100"), 2) == True
+    assert is_valid_code(bytes.fromhex("b0000000"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000100"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000200"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000300"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000400"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000500"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000600"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000700"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000800"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0000900"), 10) == True
+    assert is_valid_code(bytes.fromhex("b0ffff00"), 65536) == True
 
 
 def test_valid_code_terminator():
     assert is_valid_code(b'\x00') == True
+    assert is_valid_code(b'\xb1') == True
     assert is_valid_code(b'\xf3') == True
-    assert is_valid_code(b'\xfc') == True
     assert is_valid_code(b'\xfd') == True
     assert is_valid_code(b'\xfe') == True
 
@@ -194,7 +194,7 @@ def test_invalid_code():
 
     # Valid opcode, but invalid as terminator
     is_invalid_with_error(bytes.fromhex("5b"), "no terminating instruction")
-    is_invalid_with_error(bytes.fromhex("fb0000"), "no terminating instruction")
+    is_invalid_with_error(bytes.fromhex("b00000"), "no terminating instruction")
     # Invalid opcodes
     is_invalid_with_error(bytes.fromhex("0c00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("0d00"), "undefined instruction")
@@ -243,8 +243,6 @@ def test_invalid_code():
     is_invalid_with_error(bytes.fromhex("ae00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("af00"), "undefined instruction")
 
-    is_invalid_with_error(bytes.fromhex("b000"), "undefined instruction")
-    is_invalid_with_error(bytes.fromhex("b100"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("b200"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("b300"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("b400"), "undefined instruction")
@@ -315,6 +313,8 @@ def test_invalid_code():
     is_invalid_with_error(bytes.fromhex("f700"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("f800"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("f900"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("fb00"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("fc00"), "undefined instruction")
 
 def test_push_truncated_immediate():
     is_invalid_with_error(b'\x60', "truncated immediate")
@@ -402,19 +402,19 @@ def test_rjumps_into_immediate():
     is_invalid_with_error(bytes.fromhex("60015d000360015d000000"), "relative jump destination targets immediate")
     is_invalid_with_error(bytes.fromhex("60015d000460015d000000"), "relative jump destination targets immediate")
     # RJUMP into CALLF immediate
-    is_invalid_with_error(bytes.fromhex("5c0001fb000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("5c0002fb000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c0001b0000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c0002b0000000"), "relative jump destination targets immediate")
     # RJUMPI into CALLF immediate
-    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d0001b0000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d0001b0000000"), "relative jump destination targets immediate")
 
 def test_callf_invalid_section_id():
-    is_invalid_with_error(bytes.fromhex("fb000100"), "invalid section id", 1)
-    is_invalid_with_error(bytes.fromhex("fb000200"), "invalid section id", 1)
-    is_invalid_with_error(bytes.fromhex("fb000a00"), "invalid section id", 1)
-    is_invalid_with_error(bytes.fromhex("fbffff00"), "invalid section id", 1)
-    is_invalid_with_error(bytes.fromhex("fb000a00"), "invalid section id", 10)
-    is_invalid_with_error(bytes.fromhex("fbffff00"), "invalid section id", 65535)
+    is_invalid_with_error(bytes.fromhex("b0000100"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("b0000200"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("b0000a00"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("b0ffff00"), "invalid section id", 1)
+    is_invalid_with_error(bytes.fromhex("b0000a00"), "invalid section id", 10)
+    is_invalid_with_error(bytes.fromhex("b0ffff00"), "invalid section id", 65535)
 
 def test_immediate_contains_opcode():
     # 0x5c byte which could be interpreted a RJUMP, but it's not because it's in PUSH data
@@ -432,11 +432,11 @@ def test_immediate_contains_opcode():
     assert is_valid_code(b'0x00' * 160 + bytes.fromhex("5dff6000")) == True
     # 0x60 byte which could be interpreted as PUSH, but it's not because it's in CALLF data
     # section_id = 96
-    assert is_valid_code(bytes.fromhex("fb006000"), 97) == True
+    assert is_valid_code(bytes.fromhex("b0006000"), 97) == True
 
     # 0x5c byte which could be interpreted a RJUMP, but it's not because it's in CALLF data
     # section_id = 92
-    assert is_valid_code(bytes.fromhex("fb005c0000"), 93) == True
+    assert is_valid_code(bytes.fromhex("b0005c0000"), 93) == True
     # 0x5d byte which could be interpreted a RJUMPI, but it's not because it's in CALLF data
     # section_id = 93
-    assert is_valid_code(bytes.fromhex("fb005d0000"), 94) == True
+    assert is_valid_code(bytes.fromhex("b0005d0000"), 94) == True
