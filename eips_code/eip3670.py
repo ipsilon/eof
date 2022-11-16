@@ -1,3 +1,5 @@
+from eip3540 import ValidationException
+
 # The ranges below are as specified in the Yellow Paper.
 # Note: range(s, e) excludes e, hence the +1
 valid_opcodes = [
@@ -23,11 +25,6 @@ terminating_opcodes = [0x00, 0xf3, 0xfd, 0xfe]
 immediate_sizes = 256 * [0]
 for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
-
-
-class ValidationException(Exception):
-    pass
-
 
 # Raises ValidationException on invalid code
 def validate_code(code: bytes):

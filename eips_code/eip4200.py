@@ -1,3 +1,5 @@
+from eip3540 import ValidationException
+
 # The ranges below are as specified in the Yellow Paper.
 # Note: range(s, e) excludes e, hence the +1
 valid_opcodes = [
@@ -24,9 +26,6 @@ immediate_sizes[0x5c] = 2  # RJUMP
 immediate_sizes[0x5d] = 2  # RJUMPI
 for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
-
-class ValidationException(Exception):
-    pass
 
 # Raises ValidationException on invalid code
 def validate_code(code: bytes):

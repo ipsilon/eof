@@ -1,3 +1,5 @@
+from eip3540 import ValidationException
+
 MAGIC = b'\xEF\x00'
 VERSION = 0x01
 S_TERMINATOR = 0x00
@@ -32,9 +34,6 @@ immediate_sizes[0x5d] = 2  # RJUMPI
 immediate_sizes[0xfb] = 2  # CALLF
 for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
-
-class ValidationException(Exception):
-    pass
 
 # Validate EOF code.
 # Raises ValidationException on invalid code
