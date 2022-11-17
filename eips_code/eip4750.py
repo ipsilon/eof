@@ -138,7 +138,7 @@ def validate_code_section(code: bytes, num_code_sections: int):
 
             rjumpdest = pos + 2 + offset
             if rjumpdest < 0 or rjumpdest >= len(code):
-                raise ValidationException("relative jump destination out of bounds")
+                raise ValidationException("invalid jump target")
 
             rjumpdests.add(rjumpdest)
         elif opcode == 0xfb:

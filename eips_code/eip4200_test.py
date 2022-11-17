@@ -261,24 +261,24 @@ def test_push_truncated_immediate():
 def test_rjump_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("5c"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("5c00"), "truncated relative jump offset")
-    is_invalid_with_error(bytes.fromhex("5c0000"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5c0000"), "invalid jump target")
 
 def test_rjumpi_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("60015d"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("60015d00"), "truncated relative jump offset")
-    is_invalid_with_error(bytes.fromhex("60015d0000"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015d0000"), "invalid jump target")
 
 def test_rjumps_out_of_bounds():
     # RJUMP destination out of bounds
     # offset = 1
-    is_invalid_with_error(bytes.fromhex("5c000100"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5c000100"), "invalid jump target")
     # offset = -4
-    is_invalid_with_error(bytes.fromhex("5cfffc00"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5cfffc00"), "invalid jump target")
     # RJUMPI destination out of bounds
     # offset = 1
-    is_invalid_with_error(bytes.fromhex("60015d000100"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015d000100"), "invalid jump target")
     # offset = -6
-    is_invalid_with_error(bytes.fromhex("60015dfffa00"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015dfffa00"), "invalid jump target")
 
 def test_rjumps_into_immediate():
     for n in range(1, 33):

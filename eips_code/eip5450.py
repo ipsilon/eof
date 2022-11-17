@@ -112,7 +112,7 @@ def validate_function_jvm(func_id: int, code: bytes, types: list[FunctionType] =
             target_offset = int.from_bytes(code[offset + 1:offset + 3], byteorder="big", signed=True)
             target = offset + target_offset + 3
             if target not in instr_offsets:
-                raise ValidationException("invalid static jump")
+                raise ValidationException("invalid jump target")
 
         if opcode == OP_CALLF:
             fid = int.from_bytes(code[offset + 1:offset + 3], byteorder="big", signed=True)

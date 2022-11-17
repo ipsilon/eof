@@ -84,7 +84,7 @@ def test_invalid_eof1_container():
     # EIP-3670 violation - undefined opcode
     is_invalid_eof_with_error(bytes.fromhex("ef0001 010002 00 f600"), "undefined instruction")
     # EIP-4200 violation - invalid RJUMP
-    is_invalid_eof_with_error(bytes.fromhex("ef0001 010004 00 5c00ff00"), "relative jump destination out of bounds")
+    is_invalid_eof_with_error(bytes.fromhex("ef0001 010004 00 5c00ff00"), "invalid jump target")
     # EIP-4750 violation - invalid CALLF
     is_invalid_eof_with_error(bytes.fromhex("ef0001 030004 010005 010003 00 00000001 fbffff5000 6000fc"), "invalid section id")
     # EIP-5450 violation - stack underflow
