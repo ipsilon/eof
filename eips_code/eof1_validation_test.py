@@ -17,12 +17,15 @@ def wrapped_validate_eof1(code: bytes):
         b = e
 
     assert str(b) == str(a)
-    raise a
+
+    if a is not None:
+        raise a
+
 
 def is_valid_eof(code: bytes) -> bool:
     try:
         wrapped_validate_eof1(code)
-    except:
+    except ValidationException:
         return False
     return True
 
