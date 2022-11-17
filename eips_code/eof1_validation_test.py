@@ -1,11 +1,27 @@
 import pytest
 
-from eof1_validation import validate_eof1, read_eof1_header, EOF, FunctionType, ValidationException
+from eof1_validation import validate_eof1, validate_eof1_jvm, read_eof1_header, EOF, FunctionType, ValidationException
 
+
+def wrapped_validate_eof1(code: bytes):
+    a = None
+    try:
+        validate_eof1(code)
+    except ValidationException as e:
+        a = e
+
+    b = None
+    try:
+        validate_eof1_jvm(code)
+    except ValidationException as e:
+        b = e
+
+    assert str(b) == str(a)
+    raise a
 
 def is_valid_eof(code: bytes) -> bool:
     try:
-        validate_eof1(code)
+        wrapped_validate_eof1(code)
     except:
         return False
     return True
@@ -13,7 +29,7 @@ def is_valid_eof(code: bytes) -> bool:
 
 def is_invalid_eof_with_error(code: bytes, error: str):
     with pytest.raises(ValidationException, match=error):
-        validate_eof1(code)
+        wrapped_validate_eof1(code)
 
 
 def test_read_eof1_header():
@@ -73,3 +89,5 @@ def test_invalid_eof1_container():
     is_invalid_eof_with_error(bytes.fromhex("ef0001 030004 010005 010003 00 00000001 fbffff5000 6000fc"), "invalid section id")
     # EIP-5450 violation - stack underflow
     is_invalid_eof_with_error(bytes.fromhex("ef0001 030004 010005 010004 00 00000001 fb00015000 600001fc"), "stack underflow")
+
+    is_invalid_eof_with_error(bytes.fromhex("eef0001 010001 00 de"), "stack underflow")
