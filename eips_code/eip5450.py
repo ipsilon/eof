@@ -14,7 +14,11 @@ def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [Fu
     assert types[func_id].inputs >= 0
     assert types[func_id].outputs >= 0
 
-    validate_code_section(code, len(types))
+    try:
+        validate_code_section(code, len(types))
+    except ValidationException as e:
+        if str(e) != "no terminating instruction":
+            raise e
 
     stack_heights = {}
     start_stack_height = types[func_id].inputs

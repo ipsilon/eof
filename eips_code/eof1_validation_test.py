@@ -74,6 +74,8 @@ def test_valid_eof1_container():
     assert is_valid_eof(bytes.fromhex("ef0001 030004 010001 010003 00 00000001 fe 6000fc"))
     # Type section, two code sections, data section
     assert is_valid_eof(bytes.fromhex("ef0001 030004 010001 010002 020004 00 00000201 fe 50fc aabbccdd"))
+    # Last instruction may not be terminating
+    assert is_valid_eof(bytes.fromhex('ef0001 010002 00 fc01'))
 
     # Example with 3 functions
     assert is_valid_eof(bytes.fromhex("ef0001 030006 01003b 010017 01001d 00 000001010101 "
@@ -96,3 +98,5 @@ def test_invalid_eof1_container():
     is_invalid_eof_with_error(bytes.fromhex("ef0001 010001 00 de"), "undefined instruction")
 
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb8000'), "invalid section id")  # Func index as signed
+
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00 3a'), "TODO")  # Cannot "fall off"
