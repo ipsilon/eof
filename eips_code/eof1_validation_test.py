@@ -1,5 +1,6 @@
-from eof1_validation import validate_eof1, ValidationException
 import pytest
+
+from eof1_validation import validate_eof1, read_eof1_header, EOF, FunctionType, ValidationException
 
 
 def is_valid_eof(code: bytes) -> bool:
@@ -13,6 +14,36 @@ def is_valid_eof(code: bytes) -> bool:
 def is_invalid_eof_with_error(code: bytes, error: str):
     with pytest.raises(ValidationException, match=error):
         validate_eof1(code)
+
+
+def test_read_eof1_header():
+    # Code and data section
+    assert read_eof1_header(bytes.fromhex('ef000101000102000100feaa')) \
+           == EOF([FunctionType(0, 0)], [bytes.fromhex('fe')])
+
+    # Valid with one code section and implicit type section
+    assert read_eof1_header(bytes.fromhex('ef0001 010001 00 fe')) \
+           == EOF([FunctionType(0, 0)], [bytes.fromhex('fe')])
+
+    # Valid with one code section and explicit type section
+    assert read_eof1_header(bytes.fromhex('ef0001 030002 010001 00 0000 fe')) \
+           == EOF([FunctionType(0, 0)], [bytes.fromhex('fe')])
+
+    # Valid with two code sections, 2nd code sections has 0 inputs and 1 output
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 6000fc')) \
+           == EOF([FunctionType(0, 0), FunctionType(0, 1)], [bytes.fromhex('fe'), bytes.fromhex('6000fc')])
+
+    # Valid with two code sections, 2nd code sections has 2 inputs and 0 outputs
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010003 00 00000200 fe 5050fc')) \
+           == EOF([FunctionType(0, 0), FunctionType(2, 0)], [bytes.fromhex('fe'), bytes.fromhex('5050fc')])
+
+    # Valid with two code sections, 2nd code sections has 2 inputs and 1 output
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010002 00 00000201 fe 50fc')) \
+           == EOF([FunctionType(0, 0), FunctionType(2, 1)], [bytes.fromhex('fe'), bytes.fromhex('50fc')])
+
+    # Valid with two code sections and one data section
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010002 020004 00 00000201 fe 50fc aabbccdd')) \
+           == EOF([FunctionType(0, 0), FunctionType(2, 1)], [bytes.fromhex('fe'), bytes.fromhex('50fc')])
 
 
 def test_valid_eof1_container():
