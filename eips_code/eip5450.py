@@ -115,9 +115,9 @@ def validate_function_jvm(func_id: int, code: bytes, types: list[FunctionType] =
                 raise ValidationException("invalid jump target")
 
         if opcode == OP_CALLF:
-            fid = int.from_bytes(code[offset + 1:offset + 3], byteorder="big", signed=True)
+            fid = int.from_bytes(code[offset + 1:offset + 3], byteorder="big")
             if fid >= len(types):
-                raise ValidationException("invalid func id")
+                raise ValidationException("invalid section id")
 
     # Dataflow analysis
     analysis = []
