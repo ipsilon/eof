@@ -21,17 +21,18 @@ valid_opcodes = [
     *range(0x80, 0x8f + 1),
     *range(0x90, 0x9f + 1),
     *range(0xa0, 0xa4 + 1),
+    0xb0, 0xb1,
     # Note: 0xfe is considered assigned.
-    0xf0, 0xf1, 0xf3, 0xf4, 0xf5, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe
+    0xf0, 0xf1, 0xf3, 0xf4, 0xf5, 0xfa, 0xfd, 0xfe
 ]
 
-# STOP, RETURN, REVERT, INVALID
-terminating_opcodes = [0x00, 0xf3, 0xfc, 0xfd, 0xfe]
+# STOP, RETF, RETURN, REVERT, INVALID
+terminating_opcodes = [0x00, 0xb1, 0xf3, 0xfd, 0xfe]
 
 immediate_sizes = 256 * [0]
 immediate_sizes[0x5c] = 2  # RJUMP
 immediate_sizes[0x5d] = 2  # RJUMPI
-immediate_sizes[0xfb] = 2  # CALLF
+immediate_sizes[0xb0] = 2  # CALLF
 for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
 
@@ -141,7 +142,7 @@ def validate_code_section(code: bytes, num_code_sections: int):
                 raise ValidationException("relative jump destination out of bounds")
 
             rjumpdests.add(rjumpdest)
-        elif opcode == 0xfb:
+        elif opcode == 0xb0:
             if pos + 2 > len(code):
                 raise ValidationException("truncated CALLF immediate")
             section_id = int.from_bytes(code[pos:pos+2], byteorder = "big", signed = False)
