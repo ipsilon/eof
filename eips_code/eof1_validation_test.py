@@ -1,18 +1,75 @@
-from eof1_validation import validate_eof1, ValidationException
 import pytest
+
+from eof1_validation import validate_eof1, validate_eof1_jvm, validate_eof1_2pass, read_eof1_header, EOF, FunctionType, ValidationException
+
+
+def wrapped_validate_eof1(code: bytes):
+    a = None
+    try:
+        validate_eof1(code)
+    except ValidationException as e:
+        a = e
+
+    b = None
+    try:
+        validate_eof1_jvm(code)
+    except ValidationException as e:
+        b = e
+
+    c = None
+    try:
+        validate_eof1_2pass(code)
+    except ValidationException as e:
+        c = e
+
+    assert str(b) == str(a)
+    assert str(c) == str(a)
+
+    if a is not None:
+        raise a
 
 
 def is_valid_eof(code: bytes) -> bool:
     try:
-        validate_eof1(code)
-    except:
+        wrapped_validate_eof1(code)
+    except ValidationException:
         return False
     return True
 
 
 def is_invalid_eof_with_error(code: bytes, error: str):
     with pytest.raises(ValidationException, match=error):
-        validate_eof1(code)
+        wrapped_validate_eof1(code)
+
+
+def test_read_eof1_header():
+    # Code and data section
+    assert read_eof1_header(bytes.fromhex('ef000101000102000100feaa')) \
+           == EOF([FunctionType(0, 0)], [bytes.fromhex('fe')])
+
+    # Valid with one code section and implicit type section
+    assert read_eof1_header(bytes.fromhex('ef0001 010001 00 fe')) \
+           == EOF([FunctionType(0, 0)], [bytes.fromhex('fe')])
+
+    # Valid with one code section and explicit type section
+    assert read_eof1_header(bytes.fromhex('ef0001 030002 010001 00 0000 fe')) \
+           == EOF([FunctionType(0, 0)], [bytes.fromhex('fe')])
+
+    # Valid with two code sections, 2nd code sections has 0 inputs and 1 output
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 6000fc')) \
+           == EOF([FunctionType(0, 0), FunctionType(0, 1)], [bytes.fromhex('fe'), bytes.fromhex('6000fc')])
+
+    # Valid with two code sections, 2nd code sections has 2 inputs and 0 outputs
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010003 00 00000200 fe 5050fc')) \
+           == EOF([FunctionType(0, 0), FunctionType(2, 0)], [bytes.fromhex('fe'), bytes.fromhex('5050fc')])
+
+    # Valid with two code sections, 2nd code sections has 2 inputs and 1 output
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010002 00 00000201 fe 50fc')) \
+           == EOF([FunctionType(0, 0), FunctionType(2, 1)], [bytes.fromhex('fe'), bytes.fromhex('50fc')])
+
+    # Valid with two code sections and one data section
+    assert read_eof1_header(bytes.fromhex('ef0001 030004 010001 010002 020004 00 00000201 fe 50fc aabbccdd')) \
+           == EOF([FunctionType(0, 0), FunctionType(2, 1)], [bytes.fromhex('fe'), bytes.fromhex('50fc')])
 
 
 def test_valid_eof1_container():
@@ -24,6 +81,12 @@ def test_valid_eof1_container():
     assert is_valid_eof(bytes.fromhex("ef0001 030004 010001 010003 00 00000001 fe 6000fc"))
     # Type section, two code sections, data section
     assert is_valid_eof(bytes.fromhex("ef0001 030004 010001 010002 020004 00 00000201 fe 50fc aabbccdd"))
+    # Last instruction may not be terminating
+    assert is_valid_eof(bytes.fromhex('ef0001 010002 00 fc01'))
+
+    assert is_valid_eof(bytes.fromhex('ef0001 030002 010001 00 0000 00'))
+    # Probably two jumps having the same target
+    assert is_valid_eof(bytes.fromhex('ef0001 010006 005c00005cfffd'))
 
     # Example with 3 functions
     assert is_valid_eof(bytes.fromhex("ef0001 030006 01003b 010017 01001d 00 000001010101 "
@@ -37,8 +100,23 @@ def test_invalid_eof1_container():
     # EIP-3670 violation - undefined opcode
     is_invalid_eof_with_error(bytes.fromhex("ef0001 010002 00 f600"), "undefined instruction")
     # EIP-4200 violation - invalid RJUMP
-    is_invalid_eof_with_error(bytes.fromhex("ef0001 010004 00 5c00ff00"), "relative jump destination out of bounds")
+    is_invalid_eof_with_error(bytes.fromhex("ef0001 010004 00 5c00ff00"), "invalid jump target")
     # EIP-4750 violation - invalid CALLF
     is_invalid_eof_with_error(bytes.fromhex("ef0001 030004 010005 010003 00 00000001 fbffff5000 6000fc"), "invalid section id")
     # EIP-5450 violation - stack underflow
     is_invalid_eof_with_error(bytes.fromhex("ef0001 030004 010005 010004 00 00000001 fb00015000 600001fc"), "stack underflow")
+
+    is_invalid_eof_with_error(bytes.fromhex("ef0001 010001 00 de"), "undefined instruction")
+    # Func index invalid
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb0001'), "invalid section id")
+    # Func index as signed
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb8000'), "invalid section id")
+    # Cannot "fall off"
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00 3a'), "no terminating instruction")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010002 00 5959'), "no terminating instruction")
+
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010002 00 0060'), "truncated immediate")
+
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010004 00 005cfffe'), "invalid jump target")
+    # Function inputs increase initial stack
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010001 010001 00 00000100 00 00'), "non-empty stack on terminating instruction")

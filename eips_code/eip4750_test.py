@@ -48,7 +48,7 @@ def test_eof_type_section():
     # Valid with two code sections, 2nd code sections has 0 inputs and 1 output
     assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 6000fc')) == True
     # Valid with two code sections, 2nd code sections has 2 inputs and 0 outputs
-    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000001 fe 5050fc')) == True
+    assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010003 00 00000200 fe 5050fc')) == True
     # Valid with two code sections, 2nd code sections has 2 inputs and 1 output
     assert is_valid_eof(bytes.fromhex('ef0001 030004 010001 010002 00 00000201 fe 50fc')) == True
     # Valid with two code sections and one data section
@@ -353,24 +353,24 @@ def test_push_truncated_immediate():
 def test_rjump_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("5c"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("5c00"), "truncated relative jump offset")
-    is_invalid_with_error(bytes.fromhex("5c0000"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5c0000"), "invalid jump target")
 
 def test_rjumpi_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("60015d"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("60015d00"), "truncated relative jump offset")
-    is_invalid_with_error(bytes.fromhex("60015d0000"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015d0000"), "invalid jump target")
 
 def test_rjumps_out_of_bounds():
     # RJUMP destination out of bounds
     # offset = 1
-    is_invalid_with_error(bytes.fromhex("5c000100"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5c000100"), "invalid jump target")
     # offset = -4
-    is_invalid_with_error(bytes.fromhex("5cfffc00"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("5cfffc00"), "invalid jump target")
     # RJUMPI destination out of bounds
     # offset = 1
-    is_invalid_with_error(bytes.fromhex("60015d000100"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015d000100"), "invalid jump target")
     # offset = -6
-    is_invalid_with_error(bytes.fromhex("60015dfffa00"), "relative jump destination out of bounds")
+    is_invalid_with_error(bytes.fromhex("60015dfffa00"), "invalid jump target")
 
 def test_rjumps_into_immediate():
     for n in range(1, 33):
@@ -380,33 +380,33 @@ def test_rjumps_into_immediate():
             code += [0x00] * n     # push data
             code += [0x00]         # STOP
 
-            is_invalid_with_error(code, "relative jump destination targets immediate")
+            is_invalid_with_error(code, "invalid jump target")
 
             code = [0x60, 0x01, 0x5d, 0x00, offset] # PUSH1 1 RJUMI offset
             code += [0x60 + n - 1] # PUSHn
             code += [0x00] * n     # push data
             code += [0x00]         # STOP
 
-            is_invalid_with_error(code, "relative jump destination targets immediate")
+            is_invalid_with_error(code, "invalid jump target")
 
     # RJUMP into RJUMP immediate
-    is_invalid_with_error(bytes.fromhex("5c00015c000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("5c00025c000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c00015c000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("5c00025c000000"), "invalid jump target")
     # RJUMPI into RJUMP immediate
-    is_invalid_with_error(bytes.fromhex("60015d00015c000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("60015d00025c000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d00015c000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("60015d00025c000000"), "invalid jump target")
     # RJUMP into RJUMPI immediate
-    is_invalid_with_error(bytes.fromhex("5c000360015d000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("5c000460015d000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c000360015d000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("5c000460015d000000"), "invalid jump target")
     # RJUMPI into RJUMPI immediate
-    is_invalid_with_error(bytes.fromhex("60015d000360015d000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("60015d000460015d000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d000360015d000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("60015d000460015d000000"), "invalid jump target")
     # RJUMP into CALLF immediate
-    is_invalid_with_error(bytes.fromhex("5c0001fb000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("5c0002fb000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c0001fb000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("5c0002fb000000"), "invalid jump target")
     # RJUMPI into CALLF immediate
-    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("60015d0001fb000000"), "invalid jump target")
 
 def test_callf_invalid_section_id():
     is_invalid_with_error(bytes.fromhex("fb000100"), "invalid section id", 1)
