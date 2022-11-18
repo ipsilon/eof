@@ -77,6 +77,10 @@ def test_valid_eof1_container():
     # Last instruction may not be terminating
     assert is_valid_eof(bytes.fromhex('ef0001 010002 00 fc01'))
 
+    assert is_valid_eof(bytes.fromhex('ef0001 030002 010001 00 0000 00'))
+    # Probably two jumps having the same target
+    assert is_valid_eof(bytes.fromhex('ef0001 010006 005c00005cfffd'))
+
     # Example with 3 functions
     assert is_valid_eof(bytes.fromhex("ef0001 030006 01003b 010017 01001d 00 000001010101 "
                                       "60043560e06000351c639fb890d581145d001c6320cb776181145d00065050600080fd50fb000260005260206000f350fb000160005260206000f3"
@@ -96,11 +100,16 @@ def test_invalid_eof1_container():
     is_invalid_eof_with_error(bytes.fromhex("ef0001 030004 010005 010004 00 00000001 fb00015000 600001fc"), "stack underflow")
 
     is_invalid_eof_with_error(bytes.fromhex("ef0001 010001 00 de"), "undefined instruction")
+    # Func index invalid
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb0001'), "invalid section id")
     # Func index as signed
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb8000'), "invalid section id")
     # Cannot "fall off"
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00 3a'), "no terminating instruction")
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010002 00 5959'), "no terminating instruction")
 
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010002 00 0060'), "truncated immediate")
 
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010004 00 005cfffe'), "invalid jump target")
+    # Function inputs increase initial stack
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010001 010001 00 00000100 00 00'), "non-empty stack on terminating instruction")
