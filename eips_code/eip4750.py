@@ -158,13 +158,13 @@ def validate_code_section(code: bytes, num_code_sections: int):
     if pos != len(code):
         raise ValidationException("truncated immediate")
 
+    # Ensure relative jump destinations don't target immediates
+    if not rjumpdests.isdisjoint(immediates):
+        raise ValidationException("invalid jump target")
+
     # opcode is the *last opcode*
     if not opcode in terminating_opcodes:
         raise ValidationException("no terminating instruction")
-
-    # Ensure relative jump destinations don't target immediates
-    if not rjumpdests.isdisjoint(immediates):
-        raise ValidationException("relative jump destination targets immediate")
 
 
 def is_valid_code(code: bytes, num_code_sections: int = 1) -> bool:
