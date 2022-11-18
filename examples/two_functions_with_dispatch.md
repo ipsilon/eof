@@ -74,7 +74,7 @@ return
 
 //if1_true:
 pop
-callb fac
+callf fac
 push1 0
 mstore
 push1 32
