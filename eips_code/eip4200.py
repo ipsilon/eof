@@ -70,7 +70,7 @@ def validate_code(code: bytes):
 
     # Ensure relative jump destinations don't target immediates
     if not rjumpdests.isdisjoint(immediates):
-        raise ValidationException("relative jump destination targets immediate")
+        raise ValidationException("invalid jump target")
 
 
 def is_valid_code(code: bytes) -> bool:

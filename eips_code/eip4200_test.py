@@ -288,27 +288,27 @@ def test_rjumps_into_immediate():
             code += [0x00] * n     # push data
             code += [0x00]         # STOP
 
-            is_invalid_with_error(code, "relative jump destination targets immediate")
+            is_invalid_with_error(code, "invalid jump target")
 
             code = [0x60, 0x01, 0x5d, 0x00, offset] # PUSH1 1 RJUMI offset
             code += [0x60 + n - 1] # PUSHn
             code += [0x00] * n     # push data
             code += [0x00]         # STOP
 
-            is_invalid_with_error(code, "relative jump destination targets immediate")
+            is_invalid_with_error(code, "invalid jump target")
 
     # RJUMP into RJUMP immediate
-    is_invalid_with_error(bytes.fromhex("5c00015c000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("5c00025c000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c00015c000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("5c00025c000000"), "invalid jump target")
     # RJUMPI into RJUMP immediate
-    is_invalid_with_error(bytes.fromhex("60015d00015c000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("60015d00025c000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d00015c000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("60015d00025c000000"), "invalid jump target")
     # RJUMP into RJUMPI immediate
-    is_invalid_with_error(bytes.fromhex("5c000360015d000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("5c000460015d000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5c000360015d000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("5c000460015d000000"), "invalid jump target")
     # RJUMPI into RJUMPI immediate
-    is_invalid_with_error(bytes.fromhex("60015d000360015d000000"), "relative jump destination targets immediate")
-    is_invalid_with_error(bytes.fromhex("60015d000460015d000000"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015d000360015d000000"), "invalid jump target")
+    is_invalid_with_error(bytes.fromhex("60015d000460015d000000"), "invalid jump target")
 
 def test_immediate_contains_opcode():
     # 0x5c byte which could be interpreted a RJUMP, but it's not because it's in PUSH data
