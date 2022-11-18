@@ -110,8 +110,8 @@ def validate_function_jvm(func_id: int, code: bytes, types: list[FunctionType] =
         opcode = code[offset]
 
         imm_len = TABLE[opcode].immediate_size
-        if offset + imm_len > len(code):
-            raise ValidationException("incomplete instruction")
+        if offset + imm_len >= len(code):
+            raise ValidationException("truncated immediate")
 
         if opcode in (OP_RJUMP, OP_RJUMPI):
             target_offset = int.from_bytes(code[offset + 1:offset + 3], byteorder="big", signed=True)

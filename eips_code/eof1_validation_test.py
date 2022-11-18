@@ -100,3 +100,5 @@ def test_invalid_eof1_container():
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010003 00 fb8000'), "invalid section id")
     # Cannot "fall off"
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010001 00 3a'), "no terminating instruction")
+
+    is_invalid_eof_with_error(bytes.fromhex('ef0001 010002 00 0060'), "truncated immediate")
