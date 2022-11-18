@@ -1,6 +1,6 @@
 import pytest
 
-from eof1_validation import validate_eof1, validate_eof1_jvm, read_eof1_header, EOF, FunctionType, ValidationException
+from eof1_validation import validate_eof1, validate_eof1_jvm, validate_eof1_2pass, read_eof1_header, EOF, FunctionType, ValidationException
 
 
 def wrapped_validate_eof1(code: bytes):
@@ -16,7 +16,14 @@ def wrapped_validate_eof1(code: bytes):
     except ValidationException as e:
         b = e
 
+    c = None
+    try:
+        validate_eof1_2pass(code)
+    except ValidationException as e:
+        c = e
+
     assert str(b) == str(a)
+    assert str(c) == str(a)
 
     if a is not None:
         raise a

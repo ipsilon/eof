@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from eip4750 import *
-from eip5450 import validate_function, validate_function_jvm, FunctionType
+from eip5450 import validate_function, validate_function_jvm, validate_function_2pass, FunctionType
 
 
 @dataclass
@@ -24,6 +24,13 @@ def validate_eof1_jvm(container: bytes):
     eof = read_eof1_header(container)
     for func_idx, code in enumerate(eof.codes):
         validate_function_jvm(func_idx, code, eof.types)
+
+
+def validate_eof1_2pass(container: bytes):
+    validate_eof(container)
+    eof = read_eof1_header(container)
+    for func_idx, code in enumerate(eof.codes):
+        validate_function_2pass(func_idx, code, eof.types)
 
 
 def read_eof1_header(container: bytes) -> EOF:

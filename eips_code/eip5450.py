@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from eip3540 import ValidationException
 from eip4750 import validate_code_section, valid_opcodes
 from eip5450_table import TABLE, OP_RJUMP, OP_RJUMPI, OP_CALLF, OP_RETF
@@ -8,6 +9,7 @@ from eip5450_table import TABLE, OP_RJUMP, OP_RJUMPI, OP_CALLF, OP_RETF
 class FunctionType:
     inputs: int
     outputs: int
+
 
 def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
     assert func_id >= 0
@@ -183,6 +185,96 @@ def validate_function_jvm(func_id: int, code: bytes, types: list[FunctionType] =
     max_stack_height = -1
     for a in analysis:
         max_stack_height = max(max_stack_height, a.stack_height)
+    if max_stack_height >= 1023:
+        raise ValidationException("max stack above limit")
+    return max_stack_height
+
+
+class CodeMark(Enum):
+    OTHER = 0
+    DATA = 1
+    JUMP_TARGET = 2
+
+
+def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
+    # Instructions validation.
+    code_map = [CodeMark.OTHER] * len(code)
+    i = 0
+    while i < len(code):
+        opcode = code[i]
+        if opcode not in valid_opcodes:
+            raise ValidationException("undefined instruction")
+        imm_len = TABLE[opcode].immediate_size
+        if i + imm_len >= len(code):
+            raise ValidationException("truncated immediate")
+        for j in range(imm_len):
+            if code_map[i + 1 + j] == CodeMark.JUMP_TARGET:
+                raise ValidationException("invalid jump target")
+            code_map[i + 1 + j] = CodeMark.DATA
+
+        if opcode == OP_CALLF:
+            target_func_idx = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=False)
+            if target_func_idx >= len(types):
+                raise ValidationException("invalid section id")  # FIXME: Better error message.
+        elif opcode in (OP_RJUMP, OP_RJUMPI):
+            target_relative_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+            target_relative_offset = i + 3 + target_relative_offset
+            if target_relative_offset < 0:
+                raise ValidationException("invalid jump target")
+            elif target_relative_offset >= len(code):
+                raise ValidationException("invalid jump target")
+            elif code_map[target_relative_offset] == CodeMark.DATA:
+                raise ValidationException("invalid jump target")
+            code_map[target_relative_offset] = CodeMark.JUMP_TARGET
+
+        i += 1 + imm_len
+
+    # Operand stack validation
+    stack_heights = [-1] * len(code)
+    stack_heights[0] = types[func_id].inputs
+    worklist = [0]
+    while worklist:
+        i = worklist.pop(0)
+
+        opcode = code[i]
+        stack_height_required = TABLE[opcode].stack_height_required
+        stack_height_change = TABLE[opcode].stack_height_change
+        if opcode == OP_CALLF:
+            fid = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+            stack_height_required = types[fid].inputs
+            stack_height_change = types[fid].outputs - stack_height_required
+
+        stack_height = stack_heights[i]
+        assert stack_height != -1
+        if stack_height < stack_height_required:
+            raise ValidationException("stack underflow")
+
+        successors = []
+        if opcode != OP_RJUMP and not TABLE[opcode].is_terminating:
+            next = i + TABLE[opcode].immediate_size + 1
+            if next >= len(code):
+                raise ValidationException("no terminating instruction")  # FIXME: Better error message
+            successors.append(next)
+        if opcode in (OP_RJUMP, OP_RJUMPI):
+            target_relative_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+            target_offset = i + target_relative_offset + 3
+            successors.append(target_offset)
+
+        stack_height = stack_height + stack_height_change
+
+        for s in successors:
+            if stack_heights[s] == -1:  # visited first time
+                stack_heights[s] = stack_height
+                worklist.append(s)
+            elif stack_heights[s] != stack_height:
+                raise ValidationException("stack height mismatch for different paths")
+
+        if opcode == OP_RETF and stack_height != types[func_id].outputs:
+            raise ValidationException("non-empty stack on terminating instruction")
+        if opcode != OP_RETF and TABLE[opcode].is_terminating and stack_height != 0:
+            raise ValidationException("non-empty stack on terminating instruction")
+
+    max_stack_height = max(stack_heights)
     if max_stack_height >= 1023:
         raise ValidationException("max stack above limit")
     return max_stack_height
