@@ -297,6 +297,7 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
     code_map[0] = types[func_id].inputs
 
     visited_bytes = 0
+    stack_height = None
 
     i = 0
     while True:
@@ -333,27 +334,47 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
         if TABLE[opcode].is_terminating:
             if opcode == OP_RETF and stack_height != types[func_id].outputs:
                 raise ValidationException("non-empty stack on terminating instruction")
-            if visited_bytes != len(code):
-                raise ValidationException("unreachable instructions")
-            return stack_height  # FIXME
+            break
 
-        # elif opcode in (OP_RJUMP, OP_RJUMPI):
-        #     target_relative_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
-        #     target_relative_offset = i + 3 + target_relative_offset
-        #     if target_relative_offset < 0:
-        #         raise ValidationException("invalid jump target")
-        #     elif target_relative_offset >= len(code):
-        #         raise ValidationException("invalid jump target")
-        #     elif code_map[target_relative_offset] == CodeMark.DATA:
-        #         raise ValidationException("invalid jump target")
-        #     code_map[target_relative_offset] = CodeMark.JUMP_TARGET
+        succ = None
 
-        i += 1 + imm_len
+        if opcode in (OP_RJUMP, OP_RJUMPI):
+            target_relative_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+            target_offset = i + 3 + target_relative_offset
+            if target_offset < 0:
+                raise ValidationException("invalid jump target")
+            elif target_offset >= len(code):
+                raise ValidationException("invalid jump target")
+
+            t = code_map[target_offset]
+            if t == IMM:
+                raise ValidationException("invalid jump target")
+            if t >= 0:
+                if t != stack_height:
+                    raise ValidationException("stack height mismatch for different paths")
+            else:
+                assert t == UNREACHABLE
+                code_map[target_offset] = stack_height
+
+            if opcode == OP_RJUMP:
+                if t == UNREACHABLE:
+                    succ = target_offset
+                else:
+                    break
+
+        if succ is None:
+            i += 1 + imm_len
+        else:
+            i = succ
 
         if i >= len(code):
             raise ValidationException("no terminating instruction")
 
+        assert code_map[i] == UNREACHABLE
+
         stack_height += stack_height_change
         code_map[i] = stack_height
 
-    return 0
+    if visited_bytes != len(code):
+        raise ValidationException("unreachable instructions")
+    return stack_height  # FIXME
