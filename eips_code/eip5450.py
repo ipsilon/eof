@@ -273,8 +273,8 @@ def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType]
 
         if opcode == OP_RETF and stack_height != types[func_id].outputs:
             raise ValidationException("non-empty stack on terminating instruction")
-        if opcode != OP_RETF and TABLE[opcode].is_terminating and stack_height != 0:
-            raise ValidationException("non-empty stack on terminating instruction")
+        # if opcode != OP_RETF and TABLE[opcode].is_terminating and stack_height != 0:
+        #     raise ValidationException("non-empty stack on terminating instruction")
 
     max_stack_height = max(stack_heights)
     if max_stack_height >= 1023:
