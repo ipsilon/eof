@@ -332,6 +332,7 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
             raise ValidationException("stack underflow")
 
         max_stack_height = max(max_stack_height, stack_height)
+        stack_height += stack_height_change
 
         if TABLE[opcode].is_terminating:
             if opcode == OP_RETF and stack_height != types[func_id].outputs:
@@ -372,8 +373,7 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
         if i >= len(code):
             raise ValidationException("no terminating instruction")
 
-        stack_height += stack_height_change
-        code_map[i] = stack_height
+        code_map[i] = stack_height  # FIXME: duplicate?
 
     if visited_bytes != len(code):
         assert visited_bytes < len(code)
