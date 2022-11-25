@@ -318,9 +318,11 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
         stack_height_required = TABLE[opcode].stack_height_required
         stack_height_change = TABLE[opcode].stack_height_change
         if opcode == OP_CALLF:
-            fid = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
-            stack_height_required = types[fid].inputs
-            stack_height_change = types[fid].outputs - stack_height_required
+            target_func_idx = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=False)
+            if target_func_idx >= len(types):
+                raise ValidationException("invalid section id")  # FIXME: Better error message.
+            stack_height_required = types[target_func_idx].inputs
+            stack_height_change = types[target_func_idx].outputs - stack_height_required
 
         stack_height = code_map[i]
         assert stack_height >= 0
@@ -333,11 +335,6 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
             if visited_bytes != len(code):
                 raise ValidationException("unreachable instructions")
             return stack_height  # FIXME
-
-        if opcode == OP_CALLF:
-            target_func_idx = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=False)
-            if target_func_idx >= len(types):
-                raise ValidationException("invalid section id")  # FIXME: Better error message.
 
         # elif opcode in (OP_RJUMP, OP_RJUMPI):
         #     target_relative_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
