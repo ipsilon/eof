@@ -118,7 +118,7 @@ def is_valid_eof(code: bytes) -> bool:
 # Raises ValidationException on invalid code
 def validate_code_section(code: bytes, num_code_sections: int):
     # Note that EOF1 already asserts this with the code section requirements
-    assert len(code) > 0
+    assert len(code) > 0, "code cannot be empty"
 
     opcode = 0
     pos = 0
