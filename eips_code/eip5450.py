@@ -352,25 +352,26 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
                 elif target_offset >= len(code):
                     raise ValidationException("invalid jump target")
 
-                t = code_map[target_offset]
-                if t == IMM:
-                    raise ValidationException("invalid jump target")
-                if t >= 0:
-                    if t != stack_height:
-                        raise ValidationException("stack height mismatch for different paths")
-                else:
-                    assert t == UNREACHABLE
-                    code_map[target_offset] = stack_height
-
-                if opcode == OP_RJUMP:
-                    if t == UNREACHABLE:
-                        succ = target_offset
+                if target_relative_offset != 0:  # fallthough jump
+                    t = code_map[target_offset]
+                    if t == IMM:
+                        raise ValidationException("invalid jump target")
+                    if t >= 0:
+                        if t != stack_height:
+                            raise ValidationException("stack height mismatch for different paths")
                     else:
-                        break
+                        assert t == UNREACHABLE
+                        code_map[target_offset] = stack_height
 
-                if opcode == OP_RJUMPI:
-                    if t == UNREACHABLE and target_relative_offset != 0:  # not the same as succ
-                        worklist.append(target_offset)
+                    if opcode == OP_RJUMP:
+                        if t == UNREACHABLE:
+                            succ = target_offset
+                        else:
+                            break
+
+                    if opcode == OP_RJUMPI:
+                        if t == UNREACHABLE and target_relative_offset != 0:  # not the same as succ
+                            worklist.append(target_offset)
 
             if succ is None:
                 i += 1 + imm_len
@@ -379,6 +380,11 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
 
             if i >= len(code):
                 raise ValidationException("no terminating instruction")
+
+            if code_map[i] != UNREACHABLE:
+                if code_map[i] != stack_height:
+                    raise ValidationException("stack height mismatch for different paths")
+                break
 
             code_map[i] = stack_height  # FIXME: duplicate?
 
