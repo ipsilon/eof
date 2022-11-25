@@ -1,4 +1,4 @@
-from eip5450 import validate_function, validate_function_jvm, FunctionType, ValidationException
+from eip5450 import validate_function, validate_function_jvm, FunctionType, ValidationException, validate_function_2pass, validate_function_1pass
 from eip5450_table import *
 import pytest
 
@@ -193,3 +193,24 @@ def test_stack_overflow():
     assert _validate_function(0, bytes([OP_NUMBER] * 1022 + [OP_POP] * 1022 + [OP_STOP])) == 1022
     with pytest.raises(ValidationException, match="max stack above limit"):
         _validate_function(0, bytes([OP_NUMBER] * 1023 + [OP_POP] * 1023 + [OP_STOP]))
+
+
+def _validate_1pass(code: bytes) -> int:
+    a = -1
+    try:
+        a = validate_function_2pass(0, code)
+    except ValidationException:
+        pass
+
+    b = -1
+    try:
+        b = validate_function_1pass(0, code)
+    except ValidationException:
+        pass
+
+    assert b == a
+    return a
+
+
+def test_1pass():
+    assert _validate_1pass(bytes.fromhex("")) == 0

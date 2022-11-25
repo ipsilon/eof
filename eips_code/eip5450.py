@@ -197,6 +197,8 @@ class CodeMark(Enum):
 
 
 def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
+    assert len(code) > 0, "code cannot be empty"
+
     # Instructions validation.
     code_map = [CodeMark.OTHER] * len(code)
     i = 0
@@ -278,3 +280,8 @@ def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType]
     if max_stack_height >= 1023:
         raise ValidationException("max stack above limit")
     return max_stack_height
+
+
+def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
+    assert len(code) > 0, "code cannot be empty"
+    return 0
