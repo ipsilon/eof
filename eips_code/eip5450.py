@@ -284,4 +284,64 @@ def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType]
 
 def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
     assert len(code) > 0, "code cannot be empty"
+
+    UNREACHABLE = -1
+    IMM = -2
+
+    code_map = [UNREACHABLE] * len(code)
+    code_map[0] = types[func_id].inputs
+
+    i = 0
+    while True:
+
+        if i >= len(code):
+            raise ValidationException("no terminating instruction")
+
+        opcode = code[i]
+
+        if opcode not in valid_opcodes:
+            raise ValidationException("undefined instruction")
+
+        imm_len = TABLE[opcode].immediate_size
+        if i + imm_len >= len(code):
+            raise ValidationException("truncated immediate")
+
+        for j in range(imm_len):
+            if code_map[i + 1 + j] != UNREACHABLE:
+                raise ValidationException("invalid jump target")
+            code_map[i + 1 + j] = IMM
+
+        stack_height_required = TABLE[opcode].stack_height_required
+        stack_height_change = TABLE[opcode].stack_height_change
+        if opcode == OP_CALLF:
+            fid = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+            stack_height_required = types[fid].inputs
+            stack_height_change = types[fid].outputs - stack_height_required
+
+        stack_height = code_map[i]
+        assert stack_height >= 0
+        if stack_height < stack_height_required:
+            raise ValidationException("stack underflow")
+
+        if TABLE[opcode].is_terminating:
+            return stack_height  # FIXME
+
+        if opcode == OP_CALLF:
+            target_func_idx = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=False)
+            if target_func_idx >= len(types):
+                raise ValidationException("invalid section id")  # FIXME: Better error message.
+
+        # elif opcode in (OP_RJUMP, OP_RJUMPI):
+        #     target_relative_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
+        #     target_relative_offset = i + 3 + target_relative_offset
+        #     if target_relative_offset < 0:
+        #         raise ValidationException("invalid jump target")
+        #     elif target_relative_offset >= len(code):
+        #         raise ValidationException("invalid jump target")
+        #     elif code_map[target_relative_offset] == CodeMark.DATA:
+        #         raise ValidationException("invalid jump target")
+        #     code_map[target_relative_offset] = CodeMark.JUMP_TARGET
+
+        i += 1 + imm_len
+
     return 0

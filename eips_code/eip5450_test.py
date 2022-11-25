@@ -208,9 +208,12 @@ def _validate_1pass(code: bytes) -> int:
     except ValidationException:
         pass
 
-    assert b == a
+    assert b == a, "validation mismatch"
     return a
 
 
 def test_1pass():
-    assert _validate_1pass(bytes.fromhex("")) == 0
+    assert _validate_1pass(bytes.fromhex("50")) == -1
+
+    assert _validate_1pass(bytes.fromhex("00")) == 0
+    assert _validate_1pass(bytes.fromhex("fb")) == -1
