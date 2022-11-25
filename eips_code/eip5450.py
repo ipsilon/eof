@@ -280,8 +280,9 @@ def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType]
     if max_stack_height >= 1023:
         raise ValidationException("max stack above limit")
 
-    if -1 in stack_heights:
-        raise ValidationException("unreachable instructions")
+    for j in range(len(code)):
+        if stack_heights[j] == -1 and code_map[j] != CodeMark.DATA:
+            raise ValidationException("unreachable instructions")
 
     return max_stack_height
 
