@@ -290,13 +290,12 @@ def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType]
 def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
     assert len(code) > 0, "code cannot be empty"
 
-    UNREACHABLE = -1
-    IMM = -2
+    IMM = -1
 
-    code_map = [UNREACHABLE] * len(code)
+    visited = [False] * len(code)
+    code_map = [-2] * len(code)
     code_map[0] = types[func_id].inputs
 
-    visited_bytes = 0
     max_stack_height = 0
 
     worklist = [0]
@@ -304,8 +303,11 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
         i = worklist.pop(0)
 
         while True:
+            if visited[i]:
+                break
+            visited[i] = True
+
             opcode = code[i]
-            visited_bytes += 1
 
             if opcode not in valid_opcodes:
                 raise ValidationException("undefined instruction")
@@ -315,10 +317,10 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
                 raise ValidationException("truncated immediate")
 
             for j in range(imm_len):
-                if code_map[i + 1 + j] != UNREACHABLE:
+                if code_map[i + 1 + j] != -2:
                     raise ValidationException("invalid jump target")
                 code_map[i + 1 + j] = IMM
-                visited_bytes += 1
+                visited[i + 1 + j] = True
 
             stack_height_required = TABLE[opcode].stack_height_required
             stack_height_change = TABLE[opcode].stack_height_change
@@ -360,17 +362,17 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
                         if t != stack_height:
                             raise ValidationException("stack height mismatch for different paths")
                     else:
-                        assert t == UNREACHABLE
+                        assert not visited[target_offset]
                         code_map[target_offset] = stack_height
 
                     if opcode == OP_RJUMP:
-                        if t == UNREACHABLE:
+                        if not visited[target_offset]:
                             succ = target_offset
                         else:
                             break
 
                     if opcode == OP_RJUMPI:
-                        if t == UNREACHABLE and target_relative_offset != 0:  # not the same as succ
+                        if not visited[target_offset] and target_relative_offset != 0:  # not the same as succ
                             worklist.append(target_offset)
 
             if succ is None:
@@ -381,14 +383,12 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
             if i >= len(code):
                 raise ValidationException("no terminating instruction")
 
-            if code_map[i] != UNREACHABLE:
+            if code_map[i] >= 0:
                 if code_map[i] != stack_height:
                     raise ValidationException("stack height mismatch for different paths")
-                break
+            else:
+                code_map[i] = stack_height  # FIXME: duplicate?
 
-            code_map[i] = stack_height  # FIXME: duplicate?
-
-    if visited_bytes != len(code):
-        assert visited_bytes < len(code)
+    if sum(visited) != len(code):
         raise ValidationException("unreachable instructions")
     return max_stack_height
