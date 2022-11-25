@@ -13,24 +13,17 @@ def TestOneInput(data):
 
     a = -1
     try:
-        a = eip5450.validate_function(0, data)
+        a = eip5450.validate_function_2pass(0, data)
     except eip5450.ValidationException:
         pass
 
     b = -1
     try:
-        b = eip5450.validate_function_jvm(0, data)
+        b = eip5450.validate_function_1pass(0, data)
     except eip5450.ValidationException:
         pass
 
-    c = -1
-    try:
-        c = eip5450.validate_function_2pass(0, data)
-    except eip5450.ValidationException:
-        pass
-
-    assert b == a
-    assert c == a
+    assert b == a, "mismatched results"
 
 
 atheris.Setup(sys.argv, TestOneInput)
