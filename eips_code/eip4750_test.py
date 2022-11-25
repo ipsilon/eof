@@ -87,6 +87,7 @@ def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("b1")) == True
     assert is_valid_code(bytes.fromhex("fe00")) == True
     assert is_valid_code(bytes.fromhex("0000")) == True
+    assert is_valid_code(bytes.fromhex("5b00")) == True
 
 def test_push_valid_immediate():
     assert is_valid_code(b'\x60\x00\x00') == True
@@ -228,6 +229,8 @@ def test_invalid_code():
     is_invalid_with_error(bytes.fromhex("4e00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("4f00"), "undefined instruction")
 
+    is_invalid_with_error(bytes.fromhex("5600"), "undefined instruction")
+    is_invalid_with_error(bytes.fromhex("5700"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("5e00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("5f00"), "undefined instruction")
 
