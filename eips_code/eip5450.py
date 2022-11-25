@@ -279,6 +279,10 @@ def validate_function_2pass(func_id: int, code: bytes, types: list[FunctionType]
     max_stack_height = max(stack_heights)
     if max_stack_height >= 1023:
         raise ValidationException("max stack above limit")
+
+    if -1 in stack_heights:
+        raise ValidationException("unreachable instructions")
+
     return max_stack_height
 
 
@@ -291,9 +295,12 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
     code_map = [UNREACHABLE] * len(code)
     code_map[0] = types[func_id].inputs
 
+    visited_bytes = 0
+
     i = 0
     while True:
         opcode = code[i]
+        visited_bytes += 1
 
         if opcode not in valid_opcodes:
             raise ValidationException("undefined instruction")
@@ -306,6 +313,7 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
             if code_map[i + 1 + j] != UNREACHABLE:
                 raise ValidationException("invalid jump target")
             code_map[i + 1 + j] = IMM
+            visited_bytes += 1
 
         stack_height_required = TABLE[opcode].stack_height_required
         stack_height_change = TABLE[opcode].stack_height_change
@@ -322,6 +330,8 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
         if TABLE[opcode].is_terminating:
             if opcode == OP_RETF and stack_height != types[func_id].outputs:
                 raise ValidationException("non-empty stack on terminating instruction")
+            if visited_bytes != len(code):
+                raise ValidationException("unreachable instructions")
             return stack_height  # FIXME
 
         if opcode == OP_CALLF:
