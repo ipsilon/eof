@@ -320,6 +320,8 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
             raise ValidationException("stack underflow")
 
         if TABLE[opcode].is_terminating:
+            if opcode == OP_RETF and stack_height != types[func_id].outputs:
+                raise ValidationException("non-empty stack on terminating instruction")
             return stack_height  # FIXME
 
         if opcode == OP_CALLF:
