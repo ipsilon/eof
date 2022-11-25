@@ -374,11 +374,10 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
 
             if succ is None:
                 i += 1 + imm_len
+                if i >= len(code):
+                    raise ValidationException("no terminating instruction")
             else:
                 i = succ
-
-            if i >= len(code):
-                raise ValidationException("no terminating instruction")
 
             if code_map[i] >= 0:
                 if code_map[i] != stack_height:
