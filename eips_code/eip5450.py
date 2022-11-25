@@ -293,10 +293,6 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
 
     i = 0
     while True:
-
-        if i >= len(code):
-            raise ValidationException("no terminating instruction")
-
         opcode = code[i]
 
         if opcode not in valid_opcodes:
@@ -343,5 +339,11 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
         #     code_map[target_relative_offset] = CodeMark.JUMP_TARGET
 
         i += 1 + imm_len
+
+        if i >= len(code):
+            raise ValidationException("no terminating instruction")
+
+        stack_height += stack_height_change
+        code_map[i] = stack_height
 
     return 0
