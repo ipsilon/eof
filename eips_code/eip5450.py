@@ -293,7 +293,7 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
     IMM = -1
 
     visited = [False] * len(code)
-    code_map = [-2] * len(code)
+    code_map = [IMM] * len(code)
     code_map[0] = types[func_id].inputs
 
     max_stack_height = 0
@@ -317,9 +317,8 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
                 raise ValidationException("truncated immediate")
 
             for j in range(imm_len):
-                if code_map[i + 1 + j] != -2:
+                if code_map[i + 1 + j] >= 0:
                     raise ValidationException("invalid jump target")
-                code_map[i + 1 + j] = IMM
                 visited[i + 1 + j] = True
 
             stack_height_required = TABLE[opcode].stack_height_required
@@ -349,14 +348,12 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
             if opcode in (OP_RJUMP, OP_RJUMPI):
                 target_relative_offset = int.from_bytes(code[i + 1:i + 3], byteorder="big", signed=True)
                 target_offset = i + 3 + target_relative_offset
-                if target_offset < 0:
-                    raise ValidationException("invalid jump target")
-                elif target_offset >= len(code):
+                if not 0 <= target_offset < len(code):
                     raise ValidationException("invalid jump target")
 
                 if target_relative_offset != 0:  # fallthough jump
                     t = code_map[target_offset]
-                    if t == IMM:
+                    if visited[target_offset] and t == IMM:
                         raise ValidationException("invalid jump target")
                     if t >= 0:
                         if t != stack_height:

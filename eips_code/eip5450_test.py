@@ -213,6 +213,7 @@ def _validate_1pass(code: bytes) -> int:
 
 
 def test_1pass():
+    assert _validate_1pass(bytes.fromhex("5cffff")) == -1
     assert _validate_1pass(bytes.fromhex("5c00035c00005cfffa")) == 0
     assert _validate_1pass(bytes.fromhex("595d000000")) == 1
     assert _validate_1pass(bytes.fromhex("595d00015900")) == -1
