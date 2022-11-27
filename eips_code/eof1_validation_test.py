@@ -120,3 +120,5 @@ def test_invalid_eof1_container():
     is_invalid_eof_with_error(bytes.fromhex('ef0001 010004 00 005cfffe'), "invalid jump target")
     # Function inputs increase initial stack
     is_invalid_eof_with_error(bytes.fromhex('ef0001 030004 010001 010001 00 00000100 00 00'), "non-empty stack on terminating instruction")
+
+# TODO: Add stack overflow test case using CALLF (it can have arbitrary number of outputs).

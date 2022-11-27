@@ -387,4 +387,6 @@ def validate_function_1pass(func_id: int, code: bytes, types: list[FunctionType]
 
     if sum(visited) != len(code):
         raise ValidationException("unreachable instructions")
+    if max_stack_height >= 1023:
+        raise ValidationException("stack overflow")
     return max_stack_height
