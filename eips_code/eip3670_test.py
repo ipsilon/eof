@@ -7,6 +7,12 @@ def is_invalid_with_error(code: bytes, error: str):
         validate_instructions(code)
 
 
+def test_immediate_sizes_definition():
+    assert len(immediate_sizes) == 256
+    assert immediate_sizes[0x60] == 1
+    assert immediate_sizes[0x7f] == 32
+
+
 def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("3000")) == True
     assert is_valid_code(bytes.fromhex("5000")) == True
@@ -57,8 +63,8 @@ def test_valid_code_terminator():
 
 
 def test_no_terminating_instruction():
-    # Valid opcode, but invalid as terminator
-    is_invalid_with_error(bytes.fromhex("5b"), "no terminating instruction")
+    # Code does not need to finish with terminator anymore
+    assert is_valid_code(bytes.fromhex("5b"))
 
 
 def test_undefined_instructions():
