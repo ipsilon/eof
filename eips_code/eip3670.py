@@ -27,7 +27,7 @@ for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
 
 # Raises ValidationException on invalid code
-def validate_code(code: bytes):
+def validate_instructions(code: bytes):
     # Note that EOF1 already asserts this with the code section requirements
     assert len(code) > 0
 
@@ -54,7 +54,7 @@ def validate_code(code: bytes):
 
 def is_valid_code(code: bytes) -> bool:
     try:
-        validate_code(code)
+        validate_instructions(code)
         return True
-    except:
+    except ValidationException:
         return False

@@ -1,10 +1,10 @@
-from eip3670 import is_valid_code, validate_code, ValidationException
+from eip3670 import *
 import pytest
 
 
 def is_invalid_with_error(code: bytes, error: str):
     with pytest.raises(ValidationException, match=error):
-        validate_code(code)
+        validate_instructions(code)
 
 
 def test_valid_opcodes():
@@ -56,12 +56,12 @@ def test_valid_code_terminator():
     assert is_valid_code(b'\xfe') == True
 
 
-def test_invalid_code():
-    # Empty code
-    assert is_valid_code(b'') == False
-
+def test_no_terminating_instruction():
     # Valid opcode, but invalid as terminator
     is_invalid_with_error(bytes.fromhex("5b"), "no terminating instruction")
+
+
+def test_undefined_instructions():
     # Invalid opcodes
     is_invalid_with_error(bytes.fromhex("0c00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("0d00"), "undefined instruction")
