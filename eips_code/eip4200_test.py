@@ -134,7 +134,6 @@ def test_invalid_code():
     is_invalid_with_error(bytes.fromhex("4e00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("4f00"), "undefined instruction")
 
-    is_invalid_with_error(bytes.fromhex("5e00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("5f00"), "undefined instruction")
 
     is_invalid_with_error(bytes.fromhex("a500"), "undefined instruction")

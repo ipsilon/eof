@@ -8,7 +8,7 @@ valid_opcodes = [
     0x20,
     *range(0x30, 0x3f + 1),
     *range(0x40, 0x48 + 1),
-    *range(0x50, 0x5d + 1),
+    *range(0x50, 0x5e + 1),
     *range(0x60, 0x6f + 1),
     *range(0x70, 0x7f + 1),
     *range(0x80, 0x8f + 1),
@@ -43,21 +43,40 @@ def validate_code(code: bytes):
         if not opcode in valid_opcodes:
             raise ValidationException("undefined instruction")
 
+        pc_post_instruction = pos + immediate_sizes[opcode]
+
         if opcode == 0x5c or opcode == 0x5d:
             if pos + 2 > len(code):
                 raise ValidationException("truncated relative jump offset")
             offset = int.from_bytes(code[pos:pos+2], byteorder = "big", signed = True)
 
-            rjumpdest = pos + 2 + offset
+            rjumpdest = pc_post_instruction + offset
             if rjumpdest < 0 or rjumpdest >= len(code):
                 raise ValidationException("relative jump destination out of bounds")
 
             rjumpdests.add(rjumpdest)
+        elif opcode == 0x5e:
+            if pos + 1 > len(code):
+                raise ValidationException("truncated jump table")
+            jump_table_size = code[pos+1] + 1
+
+            pc_post_instruction = pos + 1 + 2 * jump_table_size
+            if pc_post_instruction > len(code):
+                raise ValidationException("truncated jump table")
+            
+            for offset_pos in range(pos + 1, pc_post_instruction, 2):
+                offset = int.from_bytes(code[offset_pos:offset_pos+2], byteorder = "big", signed = True)
+
+                rjumpdest = pc_post_instruction + offset
+                if rjumpdest < 0 or rjumpdest >= len(code):
+                    raise ValidationException("relative jump destination out of bounds")
+                rjumpdests.add(rjumpdest)
+
 
         # Save immediate value positions
-        immediates.update(range(pos, pos + immediate_sizes[opcode]))
+        immediates.update(range(pos, pc_post_instruction))
         # Skip immediates
-        pos += immediate_sizes[opcode]
+        pos = pc_post_instruction
 
     # Ensure last opcode's immediate doesn't go over code end
     if pos != len(code):        
