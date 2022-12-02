@@ -58,7 +58,7 @@ def validate_code(code: bytes):
         elif opcode == 0x5e:
             if pos + 1 > len(code):
                 raise ValidationException("truncated jump table")
-            jump_table_size = code[pos+1]
+            jump_table_size = code[pos]
             if jump_table_size == 0:
                 raise ValidationException("empty jump table")                
 
