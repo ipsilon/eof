@@ -76,9 +76,9 @@ def test_rjumpi_valid_immediate():
     # offset = 4
     assert is_valid_code(bytes.fromhex("60015d00010000000000")) == True
     # offset = 256
-    assert is_valid_code(bytes.fromhex("60015d0100") + b'\x00' * 256 + b'\x00') == True
+    assert is_valid_code(bytes.fromhex("60015d0100") + b'\x5b' * 256 + b'\x00') == True
     # offset = 32767
-    assert is_valid_code(bytes.fromhex("60015d7fff") + b'\x00' * 32767 + b'\x00') == True
+    assert is_valid_code(bytes.fromhex("60015d7fff") + b'\x5b' * 32767 + b'\x00') == True
     # offset = -3
     assert is_valid_code(bytes.fromhex("60015dfffd0000")) == True
     # offset = -5
