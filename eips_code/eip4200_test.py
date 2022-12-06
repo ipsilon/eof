@@ -66,7 +66,7 @@ def test_rjump_valid_immediate():
     # offset = -256
     assert is_valid_code(b'\x00' * 253 + bytes.fromhex("5cff0000")) == True
     # offset = -32768
-    assert is_valid_code(b'\x00' * 32765 + bytes.fromhex("5c800100")) == True
+    assert is_valid_code(b'\x00' * 32765 + bytes.fromhex("5c800000")) == True
 
 def test_rjumpi_valid_immediate():
     # offset = 0
@@ -86,7 +86,7 @@ def test_rjumpi_valid_immediate():
     # offset = -256
     assert is_valid_code(b'\x00' * 252 + bytes.fromhex("60015dff0000")) == True
     # offset = -32768
-    assert is_valid_code(b'\x00' * 32763 + bytes.fromhex("60015d800100")) == True
+    assert is_valid_code(b'\x00' * 32763 + bytes.fromhex("60015d800000")) == True
     # RJUMP without PUSH before - still valid
     assert is_valid_code(bytes.fromhex("5d000000")) == True
 
