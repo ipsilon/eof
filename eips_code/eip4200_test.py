@@ -338,7 +338,10 @@ def test_rjumps_into_immediate():
             code += [0x00]         # STOP
 
             is_invalid_with_error(code, "relative jump destination targets immediate")
+
     # RJUMP into RJUMP immediate
+    is_invalid_with_error(bytes.fromhex("5cffff00"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("5cfffe00"), "relative jump destination targets immediate")
     is_invalid_with_error(bytes.fromhex("5c00015c000000"), "relative jump destination targets immediate")
     is_invalid_with_error(bytes.fromhex("5c00025c000000"), "relative jump destination targets immediate")
     # RJUMPI into RJUMP immediate
@@ -352,6 +355,8 @@ def test_rjumps_into_immediate():
     is_invalid_with_error(bytes.fromhex("5c000360015d000000"), "relative jump destination targets immediate")
     is_invalid_with_error(bytes.fromhex("5c000460015d000000"), "relative jump destination targets immediate")
     # RJUMPI into RJUMPI immediate
+    is_invalid_with_error(bytes.fromhex("60015dffff00"), "relative jump destination targets immediate")
+    is_invalid_with_error(bytes.fromhex("60015dfffe00"), "relative jump destination targets immediate")
     is_invalid_with_error(bytes.fromhex("60015d000360015d000000"), "relative jump destination targets immediate")
     is_invalid_with_error(bytes.fromhex("60015d000460015d000000"), "relative jump destination targets immediate")
     # RJUMPV into RJUMPI immediate
