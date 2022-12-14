@@ -1,9 +1,11 @@
 from eip4200 import is_valid_code, validate_code, ValidationException
 import pytest
 
+
 def is_invalid_with_error(code: bytes, error: str):
     with pytest.raises(ValidationException, match=error):
         validate_code(code)
+
 
 def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("3000")) == True
@@ -13,6 +15,7 @@ def test_valid_opcodes():
     assert is_valid_code(bytes.fromhex("60005e01000000")) == True
     assert is_valid_code(bytes.fromhex("fe00")) == True
     assert is_valid_code(bytes.fromhex("0000")) == True
+
 
 def test_push_valid_immediate():
     assert is_valid_code(b'\x60\x00\x00') == True
@@ -48,6 +51,7 @@ def test_push_valid_immediate():
     assert is_valid_code(b'\x7e' + b'\x00' * 31 + b'\x00') == True
     assert is_valid_code(b'\x7f' + b'\x00' * 32 + b'\x00') == True
 
+
 def test_rjump_valid_immediate():
     # offset = 0
     assert is_valid_code(bytes.fromhex("5c000000")) == True
@@ -67,6 +71,7 @@ def test_rjump_valid_immediate():
     assert is_valid_code(b'\x00' * 253 + bytes.fromhex("5cff0000")) == True
     # offset = -32768
     assert is_valid_code(b'\x00' * 32765 + bytes.fromhex("5c800000")) == True
+
 
 def test_rjumpi_valid_immediate():
     # offset = 0
@@ -90,6 +95,7 @@ def test_rjumpi_valid_immediate():
     # RJUMP without PUSH before - still valid
     assert is_valid_code(bytes.fromhex("5d000000")) == True
 
+
 def test_rjumptable_valid_immediate():
     # offset1 = 0
     assert is_valid_code(bytes.fromhex("60015e01000000")) == True
@@ -108,6 +114,7 @@ def test_rjumptable_valid_immediate():
     # RJUMPV without PUSH before - still valid
     assert is_valid_code(bytes.fromhex("5e01000000")) == True
 
+
 def test_valid_code_terminator():
     assert is_valid_code(b'\x00') == True
     assert is_valid_code(b'\xf3') == True
@@ -120,10 +127,14 @@ def test_invalid_code():
     assert is_valid_code(b'') == False
 
     # Valid opcode, but invalid as terminator
-    is_invalid_with_error(bytes.fromhex("5b"), "no terminating instruction")
-    is_invalid_with_error(bytes.fromhex("5cfffd"), "no terminating instruction")
-    is_invalid_with_error(bytes.fromhex("60005dfffd"), "no terminating instruction")
-    is_invalid_with_error(bytes.fromhex("60005e01fffc"), "no terminating instruction")
+    assert is_valid_code(bytes.fromhex("5b"))  # TODO
+    assert is_valid_code(bytes.fromhex("5cfffd"))
+    assert is_valid_code(bytes.fromhex("60005dfffd"))
+    assert is_valid_code(bytes.fromhex("60005e01fffc"))
+
+    # Trunc imm
+    is_invalid_with_error(bytes.fromhex("61ff"), "truncated immediate")
+
     # Invalid opcodes
     is_invalid_with_error(bytes.fromhex("0c00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("0d00"), "undefined instruction")
@@ -246,6 +257,7 @@ def test_invalid_code():
     is_invalid_with_error(bytes.fromhex("fb00"), "undefined instruction")
     is_invalid_with_error(bytes.fromhex("fc00"), "undefined instruction")
 
+
 def test_push_truncated_immediate():
     is_invalid_with_error(b'\x60', "truncated immediate")
     is_invalid_with_error(b'\x61' + b'\x00' * 1, "truncated immediate")
@@ -280,15 +292,18 @@ def test_push_truncated_immediate():
     is_invalid_with_error(b'\x7e' + b'\x00' * 30, "truncated immediate")
     is_invalid_with_error(b'\x7f' + b'\x00' * 31, "truncated immediate")
 
+
 def test_rjump_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("5c"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("5c00"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("5c0000"), "relative jump destination out of bounds")
 
+
 def test_rjumpi_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("60015d"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("60015d00"), "truncated relative jump offset")
     is_invalid_with_error(bytes.fromhex("60015d0000"), "relative jump destination out of bounds")
+
 
 def test_rjumpv_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("60015e"), "truncated jump table")
@@ -297,6 +312,7 @@ def test_rjumpv_truncated_immediate():
     is_invalid_with_error(bytes.fromhex("60015e030000"), "truncated jump table")
     is_invalid_with_error(bytes.fromhex("60015e0300000001"), "truncated jump table")
     is_invalid_with_error(bytes.fromhex("60015e030000000100"), "truncated jump table")
+
 
 def test_rjumps_out_of_bounds():
     # RJUMP destination out of bounds
@@ -315,27 +331,28 @@ def test_rjumps_out_of_bounds():
     # offset = -7
     is_invalid_with_error(bytes.fromhex("60015e01fff900"), "relative jump destination out of bounds")
 
+
 def test_rjumps_into_immediate():
     for n in range(1, 33):
         for offset in range(1, n + 1):
-            code = [0x5c, 0x00, offset] # RJUMP offset
-            code += [0x60 + n - 1] # PUSHn
-            code += [0x00] * n     # push data
-            code += [0x00]         # STOP
+            code = [0x5c, 0x00, offset]  # RJUMP offset
+            code += [0x60 + n - 1]  # PUSHn
+            code += [0x00] * n  # push data
+            code += [0x00]  # STOP
 
             is_invalid_with_error(code, "relative jump destination targets immediate")
 
-            code = [0x60, 0x01, 0x5d, 0x00, offset] # PUSH1 1 RJUMI offset
-            code += [0x60 + n - 1] # PUSHn
-            code += [0x00] * n     # push data
-            code += [0x00]         # STOP
+            code = [0x60, 0x01, 0x5d, 0x00, offset]  # PUSH1 1 RJUMI offset
+            code += [0x60 + n - 1]  # PUSHn
+            code += [0x00] * n  # push data
+            code += [0x00]  # STOP
 
             is_invalid_with_error(code, "relative jump destination targets immediate")
 
-            code = [0x60, 0x01, 0x5e, 0x01, 0x00, offset] # PUSH1 1 RJUMV size offset
-            code += [0x60 + n - 1] # PUSHn
-            code += [0x00] * n     # push data
-            code += [0x00]         # STOP
+            code = [0x60, 0x01, 0x5e, 0x01, 0x00, offset]  # PUSH1 1 RJUMV size offset
+            code += [0x60 + n - 1]  # PUSHn
+            code += [0x00] * n  # push data
+            code += [0x00]  # STOP
 
             is_invalid_with_error(code, "relative jump destination targets immediate")
 
@@ -384,8 +401,10 @@ def test_rjumps_into_immediate():
     is_invalid_with_error(bytes.fromhex("60015e0100045e020000fff400"), "relative jump destination targets immediate")
     is_invalid_with_error(bytes.fromhex("60015e0100055e020000fff400"), "relative jump destination targets immediate")
 
+
 def test_rjumpv_empty_table():
     is_invalid_with_error(bytes.fromhex("60015e0000"), "empty jump table")
+
 
 def test_immediate_contains_opcode():
     # 0x5c byte which could be interpreted a RJUMP, but it's not because it's in PUSH data
