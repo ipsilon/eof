@@ -7,9 +7,6 @@ OP_RJUMPV = 0x5e
 
 valid_opcodes = eip3670.valid_opcodes.copy() + [OP_RJUMP, OP_RJUMPI, OP_RJUMPV]
 
-# STOP, RETURN, REVERT, INVALID
-terminating_opcodes = [0x00, 0xf3, 0xfd, 0xfe]
-
 immediate_sizes = eip3670.immediate_sizes.copy()
 immediate_sizes[OP_RJUMP] = 2
 immediate_sizes[OP_RJUMPI] = 2
@@ -20,7 +17,6 @@ def validate_code(code: bytes):
     # Note that EOF1 already asserts this with the code section requirements
     assert len(code) > 0
 
-    opcode = 0
     pos = 0
     rjumpdests = set()
     immediates = set()
@@ -67,13 +63,9 @@ def validate_code(code: bytes):
         # Skip immediates
         pos = pc_post_instruction
 
-    # Ensure last opcode's immediate doesn't go over code end
+    # Ensure last instruction's immediate doesn't go over code end
     if pos != len(code):
         raise ValidationException("truncated immediate")
-
-    # opcode is the *last opcode*
-    if not opcode in terminating_opcodes:
-        raise ValidationException("no terminating instruction")
 
     # Ensure relative jump destinations don't target immediates
     if not rjumpdests.isdisjoint(immediates):
