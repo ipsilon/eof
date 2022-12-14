@@ -1,31 +1,19 @@
 from eip3540 import ValidationException
+import eip3670
 
-# The ranges below are as specified in the Yellow Paper.
-# Note: range(s, e) excludes e, hence the +1
-valid_opcodes = [
-    *range(0x00, 0x0b + 1),
-    *range(0x10, 0x1d + 1),
-    0x20,
-    *range(0x30, 0x3f + 1),
-    *range(0x40, 0x48 + 1),
-    *range(0x50, 0x5e + 1),
-    *range(0x60, 0x6f + 1),
-    *range(0x70, 0x7f + 1),
-    *range(0x80, 0x8f + 1),
-    *range(0x90, 0x9f + 1),
-    *range(0xa0, 0xa4 + 1),
-    # Note: 0xfe is considered assigned.
-    0xf0, 0xf1, 0xf3, 0xf4, 0xf5, 0xfa, 0xfd, 0xfe
-]
+OP_RJUMP = 0x5c
+OP_RJUMPI = 0x5d
+OP_RJUMPV = 0x5e
+
+valid_opcodes = eip3670.valid_opcodes.copy() + [OP_RJUMP, OP_RJUMPI, OP_RJUMPV]
 
 # STOP, RETURN, REVERT, INVALID
 terminating_opcodes = [0x00, 0xf3, 0xfd, 0xfe]
 
-immediate_sizes = 256 * [0]
-immediate_sizes[0x5c] = 2  # RJUMP
-immediate_sizes[0x5d] = 2  # RJUMPI
-for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
-    immediate_sizes[opcode] = opcode - 0x60 + 1
+immediate_sizes = eip3670.immediate_sizes.copy()
+immediate_sizes[OP_RJUMP] = 2
+immediate_sizes[OP_RJUMPI] = 2
+
 
 # Raises ValidationException on invalid code
 def validate_code(code: bytes):
@@ -45,35 +33,34 @@ def validate_code(code: bytes):
 
         pc_post_instruction = pos + immediate_sizes[opcode]
 
-        if opcode == 0x5c or opcode == 0x5d:
+        if opcode in (OP_RJUMP, OP_RJUMPI):
             if pos + 2 > len(code):
                 raise ValidationException("truncated relative jump offset")
-            offset = int.from_bytes(code[pos:pos+2], byteorder = "big", signed = True)
+            offset = int.from_bytes(code[pos:pos + 2], byteorder="big", signed=True)
 
             rjumpdest = pc_post_instruction + offset
             if rjumpdest < 0 or rjumpdest >= len(code):
                 raise ValidationException("relative jump destination out of bounds")
 
             rjumpdests.add(rjumpdest)
-        elif opcode == 0x5e:
+        elif opcode == OP_RJUMPV:
             if pos + 1 > len(code):
                 raise ValidationException("truncated jump table")
             jump_table_size = code[pos]
             if jump_table_size == 0:
-                raise ValidationException("empty jump table")                
+                raise ValidationException("empty jump table")
 
             pc_post_instruction = pos + 1 + 2 * jump_table_size
             if pc_post_instruction > len(code):
                 raise ValidationException("truncated jump table")
-            
+
             for offset_pos in range(pos + 1, pc_post_instruction, 2):
-                offset = int.from_bytes(code[offset_pos:offset_pos+2], byteorder = "big", signed = True)
+                offset = int.from_bytes(code[offset_pos:offset_pos + 2], byteorder="big", signed=True)
 
                 rjumpdest = pc_post_instruction + offset
                 if rjumpdest < 0 or rjumpdest >= len(code):
                     raise ValidationException("relative jump destination out of bounds")
                 rjumpdests.add(rjumpdest)
-
 
         # Save immediate value positions
         immediates.update(range(pos, pc_post_instruction))
@@ -81,7 +68,7 @@ def validate_code(code: bytes):
         pos = pc_post_instruction
 
     # Ensure last opcode's immediate doesn't go over code end
-    if pos != len(code):        
+    if pos != len(code):
         raise ValidationException("truncated immediate")
 
     # opcode is the *last opcode*
@@ -91,6 +78,7 @@ def validate_code(code: bytes):
     # Ensure relative jump destinations don't target immediates
     if not rjumpdests.isdisjoint(immediates):
         raise ValidationException("relative jump destination targets immediate")
+
 
 def is_valid_code(code: bytes) -> bool:
     try:
