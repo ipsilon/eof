@@ -1,12 +1,7 @@
 from dataclasses import dataclass
 from eip3540 import ValidationException
-from eip4750 import validate_code_section
+from eip4750 import FunctionType, validate_code_section
 from eip5450_table import TABLE, OP_RJUMP, OP_RJUMPI, OP_CALLF, OP_RETF
-
-@dataclass
-class FunctionType:
-    inputs: int
-    outputs: int
 
 def validate_function(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]) -> int:
     assert func_id >= 0
