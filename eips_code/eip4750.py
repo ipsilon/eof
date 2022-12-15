@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from eip3540 import ValidationException
 
+
 @dataclass
 class FunctionType:
     inputs: int
     outputs: int
+
 
 MAGIC = b'\xEF\x00'
 VERSION = 0x01
@@ -42,6 +44,7 @@ immediate_sizes[0xb0] = 2  # CALLF
 immediate_sizes[0xb2] = 2  # JUMPF
 for opcode in range(0x60, 0x7f + 1):  # PUSH1..PUSH32
     immediate_sizes[opcode] = opcode - 0x60 + 1
+
 
 # Validate EOF code.
 # Raises ValidationException on invalid code
@@ -115,6 +118,7 @@ def validate_eof(code: bytes):
     if len(section_sizes[S_TYPE]) > 0 and (code[pos] != 0 or code[pos + 1] != 0):
         raise ValidationException("invalid type of section 0")
 
+
 # Validates any code
 def is_valid_eof(code: bytes) -> bool:
     try:
@@ -122,6 +126,7 @@ def is_valid_eof(code: bytes) -> bool:
     except:
         return False
     return True
+
 
 # Raises ValidationException on invalid code
 def validate_code_section(func_id: int, code: bytes, types: list[FunctionType] = [FunctionType(0, 0)]):
@@ -142,7 +147,7 @@ def validate_code_section(func_id: int, code: bytes, types: list[FunctionType] =
         if opcode == 0x5c or opcode == 0x5d:
             if pos + 2 > len(code):
                 raise ValidationException("truncated relative jump offset")
-            offset = int.from_bytes(code[pos:pos+2], byteorder = "big", signed = True)
+            offset = int.from_bytes(code[pos:pos + 2], byteorder="big", signed=True)
 
             rjumpdest = pos + 2 + offset
             if rjumpdest < 0 or rjumpdest >= len(code):
@@ -152,22 +157,22 @@ def validate_code_section(func_id: int, code: bytes, types: list[FunctionType] =
         elif opcode == 0xb0:
             if pos + 2 > len(code):
                 raise ValidationException("truncated CALLF immediate")
-            section_id = int.from_bytes(code[pos:pos+2], byteorder = "big", signed = False)
+            section_id = int.from_bytes(code[pos:pos + 2], byteorder="big", signed=False)
 
             if section_id >= len(types):
                 raise ValidationException("invalid section id")
         elif opcode == 0xb2:
             if pos + 2 > len(code):
                 raise ValidationException("truncated JUMPF immediate")
-            section_id = int.from_bytes(code[pos:pos+2], byteorder = "big", signed = False)
+            section_id = int.from_bytes(code[pos:pos + 2], byteorder="big", signed=False)
 
             if section_id >= len(types):
                 raise ValidationException("invalid section id")
 
             if types[section_id].outputs != types[func_id].outputs:
-                raise ValidationException("incompatible function type for JUMPF")                
+                raise ValidationException("incompatible function type for JUMPF")
 
-        # Save immediate value positions
+                # Save immediate value positions
         immediates.update(range(pos, pos + immediate_sizes[opcode]))
         # Skip immediates
         pos += immediate_sizes[opcode]
