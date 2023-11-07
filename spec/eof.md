@@ -91,22 +91,21 @@ The following validity constraints are placed on the container format:
 
 Introduce new transaction type `InitcodeTransaction` which extends EIP-1559 (type 2) transaction by adding a new field `initcodes: List[ByteList[MAX_INITCODE_SIZE], MAX_INITCODE_COUNT]`.
 
-The `initcodes` can only be accessed via the `CREATE4` instruction (see below). 
+The `initcodes` can only be accessed via the `CREATE4` instruction (see below), therefore `InitcodeTransactions` are intended to be sent to contracts including `CREATE4` in their execution.
 
-We introduce a standardised creator contract (i.e. written in EVM, but existing at a known address, such as precompiles), which eliminates the need to have create transactions with empty `to`. Instead, `InitcodeTransaction`s will have to be sent to the creator contract. Deployment of creator contract will require irregular state change at EOF activation block. See the appendix below for creator contract code.
+We introduce a standardised Creator Contract (i.e. written in EVM, but existing at a known address, such as precompiles), which eliminates the need to have create transactions with empty `to`. Deployment of the Creator Contract will require an irregular state change at EOF activation block. Note that such introduction of the Creator Contract is needed, because only EOF contracts can create EOF contracts. See the appendix below for Creator Contract code.
 
-Under transaction validation rules `initcodes` are not validated for conforming to the EOF specification. They are only validated when accessed via `CREATE4`. This avoids potential DoS attacks of the mempool.
+Under transaction validation rules `initcodes` are not validated for conforming to the EOF specification. They are only validated when accessed via `CREATE4`. This avoids potential DoS attacks of the mempool. If during the execution of an `InitcodeTransaction` no `CREATE4` instruction is called, such transaction is still valid.
 
-This data is similar to calldata for two reasons:
+`initcodes` data is similar to calldata for two reasons:
 1) It must be fully transmitted in the transaction.
 2) It is accessible to the EVM, but it can't be fully loaded into EVM memory.
 
 For these reason we suggest the same cost as for calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028).
 
-TODO initcode number limit should be defined
-> Following the example of blobs limit in EIP-4844, we define `MAX_INITCODE_SIZE` and `MAX_INITCODE_COUNT` as `2**24`. We do not want to impose a limit on the container size here, because the calldata cost is a sufficient limiting factor. Excluding everything else in a transaction, it is possible to include 3.75MB of all-zero initcodes in the transaction using the 4 gas cost.
+EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
 
-Creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic).
+Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic).
 
 ## Execution Semantics
 
@@ -172,35 +171,38 @@ Code executing within an EOF environment will behave differently than legacy cod
     - deduct `32000` gas
     - read uint8 operand `initcontainer_index`
     - pops `value`, `salt`, `data_offset`, `data_size` from the stack
+    - if `initcontainer_size > MAX_INITCODE_SIZE` instruction exceptionally aborts
     - deduct `8 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 + hashing charge)
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `CREATE3` is executed
-    - validate the container
+    - **no need to** validate the container, all subcontainers are validated recursively during `CREATE4`
     - execute the container in "initcode-mode" and deduct gas for execution
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
-        - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
+        - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset)` instruction (see below). After that:
             - load deploy EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
-            - validate EOF format (header + total size) of the container
+            - calculate `aux_data_size`: from the sum of all section sizes declared in the deploy container header subtract actual deploy container size
+            - **no need to** validate the container, all subcontainers are validated recursively during `CREATE4`
             - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
-            - validate EOF sections (e.g. types, codes)
+            - if updated deploy container size exceeds `MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
         - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
     - deduct `200 * deployed_code_size` gas
-    - if initcode container or deployed container is invalid, instruction's execution ends with the result 0 pushed on stack. The caller’s nonce remains increased and all creation gas is deducted.
 - `CREATE4 (0xed)` instruction
     - Works the same as `CREATE3` except:
         - does not have `initcontainer_index` immediate
         - pops one more value from the stack (first argument): `tx_initcode_index`
-        - takes  the initcode EOF container from the transaction `initcodes` array at `tx_initcode_index`
-            - fails (returns 0 on the stack) if such initcode does not exist in the transaction
+        - loads the initcode EOF container from the transaction `initcodes` array at `tx_initcode_index`
+            - fails (returns 0 on the stack) if such initcode does not exist in the transaction, including when there is no `initcodes` field at all
                 - this is a "light" failure: caller's nonce is not updated and gas for initcode execution is not consumed
+            - the initcode container and all its subcontainers are validated recursively. `CREATE4` fails (returns 0 on the stack) if any of these is invalid
+                - caller’s nonce is updated and gas for initcode execution is consumed
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
-    - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
+    - pops one value from the stack: `aux_data_offset` referring to memory section that will be appended to deployed container's data
     - cost 0 gas + possible memory expansion for aux data
-    - ends initcode frame execution and returns control to CREATE3/4 caller frame where `initcontainer_index` and aux data are used to construct deployed contract (see above)
+    - ends initcode frame execution and returns control to CREATE3/4 caller frame where `deploy_container_index` and `aux_data_offset` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if invoked not in "initcode-mode"
 - `DATALOAD (0xe8)` instruction
     - deduct 3 gas
@@ -230,8 +232,14 @@ Code executing within an EOF environment will behave differently than legacy cod
     - deduct 3 gas
     - read uint8 operand `imm`
     - `n = imm + 1`
-    - `n + 1`th stack item is swapped with the top stack item.
+    - `n + 1`th stack item is swapped with the top stack item (1-based).
     - Stack validation: `stack_height >= n + 1`
+- `EXCHANGE (0xe8)` instruction
+    - deduct 3 gas
+    - read uint8 operand `imm`
+    - `n = imm >> 4 + 1`, `m = imm & 0x0F + 1`
+    - `n`th stack item is swapped with `n + m`th stack item (1-based).
+    - Stack validation: `stack_height >= n + m`
 
 ## Code Validation
 
@@ -247,50 +255,54 @@ Code executing within an EOF environment will behave differently than legacy cod
     - I.e. section having only `JUMPF`s to non-returning sections is non-returning itself.
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `CREATE3` `initcontainer_index` must be less than `num_container_sections`
+- `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
 - `DATALOADN`'s `immediate + 32` must be within data section bounds
      - note that embedded initcontainer may have `DATALOADN` instructions referring to data in `aux_data` part that is appended during `CREATE3`/`CREATE4`, therefore it must be validated _after_ appending it.
 
 ## Stack Validation
 
-- For each reachable instruction in the code the operand stack height is recorded.
+- Code blocks must be ordered in a way that every block is reachable either by a forward jump or sequential flow of instructions.
 - Validation procedure does not require actual operand stack implementation, but only to keep track of its height.
 - The computational and space complexity is O(len(code)). Each instruction is visited at most once.
-- `stack_height` below refers to the number of stack values accessible by this function, i.e. it does not take into account values of caller functions’ frames (but does include this function’s inputs).
-- Each instruction's recorded`stack_height` is required to be the same for all possible code paths going through the instruction.
-- No instruction may access more operand stack items than available, i.e. may not end with `stack_height < 0`
+- `stack_height_...` below refers to the number of stack values accessible by this function, i.e. it does not take into account values of caller functions’ frames (but does include this function’s inputs).
+- For each instruction in the code the operand stack height bounds are recorded as `stack_height_min` and `stack_height_max`. Instructions are scanned in a single linear pass over the code.
+- During scanning:
+  - first instruction has `stack_height_min = stack_height_max = types[current_section_index].inputs`;
+  - for each instruction reached from a forwards jump or sequential flow from previous instruction, update the target bounds so that they contain source bounds, i.e. `target_stack_min = min(target_stack_min, source_stack_min + change)` and `target_stack_max = max(target_stack_max, source_stack_max + change)`. `change` is the stack height change of the source instruction OPCODE or `outputs - inputs` in case of `CALLF`;
+  - for each instruction reached from a backwards jump, check if target bounds are same as source bounds, i.e. `target_stack_min == source_stack_min + change` and `target_stack_max == source_stack_max + change`.
+- No instruction may access more operand stack items than `stack_height_min`
 - Terminating instructions: `STOP`, `INVALID`, `RETURN`, `REVERT`, `RETURNCONTRACT`, `RETF`, `JUMPF`.
-- During `CALLF`, the following must hold: `stack_height >= types[code_section_index].inputs`
-- During `CALLF`, the following must hold: `stack_height + types[code_section_index].max_stack_height - types[code_section_index].inputs <= 1024`
-- Stack validation of `JUMPF` depends on "no-returning" status of target section
-    - `JUMPF` into returning section (can be only from returning section): `stack_height == type[current_section_index].outputs + type[code_section_index].inputs - type[code_section_index].outputs`
-    - `JUMPF` into non-returning section: `stack_height >= type[code_section_index].inputs`
-- During `JUMPF`, the following must hold: `stack_height + types[code_section_index].max_stack_height - types[code_section_index].inputs <= 1024`
-- During `RETF`, the following must hold: `stack_height == types[current_code_index].outputs`
+- During `CALLF`, the following must hold: `stack_height_min >= types[code_section_index].inputs`
+- During `CALLF` and `JUMPF`, the following must hold: `stack_height_max + types[code_section_index].max_stack_height - types[code_section_index].inputs <= 1024`
+- Stack validation of `JUMPF` depends on "non-returning" status of target section
+    - `JUMPF` into returning section (can be only from returning section): `stack_height_min >= type[current_section_index].outputs + type[code_section_index].inputs - type[code_section_index].outputs`
+    - `JUMPF` into non-returning section: `stack_height_min >= types[code_section_index].inputs`
+- During `RETF`, the following must hold: `stack_height_max == stack_height_min == types[current_code_index].outputs`
 - During terminating instructions `STOP`, `INVALID`, `RETURN`, `REVERT`, `RETURNCONTRACT` operand stack may contain extra items below ones required by the instruction
 - the last instruction may be a terminating instruction or `RJUMP`
 - no instruction may be unreachable
 - maximum data stack of a function must not exceed 1023
 - `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
-- Find full algorithm spec at https://eips.ethereum.org/EIPS/eip-5450#operand-stack-validation
+- Find full spec of the previous _more restrictive_ algorithm at https://eips.ethereum.org/EIPS/eip-5450#operand-stack-validation
 
 ## Appendix: Creator Contract
 
 ```solidity
 {
-/// Takes [index][salt][aux_data] as input,
+/// Takes [index][salt][init_data] as input,
 /// creates contract and returns the address or failure otherwise
 
-/// aux_data.length can be 0, but the first 2 words are mandatory
+/// init_data.length can be 0, but the first 2 words are mandatory
 let size := calldatasize()
 if lt(size, 64) { revert(0, 0) }
 
 let tx_initcode_index := calldataload(0)
 let salt := calldataload(32)
 
-let aux_size := sub(size, 64)
-calldatacopy(0, 64, aux_size)
+let init_data_size := sub(size, 64)
+calldatacopy(0, 64, init_data_size)
 
-let ret := create4(tx_initcode_index, callvalue(), salt, 0, aux_size)
+let ret := create4(tx_initcode_index, callvalue(), salt, 0, init_data_size)
 if iszero(ret) { revert(0, 0) }
 
 mstore(0, ret)
@@ -298,10 +310,8 @@ return(0, 32)
 
 // Helper to compile this with existing Solidity (with --strict-assembly mode)
 function create4(a, b, c, d, e) -> f {
-    f := verbatim_5i_1o(hex"f7", a, b, c, d, e)
+    f := verbatim_5i_1o(hex"ed", a, b, c, d, e)
 }
     
 }
 ```
-
-Bytecode (<small>Solidity 0.8.18 using `solc --strict-assembly --optimize creator_contract.yul`</small>): `60403610602a57600036603f1901806040833781602035348235f780156026578152602090f35b5080fd5b600080fd`
