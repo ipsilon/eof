@@ -179,9 +179,8 @@ Code executing within an EOF environment will behave differently than legacy cod
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
-        - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset)` instruction (see below). After that:
+        - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
             - load deploy EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
-            - calculate `aux_data_size`: from the sum of all section sizes declared in the deploy container header subtract actual deploy container size
             - **no need to** validate the container, all subcontainers are validated recursively during `CREATE4`
             - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
             - if updated deploy container size exceeds `MAX_CODE_SIZE` instruction exceptionally aborts
@@ -200,9 +199,10 @@ Code executing within an EOF environment will behave differently than legacy cod
                 - caller’s nonce is updated and gas for initcode execution is consumed
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
-    - pops one value from the stack: `aux_data_offset` referring to memory section that will be appended to deployed container's data
+    - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
     - cost 0 gas + possible memory expansion for aux data
-    - ends initcode frame execution and returns control to CREATE3/4 caller frame where `deploy_container_index` and `aux_data_offset` are used to construct deployed contract (see above)
+    - ends initcode frame execution and returns control to CREATE3/4 caller frame where `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
+    - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
     - instruction exceptionally aborts if invoked not in "initcode-mode"
 - `DATALOAD (0xe8)` instruction
     - deduct 3 gas
@@ -256,8 +256,9 @@ Code executing within an EOF environment will behave differently than legacy cod
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `CREATE3` `initcontainer_index` must be less than `num_container_sections`
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
-- `DATALOADN`'s `immediate + 32` must be within data section bounds
-     - note that embedded initcontainer may have `DATALOADN` instructions referring to data in `aux_data` part that is appended during `CREATE3`/`CREATE4`, therefore it must be validated _after_ appending it.
+- `DATALOADN`'s `immediate + 32` must be within "static" data section bounds
+     - note that the data section bounds here mean the size declared in the header of the deploy container ("static" portion, known during `CREATE4`-time validation)
+     - the part of the data section which exceeds these bounds (the "dynamic" portion, known in runtime only) needs to be accessed using `DATALOAD` or `DATACOPY`
 
 ## Stack Validation
 
