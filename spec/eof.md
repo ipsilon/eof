@@ -92,6 +92,7 @@ Under transaction validation rules `initcodes` are not validated for conforming 
 For these reason we suggest the same cost as for calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028).
 
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
+`InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
 
 Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic).
 
@@ -159,17 +160,14 @@ Code executing within an EOF environment will behave differently than legacy cod
     - deduct `32000` gas
     - read uint8 operand `initcontainer_index`
     - pops `value`, `salt`, `data_offset`, `data_size` from the stack
-    - if `initcontainer_size > MAX_INITCODE_SIZE` instruction exceptionally aborts
-    - deduct `8 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 + hashing charge)
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `CREATE3` is executed
-    - **no need to** validate the container, all subcontainers are validated recursively during `CREATE4`
+    - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - execute the container in "initcode-mode" and deduct gas for execution
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
         - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
             - load deploy EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
-            - **no need to** validate the container, all subcontainers are validated recursively during `CREATE4`
             - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
             - if updated deploy container size exceeds `MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
@@ -182,9 +180,12 @@ Code executing within an EOF environment will behave differently than legacy cod
         - pops one more value from the stack (first argument): `tx_initcode_index`
         - loads the initcode EOF container from the transaction `initcodes` array at `tx_initcode_index`
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, including when there is no `initcodes` field at all
-                - this is a "light" failure: caller's nonce is not updated and gas for initcode execution is not consumed
-            - the initcode container and all its subcontainers are validated recursively. `CREATE4` fails (returns 0 on the stack) if any of these is invalid
-                - caller’s nonce is updated and gas for initcode execution is consumed
+                - caller's nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant gas was consumed
+        - just before deducting hashing charge as in `CREATE3`, does following extra steps:
+            - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
+            - **validates the initcode container and all its subcontainers recursively**
+            - fails (returns 0 on the stack) if any of those was invalid
+                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant and EIP-3860 gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
