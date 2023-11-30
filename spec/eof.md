@@ -197,7 +197,7 @@ Code executing within an EOF environment will behave differently than legacy cod
     - deduct 3 gas
     - pop one value, `offset`, from the stack
     - read `[offset, offset+32]` from the data section of the active container and push the value to the stack
-    - exceptional abort if reading out of data bounds
+    - pad with 0s if reading out of data bounds
 - `DATALOADN (0xe9)` instruction
     - deduct 2 gas
     - like `DATALOAD`, but takes the offset as a 16-bit immediate value and not from the stack
@@ -210,7 +210,7 @@ Code executing within an EOF environment will behave differently than legacy cod
     - perform memory expansion to `mem_offset + size` and deduct memory expansion cost
     - deduct `3 * ((size + 31) // 32)` gas for copying
     - read `[offset, offset+size]` from the data section of the active container and write it to memory starting at offset `mem_offset`
-    - exceptional abort if reading out of data bounds
+    - pad with 0s if reading out of data bounds
 - `DUPN (0xe6)` instruction
     - deduct 3 gas
     - read uint8 operand `imm`
