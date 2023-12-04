@@ -248,6 +248,7 @@ Code executing within an EOF environment will behave differently than legacy cod
 - `DATALOADN`'s `immediate + 32` must be within "static" data section bounds
      - note that the data section bounds here mean the size declared in the header of the deploy container ("static" portion, known during `CREATE4`-time validation)
      - the part of the data section which exceeds these bounds (the "dynamic" portion, known in runtime only) needs to be accessed using `DATALOAD` or `DATACOPY`
+- no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
 
 ## Stack Validation
 
