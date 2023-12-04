@@ -152,9 +152,9 @@ Code executing within an EOF environment will behave differently than legacy cod
     - pops `val` from `return_stack` and sets `current_code_idx` to `val.code_section` and `pc` to `val.pc`
 - `JUMPF (0xe5)` instruction
     - deduct 5 gas
-    - read uint16 operand `section`
+    - read uint16 operand `idx`
     - if `1024 < len(stack) + types[idx].max_stack_height - types[idx].inputs`, execution results in an exceptional halt
-    - set `current_code_idx` to `section`
+    - set `current_code_idx` to `idx`
     - set `pc = 0`
 - `CREATE3 (0xec)` instruction
     - deduct `32000` gas
