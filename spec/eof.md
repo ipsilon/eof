@@ -7,19 +7,7 @@
 
 **This document describes all the changes which we previously dicussed titles as EOF 1.1 and EOF 2.0. Those changes do not have an EIP yet.**
 
-This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. The individual EIPs ~~still remain the official specification and should confusion arise those are to be consulted~~ are not fully updated yet, and this document serves as a main source of truth at the moment.
-
-- 📃[EIP-3540](https://eips.ethereum.org/EIPS/eip-3540): EOF - EVM Object Format v1 [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-3540.md)
-- 📃[EIP-3670](https://eips.ethereum.org/EIPS/eip-3670): EOF - Code Validation [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-3670.md)
-- 📃[EIP-4200](https://eips.ethereum.org/EIPS/eip-4200): EOF - Static relative jumps [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-4200.md)
-- 📃[EIP-4750](https://eips.ethereum.org/EIPS/eip-4750): EOF - Functions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-4750.md)
-- 📃[EIP-5450](https://eips.ethereum.org/EIPS/eip-5450): EOF - Stack Validation [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-5450.md)
-- 📃[EIP-6206](https://eips.ethereum.org/EIPS/eip-6206): EOF - JUMPF instruction [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-6026.md)
-- 📃[EIP-7480](https://eips.ethereum.org/EIPS/eip-7480): EOF - Data section access instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7480.md)
-- TBA: EOF - Contract Creation
-- TBA: EOF - Restrict code and gas introspection
-- 📃[EIP-663](https://eips.ethereum.org/EIPS/eip-663): Unlimited SWAP and DUP instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-663.md)
-- 📃[EIP-7069](https://eips.ethereum.org/EIPS/eip-7069): Revamped CALL instructions (*does not require EOF*) [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7069.md)
+This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. The individual EIPs ~~still remain the official specification and should confusion arise those are to be consulted~~ are not fully updated yet, and this document serves as a main source of truth at the moment. See appendix for the original list of EIPs.
 
 ## Container
 
@@ -104,6 +92,7 @@ Under transaction validation rules `initcodes` are not validated for conforming 
 For these reason we suggest the same cost as for calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028).
 
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
+`InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
 
 Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic).
 
@@ -171,17 +160,14 @@ Code executing within an EOF environment will behave differently than legacy cod
     - deduct `32000` gas
     - read uint8 operand `initcontainer_index`
     - pops `value`, `salt`, `data_offset`, `data_size` from the stack
-    - if `initcontainer_size > MAX_INITCODE_SIZE` instruction exceptionally aborts
-    - deduct `8 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 + hashing charge)
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `CREATE3` is executed
-    - **no need to** validate the container, all subcontainers are validated recursively during `CREATE4`
+    - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - execute the container in "initcode-mode" and deduct gas for execution
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
         - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
             - load deploy EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
-            - **no need to** validate the container, all subcontainers are validated recursively during `CREATE4`
             - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
             - if updated deploy container size exceeds `MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
@@ -191,12 +177,15 @@ Code executing within an EOF environment will behave differently than legacy cod
 - `CREATE4 (0xed)` instruction
     - Works the same as `CREATE3` except:
         - does not have `initcontainer_index` immediate
-        - pops one more value from the stack (first argument): `tx_initcode_index`
-        - loads the initcode EOF container from the transaction `initcodes` array at `tx_initcode_index`
+        - pops one more value from the stack (first argument): `tx_initcode_hash`
+        - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, including when there is no `initcodes` field at all
-                - this is a "light" failure: caller's nonce is not updated and gas for initcode execution is not consumed
-            - the initcode container and all its subcontainers are validated recursively. `CREATE4` fails (returns 0 on the stack) if any of these is invalid
-                - caller’s nonce is updated and gas for initcode execution is consumed
+                - caller's nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant gas was consumed
+        - just before deducting hashing charge as in `CREATE3`, does following extra steps:
+            - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
+            - **validates the initcode container and all its subcontainers recursively**
+            - fails (returns 0 on the stack) if any of those was invalid
+                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant and EIP-3860 gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
@@ -208,7 +197,7 @@ Code executing within an EOF environment will behave differently than legacy cod
     - deduct 3 gas
     - pop one value, `offset`, from the stack
     - read `[offset, offset+32]` from the data section of the active container and push the value to the stack
-    - exceptional abort if reading out of data bounds
+    - pad with 0s if reading out of data bounds
 - `DATALOADN (0xe9)` instruction
     - deduct 2 gas
     - like `DATALOAD`, but takes the offset as a 16-bit immediate value and not from the stack
@@ -221,7 +210,7 @@ Code executing within an EOF environment will behave differently than legacy cod
     - perform memory expansion to `mem_offset + size` and deduct memory expansion cost
     - deduct `3 * ((size + 31) // 32)` gas for copying
     - read `[offset, offset+size]` from the data section of the active container and write it to memory starting at offset `mem_offset`
-    - exceptional abort if reading out of data bounds
+    - pad with 0s if reading out of data bounds
 - `DUPN (0xe6)` instruction
     - deduct 3 gas
     - read uint8 operand `imm`
@@ -316,3 +305,19 @@ function create4(a, b, c, d, e) -> f {
     
 }
 ```
+
+## Appendix: Original EIPs
+
+These are the individual EIPs which evolved into this spec.
+
+Specifications contained within are **out-of-date**, use only for reference and to look up motivation!
+
+- 📃[EIP-3540](https://eips.ethereum.org/EIPS/eip-3540): EOF - EVM Object Format v1 [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-3540.md)
+- 📃[EIP-3670](https://eips.ethereum.org/EIPS/eip-3670): EOF - Code Validation [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-3670.md)
+- 📃[EIP-4200](https://eips.ethereum.org/EIPS/eip-4200): EOF - Static relative jumps [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-4200.md)
+- 📃[EIP-4750](https://eips.ethereum.org/EIPS/eip-4750): EOF - Functions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-4750.md)
+- 📃[EIP-5450](https://eips.ethereum.org/EIPS/eip-5450): EOF - Stack Validation [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-5450.md)
+- 📃[EIP-6206](https://eips.ethereum.org/EIPS/eip-6206): EOF - JUMPF instruction [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-6026.md)
+- 📃[EIP-7480](https://eips.ethereum.org/EIPS/eip-7480): EOF - Data section access instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7480.md)
+- 📃[EIP-663](https://eips.ethereum.org/EIPS/eip-663): Unlimited SWAP and DUP instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-663.md)
+- 📃[EIP-7069](https://eips.ethereum.org/EIPS/eip-7069): Revamped CALL instructions (*does not require EOF*) [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7069.md)
