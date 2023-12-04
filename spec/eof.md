@@ -152,9 +152,9 @@ Code executing within an EOF environment will behave differently than legacy cod
     - pops `val` from `return_stack` and sets `current_code_idx` to `val.code_section` and `pc` to `val.pc`
 - `JUMPF (0xe5)` instruction
     - deduct 5 gas
-    - read uint16 operand `section`
+    - read uint16 operand `idx`
     - if `1024 < len(stack) + types[idx].max_stack_height - types[idx].inputs`, execution results in an exceptional halt
-    - set `current_code_idx` to `section`
+    - set `current_code_idx` to `idx`
     - set `pc = 0`
 - `CREATE3 (0xec)` instruction
     - deduct `32000` gas
@@ -262,11 +262,11 @@ Code executing within an EOF environment will behave differently than legacy cod
   - for each instruction reached from a backwards jump, check if target bounds are same as source bounds, i.e. `target_stack_min == source_stack_min + change` and `target_stack_max == source_stack_max + change`.
 - No instruction may access more operand stack items than `stack_height_min`
 - Terminating instructions: `STOP`, `INVALID`, `RETURN`, `REVERT`, `RETURNCONTRACT`, `RETF`, `JUMPF`.
-- During `CALLF`, the following must hold: `stack_height_min >= types[code_section_index].inputs`
-- During `CALLF` and `JUMPF`, the following must hold: `stack_height_max + types[code_section_index].max_stack_height - types[code_section_index].inputs <= 1024`
+- During `CALLF`, the following must hold: `stack_height_min >= types[target_section_index].inputs`
+- During `CALLF` and `JUMPF`, the following must hold: `stack_height_max + types[target_section_index].max_stack_height - types[target_section_index].inputs <= 1024`
 - Stack validation of `JUMPF` depends on "non-returning" status of target section
-    - `JUMPF` into returning section (can be only from returning section): `stack_height_min >= type[current_section_index].outputs + type[code_section_index].inputs - type[code_section_index].outputs`
-    - `JUMPF` into non-returning section: `stack_height_min >= types[code_section_index].inputs`
+    - `JUMPF` into returning section (can be only from returning section): `stack_height_min >= type[current_section_index].outputs + type[target_section_index].inputs - type[target_section_index].outputs`
+    - `JUMPF` into non-returning section: `stack_height_min >= types[target_section_index].inputs`
 - During `RETF`, the following must hold: `stack_height_max == stack_height_min == types[current_code_index].outputs`
 - During terminating instructions `STOP`, `INVALID`, `RETURN`, `REVERT`, `RETURNCONTRACT` operand stack may contain extra items below ones required by the instruction
 - the last instruction may be a terminating instruction or `RJUMP`
