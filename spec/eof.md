@@ -77,7 +77,8 @@ The following validity constraints are placed on the container format:
 
 ## Transaction Types
 
-Introduce new transaction type `InitcodeTransaction` which extends EIP-1559 (type 2) transaction by adding a new field `initcodes: List[ByteList[MAX_INITCODE_SIZE], MAX_INITCODE_COUNT]`.
+Introduce new transaction type `InitcodeTransaction` which extends EIP-1559 (type 2) transaction by adding two new fields `initcodes: List[ByteList[MAX_INITCODE_SIZE], MAX_INITCODE_COUNT]` and `initcode_hashes: List[ByteList[32], len(initcodes)]`.
+`initcode_hashes[i]` is presumed to hold `keccak256(initcodes[i])`, however this isn't required for the validity of an `InitcodeTransaction`.
 
 The `initcodes` can only be accessed via the `CREATE4` instruction (see below), therefore `InitcodeTransactions` are intended to be sent to contracts including `CREATE4` in their execution.
 
@@ -93,6 +94,8 @@ For these reason we suggest the same cost as for calldata (16 gas for non-zero b
 
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
 `InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
+
+`InitcodeTransaction` is invalid if `len(initcode_hashes) != len(initcodes)`
 
 Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic).
 
@@ -162,8 +165,9 @@ Code executing within an EOF environment will behave differently than legacy cod
     - pops `value`, `salt`, `data_offset`, `data_size` from the stack
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `CREATE3` is executed
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
+    - calculate `initcontainer_hash` as `keccak256(initcontainer)`
     - execute the container in "initcode-mode" and deduct gas for execution
-        - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
+        - calculate `new_address` as `keccak256(0xff || sender || salt || initcontainer_hash)[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
         - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
@@ -178,14 +182,17 @@ Code executing within an EOF environment will behave differently than legacy cod
     - Works the same as `CREATE3` except:
         - does not have `initcontainer_index` immediate
         - pops one more value from the stack (first argument): `tx_initcode_hash`
-        - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
-            - fails (returns 0 on the stack) if such initcode does not exist in the transaction, including when there is no `initcodes` field at all
+        - loads the initcode EOF container from the transaction `initcodes` array at the index where `tx_initcode_hash` is in the `initcode_hashes` array
+            - fails (returns 0 on the stack) if such entry in `initcode_hashes` does not exist in the transaction, including when the `initcode_hashes` is empty
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant gas was consumed
         - just before deducting hashing charge as in `CREATE3`, does following extra steps:
             - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
             - **validates the initcode container and all its subcontainers recursively**
             - fails (returns 0 on the stack) if any of those was invalid
                 - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant and EIP-3860 gas were consumed
+        - checks the calculated `keccak256(initcontainer)` for being equal to `tx_initcode_hash`
+            - fails (returns 0 on the stack) if it isn't
+                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant, EIP-3860 and hashing gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
