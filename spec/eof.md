@@ -96,6 +96,20 @@ EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_S
 
 Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic).
 
+### RLP and signature
+
+Given the definitions from [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) and [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559), the `TransactionPayload` for an `InitcodeTransaction` is the RLP serialization of:
+
+```
+[chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, to, value, data, access_list, initcodes, y_parity, r, s]
+```
+
+`TransactionType` is `INITCODE_TX_TYPE` (`0x04`) and the signature values `y_parity`, `r`, and `s` are calculated by constructing a secp256k1 signature over the following digest:
+
+```
+keccak256(INITCODE_TX_TYPE || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, to, value, data, access_list, initcodes]))
+```
+
 ## Execution Semantics
 
 Code executing within an EOF environment will behave differently than legacy code. We can break these differences down into i) changes to existing behavior and ii) introduction of new behavior.
