@@ -45,7 +45,7 @@ While EOF is extensible, in this document we discuss the first version, EOFv1.
 | num_container_sections | 2 bytes  | 0x0001-0x00FF | 16-bit unsigned big-endian integer denoting the number of the container sections |
 | container_size    | 2 bytes  | 0x0001-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the container section content |
 | kind_data         | 1 byte   | 0x04          | kind marker for data size section |
-| data_size         | 2 bytes  | 0x0000-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the data section content |
+| data_size         | 2 bytes  | 0x0000-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the static data section content (see [Data Section Lifecycle](#data-section-lifecycle) on how to interpret this field|
 | terminator        | 1 byte   | 0x00          | marks the end of the header |
 
 #### Body
@@ -60,6 +60,36 @@ While EOF is extensible, in this document we discuss the first version, EOFv1.
 | container_section | variable | n/a       | arbitrary sequence of bytes |
 | data_section  | variable | n/a           | arbitrary sequence of bytes |
 
+### Data Section Lifecycle
+
+**For an EOF container which has not yet been deployed**, the `data_section` is only a portion of the final `data_section` after deployment.
+Let's define it as `pre_deploy_data_section` and as `pre_deploy_data_size` the `data_size` declared in that container's header.
+`pre_deploy_data_size >= len(pre_deploy_data_section)`, which anticipates more data to be appended to the `pre_deploy_data_section` during the process of deploying.
+
+```
+pre_deploy_data_section
+|                                       |
+ \___________pre_deploy_data_size______/
+```
+
+**For a deployed EOF container**, the final `data_section` becomes:
+
+```
+pre_deploy_data_section | static_aux_data | dynamic_aux_data
+|                         |             |                  |
+|                          \___________aux_data___________/
+|                                       |
+ \___________pre_deploy_data_size______/
+```
+
+where:
+- `aux_data` is the data which is appended to `pre_deploy_data_section` on `RETURNCONTRACT` instruction [see New Behavior](#new-behavior).
+- `static_aux_data` is a subrange of `aux_data`, which size is known before `RETURNCONTRACT` and equals `pre_deploy_data_size - len(pre_deploy_data_section)`.
+- `dynamic_aux_data` is the remainder of `aux_data`.
+
+Summarizing, there are `pre_deploy_data_size` bytes in the final data section which are guaranteed to exist before the EOF container is deployed and `len(dynamic_aux_data)` bytes which are known to exist only after.
+This impacts the validation and behavior of data-section-accessing instructions: `DATALOAD`, `DATALOADN`, and `DATACOPY`, see [Code Validation](#code-validation).
+
 ### Container Validation
 
 The following validity constraints are placed on the container format:
@@ -72,8 +102,9 @@ The following validity constraints are placed on the container format:
 - `code_size` may not be 0
 - the number of container sections must not exceed 256
 - `container_size` may not be 0, but container sections are optional
-- the total size of the container without container sections must be `13 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size`
-- the total size of the container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 2*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
+- the total size of a deployed container without container sections must be `13 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size`
+- the total size of a deployed container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 2*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
+- the total size of not yet deployed container might be less than the above values due to how the data section is rewritten and resized during deployment (see [Data Section Lifecycle](#data-section-lifecycle))
 
 ## Transaction Types
 
@@ -259,9 +290,8 @@ Code executing within an EOF environment will behave differently than legacy cod
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `CREATE3` `initcontainer_index` must be less than `num_container_sections`
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
-- `DATALOADN`'s `immediate + 32` must be within "static" data section bounds
-     - note that the data section bounds here mean the size declared in the header of the deploy container ("static" portion, known during `CREATE4`-time validation)
-     - the part of the data section which exceeds these bounds (the "dynamic" portion, known in runtime only) needs to be accessed using `DATALOAD` or `DATACOPY`
+- `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
+     - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
 
 ## Stack Validation
