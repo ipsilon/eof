@@ -9,6 +9,8 @@
 
 This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. The individual EIPs ~~still remain the official specification and should confusion arise those are to be consulted~~ are not fully updated yet, and this document serves as a main source of truth at the moment. See appendix for the original list of EIPs.
 
+While EOF is extensible, in this document we discuss the first version, EOFv1.
+
 ## Container
 
 EVM bytecode is traditionally an unstructured sequence of instructions. EOF introduces the concept of a container, which brings structure to byte code. The container consists of a header and then several sections.
@@ -27,8 +29,6 @@ types_section := (inputs, outputs, max_stack_height)+
 ```
 
 _note: `,` is a concatenation operator, `+` should be interpreted as "one or more" of the preceding item, and `*` should be interpreted as "zero or more" of the preceding item._
-
-While EOF is extensible, in this document we discuss the first version, EOFv1.
 
 #### Header
 
