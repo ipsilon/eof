@@ -274,6 +274,11 @@ Code executing within an EOF environment will behave differently than legacy cod
     - `n = imm >> 4 + 1`, `m = imm & 0x0F + 1`
     - `n`th stack item is swapped with `n + m`th stack item (1-based).
     - Stack validation: `stack_height >= n + m`
+- `RETURNDATALOAD (0xf7)` instruction
+    - deduct 3 gas
+    - pop `offset` from the stack
+    - if `offset + 32 > len(returndata buffer)`, execution results in an exceptional halt
+    - push 1 item onto the stack, the 32-byte word read from the returndata buffer starting at `offset`
 
 ## Code Validation
 
