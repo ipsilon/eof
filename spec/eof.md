@@ -1,4 +1,4 @@
-# "Mega EOF Endgame" Specification
+# "Mega EOF Endgame" Specification (EOFv1)
 ###### tags: `EOF`
 
 [toc]
@@ -8,6 +8,8 @@
 **This document describes all the changes which we previously dicussed titles as EOF 1.1 and EOF 2.0. Those changes do not have an EIP yet.**
 
 This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. The individual EIPs ~~still remain the official specification and should confusion arise those are to be consulted~~ are not fully updated yet, and this document serves as a main source of truth at the moment. See appendix for the original list of EIPs.
+
+While EOF is extensible, in this document we discuss the first version, EOFv1.
 
 ## Container
 
@@ -27,8 +29,6 @@ types_section := (inputs, outputs, max_stack_height)+
 ```
 
 _note: `,` is a concatenation operator, `+` should be interpreted as "one or more" of the preceding item, and `*` should be interpreted as "zero or more" of the preceding item._
-
-While EOF is extensible, in this document we discuss the first version, EOFv1.
 
 #### Header
 
