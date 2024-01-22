@@ -315,7 +315,7 @@ Code executing within an EOF environment will behave differently than legacy cod
 - During `CALLF`, the following must hold: `stack_height_min >= types[target_section_index].inputs`
 - During `CALLF` and `JUMPF`, the following must hold: `stack_height_max + types[target_section_index].max_stack_height - types[target_section_index].inputs <= 1024`
 - Stack validation of `JUMPF` depends on "non-returning" status of target section
-    - `JUMPF` into returning section (can be only from returning section): `stack_height_min >= type[current_section_index].outputs + type[target_section_index].inputs - type[target_section_index].outputs`
+    - `JUMPF` into returning section (can be only from returning section): `stack_height_min == stack_height_max == type[current_section_index].outputs + type[target_section_index].inputs - type[target_section_index].outputs`
     - `JUMPF` into non-returning section: `stack_height_min >= types[target_section_index].inputs`
 - During `RETF`, the following must hold: `stack_height_max == stack_height_min == types[current_code_index].outputs`
 - During terminating instructions `STOP`, `INVALID`, `RETURN`, `REVERT`, `RETURNCONTRACT` operand stack may contain extra items below ones required by the instruction
