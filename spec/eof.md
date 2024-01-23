@@ -159,10 +159,6 @@ Code executing within an EOF environment will behave differently than legacy cod
 - Legacy contract may not deploy EOF code
 - ~~If a `DELEGATECALL` crosses an EOF<>legacy boundary, then it returns 0 to signal failure (i.e. legacy->EOF and EOF->legacy `DELEGATECALL`s are disallowed).~~
 - `DELEGATECALL` from an EOF contract to a legacy contract is disallowed, and it returns 0 to signal failure. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
-- Introduce a replacement of `CALL`, `DELEGATECALL` and `STATICCALL` in EOF, with two differences to legacy:
-    - The `gas_limit` input is removed.
-    - The `output_offset` and `output_size` is removed.
-    - The `gas_limit` will be set to `(gas_left / 64) * 63` (aka as if the caller used `gas()` in place of `gas_limit`).
 
 ### New Behavior
 
@@ -279,6 +275,13 @@ Code executing within an EOF environment will behave differently than legacy cod
     - pop `offset` from the stack
     - if `offset + 32 > len(returndata buffer)`, execution results in an exceptional halt
     - push 1 item onto the stack, the 32-byte word read from the returndata buffer starting at `offset`
+- `CALL2 (0xf8)`, `DELEGATECALL2 (0xf9)`, `STATICCALL2 (0xfb)`
+    - Replacement of `CALL`, `DELEGATECALL` and `STATICCALL` instructions, as specced out in [EIP-7069](https://eips.ethereum.org/EIPS/eip-7069), except the runtime operand stack check. In particular:
+    - The `gas_limit` input is removed.
+    - The `output_offset` and `output_size` is removed.
+    - The `gas_limit` will be set to `(gas_left / 64) * 63` (as if the caller used `gas()` in place of `gas_limit`).
+
+    **NOTE**: The replacement instructions `*CALL2` continue being treated as **undefined** in legacy code.
 
 ## Code Validation
 
