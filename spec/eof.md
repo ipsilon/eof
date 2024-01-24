@@ -238,18 +238,18 @@ Code executing within an EOF environment will behave differently than legacy cod
     - ends initcode frame execution and returns control to CREATE3/4 caller frame where `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
     - instruction exceptionally aborts if invoked not in "initcode-mode"
-- `DATALOAD (0xe8)` instruction
+- `DATALOAD (0xd0)` instruction
     - deduct 4 gas
     - pop one value, `offset`, from the stack
     - read `[offset, offset+32]` from the data section of the active container and push the value to the stack
     - pad with 0s if reading out of data bounds
-- `DATALOADN (0xe9)` instruction
+- `DATALOADN (0xd1)` instruction
     - deduct 3 gas
     - like `DATALOAD`, but takes the offset as a 16-bit immediate value and not from the stack
-- `DATASIZE (0xea)` instruction
+- `DATASIZE (0xd2)` instruction
     - deduct 2 gas
     - push the size of the data section of the active container to the stack
-- `DATACOPY (0xeb)` instruction
+- `DATACOPY (0xd3)` instruction
     - deduct 3 gas
     - pops `mem_offset`, `offset`, `size` from the stack
     - perform memory expansion to `mem_offset + size` and deduct memory expansion cost
