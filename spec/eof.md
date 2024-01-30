@@ -293,8 +293,8 @@ Code executing within an EOF environment will behave differently than legacy cod
 - `CALLF` operand must not point to to a section with `0x80` as outputs (non-returning)
 - `JUMPF` operand must point to a code section with equal or fewer number of outputs as the section in which it resides, or to a section with `0x80` as outputs (non-returning)
 - no section may have more than 127 inputs or outputs
-- section type is required to have `0x80` as outputs value, which marks it as non-returning, in case this section contains neither `RETF` instructions nor `JUMPF` into returning (`outputs <= 0x7f`) sections.
-    - I.e. section having only `JUMPF`s to non-returning sections is non-returning itself.
+- section type has `0x80` as outputs value, and is non-returning, if and only if this section contains neither `RETF` instructions nor `JUMPF` into returning (`outputs <= 0x7f`) sections.
+    - in particular, section having only `JUMPF`s to non-returning sections is non-returning itself.
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `CREATE3` `initcontainer_index` must be less than `num_container_sections`
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
