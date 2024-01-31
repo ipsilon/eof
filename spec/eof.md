@@ -45,7 +45,7 @@ _note: `,` is a concatenation operator, `+` should be interpreted as "one or mor
 | num_container_sections | 2 bytes  | 0x0001-0x00FF | 16-bit unsigned big-endian integer denoting the number of the container sections |
 | container_size    | 2 bytes  | 0x0001-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the container section content |
 | kind_data         | 1 byte   | 0x04          | kind marker for data size section |
-| data_size         | 2 bytes  | 0x0000-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the static data section content (see [Data Section Lifecycle](#data-section-lifecycle) on how to interpret this field)|
+| data_size         | 2 bytes  | 0x0000-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the data section content (for not yet deployed containers this can be more than the actual content, see [Data Section Lifecycle](#data-section-lifecycle))|
 | terminator        | 1 byte   | 0x00          | marks the end of the header |
 
 #### Body
@@ -78,14 +78,18 @@ pre_deploy_data_section
 pre_deploy_data_section | static_aux_data | dynamic_aux_data
 |                         |             |                  |
 |                          \___________aux_data___________/
-|                                       |
- \___________pre_deploy_data_size______/
+|                                       |                  |
+ \___________pre_deploy_data_size______/                   |
+|                                                          |
+ \________________________data_size_______________________/
 ```
 
 where:
 - `aux_data` is the data which is appended to `pre_deploy_data_section` on `RETURNCONTRACT` instruction [see New Behavior](#new-behavior).
 - `static_aux_data` is a subrange of `aux_data`, which size is known before `RETURNCONTRACT` and equals `pre_deploy_data_size - len(pre_deploy_data_section)`.
 - `dynamic_aux_data` is the remainder of `aux_data`.
+
+`data_size` in the deployed container header is also updated to be equal `len(data_section)`.
 
 Summarizing, there are `pre_deploy_data_size` bytes in the final data section which are guaranteed to exist before the EOF container is deployed and `len(dynamic_aux_data)` bytes which are known to exist only after.
 This impacts the validation and behavior of data-section-accessing instructions: `DATALOAD`, `DATALOADN`, and `DATACOPY`, see [Code Validation](#code-validation).
