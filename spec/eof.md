@@ -129,8 +129,6 @@ For these reasons, define cost of each of the `initcodes` items same as calldata
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
 `InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
 
-Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic).
-
 ### RLP and signature
 
 Given the definitions from [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) and [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559), the `TransactionPayload` for an `InitcodeTransaction` is the RLP serialization of:
@@ -159,12 +157,18 @@ Code executing within an EOF environment will behave differently than legacy cod
 - If the target account of `EXTCODESIZE` is an EOF contract, then it will return 2.
 - The instruction `JUMPDEST` is renamed to `NOP` and remains charging 1 gas without any effect.
     - Note: jumpdest-analysis is not performed anymore.
-- EOF contract may not deploy legacy code
-- Legacy contract may not deploy EOF code
-- ~~If a `DELEGATECALL` crosses an EOF<>legacy boundary, then it returns 0 to signal failure (i.e. legacy->EOF and EOF->legacy `DELEGATECALL`s are disallowed).~~
+- EOF contract may not deploy legacy code (it is naturally rejected on the code validation stage)
+- Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic)
+- If instructions `CREATE` and `CREATE2` have EOF code as initcode (starting with `EF00` magic)
+    - deployment fails (returns 0 on the stack)
+    - caller's nonce is not updated and gas for initcode execution is not consumed
 - `DELEGATECALL` from an EOF contract to a legacy contract is disallowed, and it returns 0 to signal failure. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
 
+**NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
+
 ### New Behavior
+
+The following instructions are introduced in EOF code:
 
 - `RJUMP (0xe0)` instruction
     - deduct 2 gas
