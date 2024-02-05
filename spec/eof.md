@@ -224,7 +224,7 @@ Code executing within an EOF environment will behave differently than legacy cod
         - does not have `initcontainer_index` immediate
         - pops one more value from the stack (first argument): `tx_initcode_hash`
         - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
-            - fails (returns 0 on the stack) if such initcode does not exist in the transaction, including when there is no `initcodes` field at all
+            - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant gas was consumed
         - just before deducting hashing charge as in `CREATE3`, does following extra steps:
             - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
