@@ -229,6 +229,7 @@ Code executing within an EOF environment will behave differently than legacy cod
         - just before deducting hashing charge as in `CREATE3`, does following extra steps:
             - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
             - **validates the initcode container and all its subcontainers recursively**
+            - in addition to this, check if the initcode container has its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
                 - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant and EIP-3860 gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
@@ -301,6 +302,7 @@ Code executing within an EOF environment will behave differently than legacy cod
     - in particular, section having only `JUMPF`s to non-returning sections is non-returning itself.
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `CREATE3` `initcontainer_index` must be less than `num_container_sections`
+- `CREATE3` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
