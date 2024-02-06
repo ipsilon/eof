@@ -124,7 +124,7 @@ Under transaction validation rules `initcodes` are not validated for conforming 
 1) It must be fully transmitted in the transaction.
 2) It is accessible to the EVM, but it can't be fully loaded into EVM memory.
 
-For these reason we suggest the same cost as for calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028).
+For these reasons, define cost of each of the `initcodes` items same as calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028). The intrinsic gas of an `InitcodeTransaction` is extended by the sum of all those items' costs.
 
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
 `InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
@@ -224,11 +224,12 @@ Code executing within an EOF environment will behave differently than legacy cod
         - does not have `initcontainer_index` immediate
         - pops one more value from the stack (first argument): `tx_initcode_hash`
         - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
-            - fails (returns 0 on the stack) if such initcode does not exist in the transaction, including when there is no `initcodes` field at all
+            - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant gas was consumed
         - just before deducting hashing charge as in `CREATE3`, does following extra steps:
             - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
             - **validates the initcode container and all its subcontainers recursively**
+            - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
                 - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant and EIP-3860 gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
@@ -301,6 +302,7 @@ Code executing within an EOF environment will behave differently than legacy cod
     - in particular, section having only `JUMPF`s to non-returning sections is non-returning itself.
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `CREATE3` `initcontainer_index` must be less than `num_container_sections`
+- `CREATE3` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
