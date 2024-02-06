@@ -229,7 +229,7 @@ Code executing within an EOF environment will behave differently than legacy cod
         - just before deducting hashing charge as in `CREATE3`, does following extra steps:
             - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
             - **validates the initcode container and all its subcontainers recursively**
-            - in addition to this, check if the initcode container has its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
+            - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
                 - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant and EIP-3860 gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
