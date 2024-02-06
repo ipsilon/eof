@@ -154,7 +154,7 @@ Code executing within an EOF environment will behave differently than legacy cod
 - Execution starts at the first byte of code section 0, and `pc` is set to 0.
 - `pc` is scoped to the executing code section
 - The instructions `CALL`, `CALLCODE`, `DELEGATECALL`, `STATICCALL`, `SELFDESTRUCT`, `JUMP`, `JUMPI`, `PC`, `CREATE`, `CREATE2`, `CODESIZE`, `CODECOPY`, `EXTCODESIZE`, `EXTCODECOPY`, `EXTCODEHASH`, `GAS` are deprecated and rejected by validation in EOF contracts. They are only available in legacy contracts.
-- If the target account of `EXTCODECOPY` is an EOF contract, then it will copy 0 bytes.
+- If the target account of `EXTCODECOPY` is an EOF contract, then it will copy up to 2 bytes from `EF00`, as if that would be the code.
 - If the target account of `EXTCODEHASH` is an EOF contract, then it will return `0x9dbf3648db8210552e9c4f75c6a1c3057c0ca432043bd648be15fe7be05646f5` (the hash of `EF00`, as if that would be the code).
 - If the target account of `EXTCODESIZE` is an EOF contract, then it will return 2.
 - The instruction `JUMPDEST` is renamed to `NOP` and remains charging 1 gas without any effect.
