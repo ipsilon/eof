@@ -3,7 +3,7 @@
 |              |    3540 |      3670 | 4200 | 4750 | 5450 | 6206 | 7480 | 7069 | (create) | 663   |
 |--------------|---------|-----------|------|------|------|------|------|------|----------|-------|
 | **Megaspec** | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     |  :+1: |
-| **EIP**      | 🚧      | stale     | stale| stale| stale| :+1: | 🚧   | 🚧   | :x:      | 🚧    |
+| **EIP**      | 🚧      | stale     | stale| stale| stale| :+1: | :+1:  | :+1:| :x:      | 🚧    |
 | **testing**  | :x:     | :x:       |      |      |      |      |      |      |          |       |
 | besu         | 477/758 | 1262/1374 | :+1: | :+1: | :+1: |      |      |      |          |       |
 | erigon       |         |           |      |      |      |      |      |      |          |       |
@@ -26,9 +26,7 @@
 EIP contents are being updated to match up with the **Megaspec**:
 
 - ethereum/EIPs#7819
-- ethereum/EIPs#7820
 - ethereum/EIPs#8152
-- ethereum/EIPs#8154
 
 # Implementations
 
