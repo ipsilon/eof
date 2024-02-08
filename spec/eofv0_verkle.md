@@ -7,12 +7,11 @@ An alternative to the existing method of executing
 
 ## Goal
 
-1. Provide the result of the jumpdest analysis of a deployed code as the EOF section.
+Provide the result of the jumpdest analysis of a deployed code as the EOF section.
 During code execution the jumpdest analysis is already available
 and the answer to the question "is this jump target valid?" can be looked up
 in the section. This allows using 32-byte Verkle Tree code chunks
 (instead of 31-byte of code + 1 byte of metadata).
-2. EOF-packaged code execution if fully compatible with the legacy code execution.
 
 ## Specification Draft
 
@@ -29,6 +28,21 @@ in the section. This allows using 32-byte Verkle Tree code chunks
 5. The packaging process is done for every deployed code during Verkle Tree migration
    and also for every contract creation later
    (i.e. becomes the part of the consensus forever).
+
+##  Backwards Compatibility
+
+EOF-packaged code execution if fully compatible with the legacy code execution.
+This is achieved by prepending the legacy code with EOF header and the section containing
+jumpdest metadata. The contents of the code section is identical to the lagacy code.
+
+Moreover, the wrapping process is bidirectional: wrapping can be created from the legacy code
+and legacy code extracted from the wrapping without any information loss.
+Implementations may consider keeping the legacy code in the database without modifications
+and only construct the EOF wrapping when loading the code from the database.
+
+It also can be noted that information in the *jumpdest* section is redundant to the `JUMPDEST`
+instructions. However, we cannot remove these instructions from the code because
+this would break at least *dynamic* jumps (where we will not be able to adjust their jump targets).
 
 ## Rationale
 
