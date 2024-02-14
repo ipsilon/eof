@@ -280,8 +280,8 @@ The following instructions are introduced in EOF code:
     - deduct 3 gas
     - read uint8 operand `imm`
     - `n = imm >> 4 + 1`, `m = imm & 0x0F + 1`
-    - `n`th stack item is swapped with `n + m`th stack item (1-based).
-    - Stack validation: `stack_height >= n + m`
+    - `n + 1`th stack item is swapped with `n + m + 1`th stack item (1-based).
+    - Stack validation: `stack_height >= n + m + 1`
 - `RETURNDATALOAD (0xf7)` instruction
     - deduct 3 gas
     - pop `offset` from the stack
