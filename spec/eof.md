@@ -1,7 +1,6 @@
 # "Mega EOF Endgame" Specification (EOFv1)
-###### tags: `EOF`
 
-[toc]
+![EOF logo](./assets/eof_logo.png)
 
 ## Preface
 
@@ -129,9 +128,11 @@ For these reasons, define cost of each of the `initcodes` items same as calldata
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
 `InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
 
-### RLP and signature
+`InitcodeTransaction` is invalid if the `to` is `nil`.
 
-Given the definitions from [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) and [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559), the `TransactionPayload` for an `InitcodeTransaction` is the RLP serialization of:
+#### RLP and signature
+
+Given the definitions from [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) the `TransactionPayload` for an `InitcodeTransaction` is the RLP serialization of:
 
 ```
 [chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, to, value, data, access_list, initcodes, y_parity, r, s]
@@ -142,6 +143,8 @@ Given the definitions from [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) a
 ```
 keccak256(INITCODE_TX_TYPE || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, to, value, data, access_list, initcodes]))
 ```
+
+The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) `ReceiptPayload` for this transaction is `rlp([status, cumulative_transaction_gas_used, logs_bloom, logs])`.
 
 ## Execution Semantics
 
@@ -384,3 +387,5 @@ Specifications contained within are **out-of-date**, use only for reference and 
 - 📃[EIP-7480](https://eips.ethereum.org/EIPS/eip-7480): EOF - Data section access instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7480.md)
 - 📃[EIP-663](https://eips.ethereum.org/EIPS/eip-663): Unlimited SWAP and DUP instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-663.md)
 - 📃[EIP-7069](https://eips.ethereum.org/EIPS/eip-7069): Revamped CALL instructions (*does not require EOF*) [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7069.md)
+- 📃[EIP-7620](https://eips.ethereum.org/EIPS/eip-7620): EOF - Contract Creation Instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7620.md)
+
