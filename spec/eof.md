@@ -146,6 +146,22 @@ keccak256(INITCODE_TX_TYPE || rlp([chain_id, nonce, max_priority_fee_per_gas, ma
 
 The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) `ReceiptPayload` for this transaction is `rlp([status, cumulative_transaction_gas_used, logs_bloom, logs])`.
 
+### Signature
+
+Given the definitions of transaction fields from [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559), for an `InitcodeTransaction` the signature values `y_parity`, `r`, and `s` are calculated by constructing a secp256k1 signature over the following digest:
+
+```
+keccak256(INITCODE_TX_TYPE || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, to, value, data, access_list, initcode_digest]))
+```
+
+where `initcode_digest` is a hash of the concatenation of hashes of `initcodes`.
+
+```
+keccak256([keccak256(initcode) for initcode in initcodes])
+```
+
+This hashing construction allows clients to hash `initcodes` once to cover both transaction hashing and `initcode` lookup (see `CREATE4`).
+
 ## Execution Semantics
 
 Code executing within an EOF environment will behave differently than legacy code. We can break these differences down into i) changes to existing behavior and ii) introduction of new behavior.
