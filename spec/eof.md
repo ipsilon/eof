@@ -113,11 +113,11 @@ The following validity constraints are placed on the container format:
 
 Introduce new transaction type `InitcodeTransaction` which extends EIP-1559 (type 2) transaction by adding a new field `initcodes: List[ByteList[MAX_INITCODE_SIZE], MAX_INITCODE_COUNT]`.
 
-The `initcodes` can only be accessed via the `CREATE4` instruction (see below), therefore `InitcodeTransactions` are intended to be sent to contracts including `CREATE4` in their execution.
+The `initcodes` can only be accessed via the `TXCREATE` instruction (see below), therefore `InitcodeTransactions` are intended to be sent to contracts including `TXCREATE` in their execution.
 
 We introduce a standardised Creator Contract (i.e. written in EVM, but existing at a known address, such as precompiles), which eliminates the need to have create transactions with empty `to`. Deployment of the Creator Contract will require an irregular state change at EOF activation block. Note that such introduction of the Creator Contract is needed, because only EOF contracts can create EOF contracts. See the appendix below for Creator Contract code.
 
-Under transaction validation rules `initcodes` are not validated for conforming to the EOF specification. They are only validated when accessed via `CREATE4`. This avoids potential DoS attacks of the mempool. If during the execution of an `InitcodeTransaction` no `CREATE4` instruction is called, such transaction is still valid.
+Under transaction validation rules `initcodes` are not validated for conforming to the EOF specification. They are only validated when accessed via `TXCREATE`. This avoids potential DoS attacks of the mempool. If during the execution of an `InitcodeTransaction` no `TXCREATE` instruction is called, such transaction is still valid.
 
 `initcodes` data is similar to calldata for two reasons:
 1) It must be fully transmitted in the transaction.
@@ -208,11 +208,11 @@ The following instructions are introduced in EOF code:
     - if `1024 < len(stack) + types[idx].max_stack_height - types[idx].inputs`, execution results in an exceptional halt
     - set `current_code_idx` to `idx`
     - set `pc = 0`
-- `CREATE3 (0xec)` instruction
+- `EOFCREATE (0xec)` instruction
     - deduct `32000` gas
     - read uint8 operand `initcontainer_index`
     - pops `value`, `salt`, `data_offset`, `data_size` from the stack
-    - load initcode EOF subcontainer at `initcontainer_index` in the container from which `CREATE3` is executed
+    - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - execute the container in "initcode-mode" and deduct gas for execution
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
@@ -226,24 +226,24 @@ The following instructions are introduced in EOF code:
             - push `new_address` onto the stack
         - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
     - deduct `200 * deployed_code_size` gas
-- `CREATE4 (0xed)` instruction
-    - Works the same as `CREATE3` except:
+- `TXCREATE (0xed)` instruction
+    - Works the same as `EOFCREATE` except:
         - does not have `initcontainer_index` immediate
         - pops one more value from the stack (first argument): `tx_initcode_hash`
         - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
-                - caller's nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant gas was consumed
-        - just before deducting hashing charge as in `CREATE3`, does following extra steps:
+                - caller's nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
+        - just before deducting hashing charge as in `EOFCREATE`, does following extra steps:
             - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
             - **validates the initcode container and all its subcontainers recursively**
             - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
-                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `CREATE4` constant and EIP-3860 gas were consumed
+                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant and EIP-3860 gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
     - cost 0 gas + possible memory expansion for aux data
-    - ends initcode frame execution and returns control to CREATE3/4 caller frame where `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
+    - ends initcode frame execution and returns control to `EOFCREATE` or `TXCREATE` caller frame where `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
     - instruction exceptionally aborts if invoked not in "initcode-mode"
 - `DATALOAD (0xd0)` instruction
@@ -287,13 +287,13 @@ The following instructions are introduced in EOF code:
     - pop `offset` from the stack
     - if `offset + 32 > len(returndata buffer)`, execution results in an exceptional halt
     - push 1 item onto the stack, the 32-byte word read from the returndata buffer starting at `offset`
-- `CALL2 (0xf8)`, `DELEGATECALL2 (0xf9)`, `STATICCALL2 (0xfb)`
+- `EXTCALL (0xf8)`, `EXTDCALL (0xf9)`, `EXTSCALL (0xfb)`
     - Replacement of `CALL`, `DELEGATECALL` and `STATICCALL` instructions, as specced out in [EIP-7069](https://eips.ethereum.org/EIPS/eip-7069), except the runtime operand stack check. In particular:
     - The `gas_limit` input is removed.
     - The `output_offset` and `output_size` is removed.
     - The `gas_limit` will be set to `(gas_left / 64) * 63` (as if the caller used `gas()` in place of `gas_limit`).
 
-    **NOTE**: The replacement instructions `*CALL2` continue being treated as **undefined** in legacy code.
+    **NOTE**: The replacement instructions `EXT*CALL` continue being treated as **undefined** in legacy code.
 
 ## Code Validation
 
@@ -308,8 +308,8 @@ The following instructions are introduced in EOF code:
 - section type has `0x80` as outputs value, and is non-returning, if and only if this section contains neither `RETF` instructions nor `JUMPF` into returning (`outputs <= 0x7f`) sections.
     - in particular, section having only `JUMPF`s to non-returning sections is non-returning itself.
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
-- `CREATE3` `initcontainer_index` must be less than `num_container_sections`
-- `CREATE3` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
+- `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
+- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
@@ -358,14 +358,14 @@ let salt := calldataload(32)
 let init_data_size := sub(size, 64)
 calldatacopy(0, 64, init_data_size)
 
-let ret := create4(tx_initcode_index, callvalue(), salt, 0, init_data_size)
+let ret := txcreate(tx_initcode_index, callvalue(), salt, 0, init_data_size)
 if iszero(ret) { revert(0, 0) }
 
 mstore(0, ret)
 return(0, 32)
 
 // Helper to compile this with existing Solidity (with --strict-assembly mode)
-function create4(a, b, c, d, e) -> f {
+function txcreate(a, b, c, d, e) -> f {
     f := verbatim_5i_1o(hex"ed", a, b, c, d, e)
 }
     
