@@ -317,9 +317,9 @@ The following instructions are introduced in EOF code:
 
 ## Stack Validation
 
-- Code blocks must be ordered in a way that every block is reachable either by a forward jump or sequential flow of instructions.
+- Code basic blocks must be ordered in a way that every block is reachable either by a forward jump or sequential flow of instructions. In other words, there is no basic block reachable only by a backward jump.
 - Validation procedure does not require actual operand stack implementation, but only to keep track of its height.
-- The computational and space complexity is O(len(code)). Each instruction is visited at most once.
+- The computational and space complexity is O(len(code)). Each instruction is visited exactly once.
 - `stack_height_...` below refers to the number of stack values accessible by this function, i.e. it does not take into account values of caller functions’ frames (but does include this function’s inputs).
 - For each instruction in the code the operand stack height bounds are recorded as `stack_height_min` and `stack_height_max`. Instructions are scanned in a single linear pass over the code.
 - During scanning:
