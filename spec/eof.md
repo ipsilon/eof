@@ -214,6 +214,7 @@ The following instructions are introduced in EOF code:
     - pops `value`, `salt`, `data_offset`, `data_size` from the stack
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
+    - check whether caller balance is enough to transfer `value`
     - execute the container in "initcode-mode" and deduct gas for execution
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
@@ -233,12 +234,12 @@ The following instructions are introduced in EOF code:
         - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
-        - just before deducting hashing charge as in `EOFCREATE`, does following extra steps:
-            - deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
+        - in addition to hashing charge as in `EOFCREATE`, deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
+        - just before executing the initcode container:
             - **validates the initcode container and all its subcontainers recursively**
             - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
-                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant and EIP-3860 gas were consumed
+                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant, EIP-3860 gas and hashing gas were consumed
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
