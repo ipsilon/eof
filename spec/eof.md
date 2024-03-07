@@ -288,7 +288,7 @@ The following instructions are introduced in EOF code:
     - pop `offset` from the stack
     - if `offset + 32 > len(returndata buffer)`, execution results in an exceptional halt
     - push 1 item onto the stack, the 32-byte word read from the returndata buffer starting at `offset`
-- `EXTCALL (0xf8)`, `EXTDCALL (0xf9)`, `EXTSCALL (0xfb)`
+- `EXTCALL (0xf8)`, `EXTDELEGATECALL (0xf9)`, `EXTSTATICCALL (0xfb)`
     - Replacement of `CALL`, `DELEGATECALL` and `STATICCALL` instructions, as specced out in [EIP-7069](https://eips.ethereum.org/EIPS/eip-7069), except the runtime operand stack check. In particular:
     - The `gas_limit` input is removed.
     - The `output_offset` and `output_size` is removed.
