@@ -3,7 +3,7 @@
 |              |    3540 |      3670 | 4200 | 4750 | 5450 | 6206 | 7480 | 7069 | 7620     | 663   |
 |--------------|---------|-----------|------|------|------|------|------|------|----------|-------|
 | **Megaspec** | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     |  :+1: |
-| **EIP**      | 🚧      | stale     | stale| stale| stale| :+1: | :+1:  | :+1:| 🚧       | 🚧    |
+| **EIP**      | 🚧      | stale     | stale| stale| stale| :+1: | :+1:  | :+1:| 🚧       |  :+1: |
 | **testing**  | :x:     | :x:       |      |      |      |      |      |      |          |       |
 | besu         | 477/758 | 1262/1374 | :+1: | :+1: | :+1: |      |      |      |          |       |
 | erigon       |         |           |      |      |      |      |      |      |          |       |
@@ -25,12 +25,8 @@
 
 EIP contents are being updated to match up with the **Megaspec**:
 
-- **EIP-663** - ethereum/EIPs#7819
-- **EIP-3540** - ethereum/EIPs#8217 (move out of Stagnant)
-- **EIP-6206** - ethereum/EIPs#8216 (move out of Stagnant)
-- **EIP-7480** - ethereum/EIPs#8215 (move out of Stagnant)
-- **EIP-7620** - ethereum/EIPs#8209 (Add EIP)
-- **EIP-3540** - ethereum/EIPs#8152 (depends on ethereum/EIPs#8209)
+- **EIP-3540** - ethereum/EIPs#8152
+- **EIP-7069** - ethereum/EIPs#8287
 
 # Implementations
 
@@ -65,6 +61,6 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 
 * EIP-7069 - Revamped CALL instructions
 
-* EIP-TBD - EOF Create Instructions
+* EIP-7620 - EOF Create Instructions
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
