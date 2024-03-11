@@ -165,7 +165,6 @@ Code executing within an EOF environment will behave differently than legacy cod
 - If instructions `CREATE` and `CREATE2` have EOF code as initcode (starting with `EF00` magic)
     - deployment fails (returns 0 on the stack)
     - caller's nonce is not updated and gas for initcode execution is not consumed
-- `DELEGATECALL` from an EOF contract to a legacy contract is disallowed, and it returns 0 to signal failure. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
 
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
 
@@ -293,6 +292,7 @@ The following instructions are introduced in EOF code:
     - The `gas_limit` input is removed.
     - The `output_offset` and `output_size` is removed.
     - The `gas_limit` will be set to `(gas_left / 64) * 63` (as if the caller used `gas()` in place of `gas_limit`).
+    - `EXTDELEGATECALL` to a legacy contract is disallowed, and it returns `1` (same as when the callee frame `reverts`) to signal failure. Only initial gas cost of `EXTDELEGATECALL` is consumed (similarly to the call depth check) and the target address still becomes warm. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
 
     **NOTE**: The replacement instructions `EXT*CALL` continue being treated as **undefined** in legacy code.
 
