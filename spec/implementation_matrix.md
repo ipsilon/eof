@@ -8,7 +8,7 @@
 | besu         | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧        | :+1:  |
 | erigon       |         |           |      |      |      |      |      |      |          |       |
 | ethereumjs   |         |           |      |      |      |      |      |      |          |       |
-| evmone       | :+1:    | :+1:      | :+1: | :+1: | 🚧   | :+1: | :+1: | 🚧   | 🚧       | 🚧    |
+| evmone       | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧   | 🚧       | 🚧    |
 | geth         |         |           |      |      |      |      |      |      |          |       |
 | nethermind   |         |           |      |      |      |      |      |      |          |       |
 | revm         | 🚧      |           | :+1: | :+1: |      | :+1: | :+1: |      |  🚧      | :+1:  |
@@ -38,22 +38,28 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 # Column Descriptions
 
 * EIP-3540 - EOF Container
-  * Execution Validation (758 tests) - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP3540
+  * Validation
+    * https://github.com/ethereum/tests/tree/develop/EOFTests/EIP3540
+    * https://github.com/ethereum/tests/tree/develop/EOFTests/ori
+  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP3540
 
 * EIP-3670 - Code Validation
-  * Execution Validation (1374 tests) - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP3540
+  * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP3670
+  * Validation tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/evmone-eof-validation-tests/EOFTests/eof_validation
+    * these cover validation rules from all EIPs
 
 * EIP-4200 - Static Relative Jumps
-  * Container Validation (54 tests) - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP4200
-  * Execution Validation (27 tests) - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP4200
+  * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP4200
+  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP4200
 
 * EIP-4750 - Functions
-  * Container Validation (29 tests) - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP4750
-  * Execution Validation (4 tests) - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP4750
+  * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP4750
+  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP4750
 
 * EIP-5450 - Stack Validation
-  * Container Validation (202 tests) - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP5450
-  * Execution Validation (2 tests) - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP5450
+  * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP5450
+  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP5450
+  * Validation tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/evmone-eof-validation-tests/EOFTests/eof_validation/stack
 
 * EIP-6206 - JUMPF and non-returning functions
 
@@ -62,5 +68,6 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 * EIP-7069 - Revamped CALL instructions
 
 * EIP-7620 - EOF Create Instructions
+  * Creation state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/stCreate
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
