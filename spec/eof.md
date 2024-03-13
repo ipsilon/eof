@@ -213,7 +213,8 @@ The following instructions are introduced in EOF code:
     - pops `value`, `salt`, `data_offset`, `data_size` from the stack
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
-    - check whether caller balance is enough to transfer `value`
+    - check call depth limit and whether caller balance is enough to transfer `value`
+        - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
     - execute the container in "initcode-mode" and deduct gas for execution
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
