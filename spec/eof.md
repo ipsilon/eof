@@ -189,7 +189,7 @@ The following instructions are introduced in EOF code:
     - otherwise interpret 2 byte operand at `pc + case * 2` as int16, call it `offset`, and set `pc += (max_index + 1) * 2 + offset`
 - introduce new vm context variables
     - `current_code_idx` which stores the actively executing code section index
-    - new `return_stack` which stores the pairs `(code_section`, `pc`)`.
+    - new `return_stack` which stores the pairs `(code_section, pc)`.
         - when instantiating a vm context, push an initial value to the *return stack* of `(0,0)`
 - `CALLF (0xe3)` instruction
     - deduct 5 gas
@@ -342,6 +342,10 @@ The following instructions are introduced in EOF code:
 - maximum data stack of a function must not exceed 1023
 - `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
 - Find full spec of the previous _more restrictive_ algorithm at https://eips.ethereum.org/EIPS/eip-5450#operand-stack-validation
+
+## Examples
+
+Annotated examples of EOF formatted containers demonstrating several key features of EOF can be found in [this test file within the `evmone` project repository](https://github.com/ethereum/evmone/blob/eof-examples/test/unittests/eof_example_test.cpp).
 
 ## Appendix: Creator Contract
 
