@@ -7,6 +7,10 @@ An alternative to the existing method of executing
 
 ## Goal
 
+Simplified legacy code execution in the Verkle Tree implementation.
+
+Better "code-to-data" ratio.
+
 Provide the result of the jumpdest analysis of a deployed code as the EOF section.
 During code execution the jumpdest analysis is already available
 and the answer to the question "is this jump target valid?" can be looked up
@@ -35,9 +39,9 @@ in the section. This allows using 32-byte Verkle Tree code chunks
 2. Execution stops if `PC` goes outside the code section bounds (in case of EOFv0 this is also the
    end of the container).
 3. `PC` returns the current position within the *code*.
-4. The instructions which *read* code must refer to the *code* section only. This is significantly
-   different from what the original EIP-3540 proposed, however this difference is not relevant
-   in the latest EOFv1 revision where these instructions are invalid.
+4. The instructions which *read* code must refer to the *code* section only. 
+   The modification keeps the behavior of these instructions unchanged.
+   These instructions are invalid in EOFv1.
    The instructions are:
     - `CODECOPY` (copies a part of the *code* section),
     - `CODESIZE` (returns the size of the *code* section),
@@ -53,15 +57,16 @@ in the section. This allows using 32-byte Verkle Tree code chunks
    without EOF wrapping. However, because the EOF containers are not visible to any EVM program,
    implementations may decide to wrap initcodes with EOFv0 and execute it the same way as
    EOFv0 deployed codes.
-2. The initcode size limit remains defined by [EIP-3860](https://eips.ethereum.org/EIPS/eip-3860).
+2. The initcode size limit and cost remains defined by [EIP-3860](https://eips.ethereum.org/EIPS/eip-3860).
 3. The initcode still returns a plain deploy code.
-   The plain code size limit is defined by [EIP-170](https://eips.ethereum.org/EIPS/eip-170).
-4. The plain code is not empty it must be wrapped with EOFv0 before put in the state:
+   The plain code size limit and cost is defined by [EIP-170](https://eips.ethereum.org/EIPS/eip-170).
+4. If the plain code is not empty, it must be wrapped with EOFv0 before put in the state:
     - perform jumpdest analysis of the plain code,
     - encode the jumpdest analysis result as the *jumpdest* section,
     - put the plain code in the *code* section,
     - create EOFv0 container with the *jumpdest* and *code* sections.
 5. The code deployment cost is calculated from the total EOFv0 size.
+   This is a breaking change so the impact must be analysed.
 6. During Verkle Tree migration perform the above EOFv0 wrapping of all deployed code.
 
 ### Jumpdest section encoding
@@ -90,7 +95,7 @@ place the byte in order in the *jumpdest* section.
 This provides the following benefits over the original Verkle Tree design:
 
 1. The code executes by full 32-byte chunks.
-2. The *metadata* size overhead slightly smaller `1/32` instead of `1/31`.
+2. The *metadata* size overhead slightly smaller: 3.1% (`1/32`) instead of 3.2% (`1/31`).
 3. The *metadata* lookup is only needed for executing jumps
    (not needed when following through to the next chunk).
 
