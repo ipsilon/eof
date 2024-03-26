@@ -143,15 +143,22 @@ There are new risks this method introduces.
    from being assigned to a new instruction.
 2. The heuristic will be considered by compilers optimizing for code size.
 
-### Prove all jump targets are valid
+### Prove jump targets are valid
+
+#### Prove all "static jumps"
+
+By "static jump" we consider a jump instruction directly preceded by a `PUSH` instruction.
+
+In the solidity generated code all `JUMPI` instructions and 85% of `JUMP` instructions are "static".
+(these numbers must be verified on bigger sample of contracts).
+
+We can easily validate all static jumps and mark a contracts with "all static jumps valid"
+at deploy time. Then at runtime static jumps can be executed without accessing jumpdest section.
+
+#### Prove all jumps
 
 If we can prove that all jump targets in the code are valid,
 then there is no need for the *jumpdest* section.
-
-In the solidity generated code all `JUMPI` instructions are "static"
-(preceded by a `PUSH` instruction).
-Only some `JUMP` instructions are not "static" because they are used to implement
-returns from functions.
 
 Erigon project has a
 [prototype analysis tool](https://github.com/ledgerwatch/erigon/blob/devel/cmd/hack/flow/flow.go#L488)
