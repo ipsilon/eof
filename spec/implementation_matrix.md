@@ -42,6 +42,7 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
     * https://github.com/ethereum/tests/tree/develop/EOFTests/EIP3540
     * https://github.com/ethereum/tests/tree/develop/EOFTests/ori
   * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP3540
+  * Legacy->EOF `EXTCODE*` state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/extcode
 
 * EIP-3670 - Code Validation
   * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP3670
@@ -66,6 +67,7 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 * EIP-7480 - Data section access
 
 * EIP-7069 - Revamped CALL instructions
+  * `EXT*CALL` state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/eof_calls
 
 * EIP-7620 - EOF Create Instructions
   * Creation state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/stCreate
