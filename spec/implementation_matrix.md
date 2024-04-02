@@ -26,7 +26,7 @@
 EIP contents are being updated to match up with the **Megaspec**:
 
 - **EIP-3540** - ethereum/EIPs#8152
-- **EIP-7069** - ethereum/EIPs#8287
+- **EIP-4750** - ethereum/EIPs#8312
 
 # Implementations
 
