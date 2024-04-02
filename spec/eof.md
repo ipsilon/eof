@@ -199,7 +199,7 @@ The following instructions are introduced in EOF code:
     - push new element to `return_stack` `(current_code_idx, pc+3)`
     - update `current_code_idx` to `idx` and set `pc` to 0
 - `RETF (0xe4)` instruction
-    - deduct 4 gas
+    - deduct 3 gas
     - pops `val` from `return_stack` and sets `current_code_idx` to `val.code_section` and `pc` to `val.pc`
 - `JUMPF (0xe5)` instruction
     - deduct 5 gas
