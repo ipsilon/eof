@@ -306,7 +306,6 @@ The following instructions are introduced in EOF code:
 - no unassigned instructions used
 - instructions with immediate operands must not be truncated at the end of a code section
 - `RJUMP` / `RJUMPI` / `RJUMPV` operands must not point to an immediate operand and may not point outside of code bounds
-- `RJUMPV` `count` cannot be zero
 - `CALLF` and `JUMPF` operand may not exceed `num_code_sections`
 - `CALLF` operand must not point to to a section with `0x80` as outputs (non-returning)
 - `JUMPF` operand must point to a code section with equal or fewer number of outputs as the section in which it resides, or to a section with `0x80` as outputs (non-returning)
