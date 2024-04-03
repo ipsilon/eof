@@ -126,9 +126,13 @@ Under transaction validation rules `initcodes` are not validated for conforming 
 For these reasons, define cost of each of the `initcodes` items same as calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028). The intrinsic gas of an `InitcodeTransaction` is extended by the sum of all those items' costs.
 
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
-`InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
 
-`InitcodeTransaction` is invalid if the `to` is `nil`.
+`InitcodeTransaction` is invalid if either:
+- there are more than `MAX_INITCODE_COUNT` entries in `initcodes`
+- `initcodes` is an empty array
+- length of any entry in `initcodes` exceeds `MAX_INITCODE_SIZE`
+- any entry in `initcodes` has zero length
+- the `to` is `nil`
 
 #### RLP and signature
 
