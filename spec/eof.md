@@ -213,7 +213,6 @@ The following instructions are introduced in EOF code:
             - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
-        - `RETURN` and `STOP` are not allowed in "initcode-mode" (see validation rules)
     - deduct `200 * deployed_code_size` gas
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
@@ -222,7 +221,6 @@ The following instructions are introduced in EOF code:
     - ends initcode frame execution and returns control to `EOFCREATE` caller frame (unless called in the topmost frame of a creation transaction).
     - `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
-    - instruction is not allowed in regular runtime code (see validation rules)
 - `DATALOAD (0xd0)` instruction
     - deduct 4 gas
     - pop one value, `offset`, from the stack
