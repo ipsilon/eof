@@ -213,8 +213,7 @@ The following instructions are introduced in EOF code:
             - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
-        - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
-        - "initcode-mode" _is not transitive_ - it is only active for the frame executing the initcontainer. If another (non-create) call is made from this frame, it _is not_ executed in "initcode-mode".
+        - `RETURN` and `STOP` are not allowed in "initcode-mode" (see validation rules)
     - deduct `200 * deployed_code_size` gas
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
@@ -223,7 +222,7 @@ The following instructions are introduced in EOF code:
     - ends initcode frame execution and returns control to `EOFCREATE` caller frame (unless called in the topmost frame of a creation transaction).
     - `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
-    - instruction exceptionally aborts if invoked not in "initcode-mode"
+    - instruction is not allowed in regular runtime code (see validation rules)
 - `DATALOAD (0xd0)` instruction
     - deduct 4 gas
     - pop one value, `offset`, from the stack
@@ -289,10 +288,15 @@ The following instructions are introduced in EOF code:
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
+- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must be an "initcode" subcontainer, that is, it *must* contain a `RETURNCONTRACT` instruction.
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
+- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` must not be an "initcode" subcontainer, that is, it must not contain a `RETURNCONTRACT` instruction.
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
+- whether or not a container is an "initcode" container is defined by whether or not it contains a `RETURNCONTRACT` instruction.
+- a container contains "runtime" code if it is not an "initcode" container.
+- it is an error for an "initcode" container to contain `RETURN` or `STOP`. in other words, it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
 
 ## Stack Validation
 
