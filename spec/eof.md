@@ -171,12 +171,11 @@ Code executing within an EOF environment will behave differently than legacy cod
 
 Creation transactions (tranactions with empty `to`), with `data` containing EOF code (starting with `EF00` magic) are interpreted as having an EOF `initcontainer` in the `data` and:
 
-- intrinsic gas cost rules and limits defined in EIP-3860 for legacy creation transaction apply. The entire `initcontainer` is treated as initcode
+- intrinsic gas cost rules and limits defined in EIP-3860 for legacy creation transaction apply. The entire `data` of the transaction is used for these calculations
 - **the initcontainer and all its subcontainers are validated recursively**
-- it is checked if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
 - transaction fails if any of those checks were invalid (gas for initcode execution is not consumed. Only intrinsic creation transaction costs were consumed)
+- bytes after `data_size` bytes of the initcontainer's `data_section`, are treated as calldata to pass into the execution frame
 - execute the container in "initcode-mode" and deduct gas for execution
-    - calldata is empty for this execution frame
     - calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
     - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
         - load deploy EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
