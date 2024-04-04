@@ -293,7 +293,6 @@ The following instructions are introduced in EOF code:
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
 - whether or not a container is an "initcode" container is defined by whether or not it contains a `RETURNCONTRACT` instruction.
-- a container contains "runtime" code if it is not an "initcode" container.
 - it is an error for an "initcode" container to contain `RETURN` or `STOP`. in other words, it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
 
 ## Stack Validation
