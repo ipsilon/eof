@@ -231,6 +231,7 @@ The following instructions are introduced in EOF code:
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
         - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
+        - "initcode-mode" _is not transitive_ - it is only active for the frame executing the initcontainer. If another (non-create) call is made from this frame, it _is not_ executed in "initcode-mode".
     - deduct `200 * deployed_code_size` gas
 - `TXCREATE (0xed)` instruction
     - Works the same as `EOFCREATE` except:
