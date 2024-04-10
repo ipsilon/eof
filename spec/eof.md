@@ -27,7 +27,7 @@ body := types_section, code_section+, container_section*, data_section
 types_section := (inputs, outputs, max_stack_height)+
 ```
 
-_note: `,` is a concatenation operator, `+` should be interpreted as "one or more" of the preceding item, and `*` should be interpreted as "zero or more" of the preceding item._
+_note: `,` is a concatenation operator, `+` should be interpreted as "one or more" of the preceding item, `*` should be interpreted as "zero or more" of the preceding item, and `[item]` should be interpeted as an optional item._
 
 #### Header
 
