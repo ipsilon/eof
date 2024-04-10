@@ -214,11 +214,13 @@ The following instructions are introduced in EOF code:
 - `EOFCREATE (0xec)` instruction
     - deduct `32000` gas
     - read uint8 operand `initcontainer_index`
-    - pops `value`, `salt`, `data_offset`, `data_size` from the stack
+    - pops `value`, `salt`, `input_offset`, `input_size` from the stack
+    - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
+    - copy memory starting at `input_offset` of `input_size` length into the call data
     - execute the container in "initcode-mode" and deduct gas for execution
         - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
