@@ -286,9 +286,9 @@ The following instructions are introduced in EOF code:
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
-- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must be an "initcode" subcontainer, that is, it *must* contain a `RETURNCONTRACT` instruction.
+- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must be an "initcode" subcontainer, that is, it *must not* contain either a `RETURN` or `STOP` instruction. it is allowed to not contain a `RETURNCONTRACT` instruction (that is, it may be terminated by `REVERT` or `INVALID`).
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
-- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` must not be an "initcode" subcontainer, that is, it must not contain a `RETURNCONTRACT` instruction.
+- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` must not be an "initcode" subcontainer, that is, it *must not* contain a `RETURNCONTRACT` instruction.
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
