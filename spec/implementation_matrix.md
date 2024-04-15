@@ -12,7 +12,7 @@
 | geth         |         |           |      |      |      |      |      |      |          |       |
 | nethermind   |         |           |      |      |      |      |      |      |          |       |
 | revm         | :+1:    |  :+1:     | :+1: | :+1: |  🚧  | :+1: | :+1: |   🚧  |  🚧      | :+1:  |
-| solidity     |         |           |      |      |      |      |      |      |          |       |
+| solidity     | 🚧      | N/A       | 🚧    | 🚧   | N/A  |      |      |      |          |       |
 | vyper        |         |           |      |      |      |      |      |      |          |       |
 
 # Specs
@@ -33,7 +33,6 @@ EIP contents are being updated to match up with the **Megaspec**:
 ## Besu
 
 Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof)
-
 
 # Column Descriptions
 
@@ -73,3 +72,7 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
   * Creation state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/stCreate
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
+
+## Solidity
+
+Last implementation resides at https://github.com/ethereum/solidity/pull/13825.  This is based on the December 2022 version of EOF.
