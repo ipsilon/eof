@@ -27,7 +27,7 @@ body := types_section, code_section+, container_section*, data_section
 types_section := (inputs, outputs, max_stack_height)+
 ```
 
-_note: `,` is a concatenation operator, `+` should be interpreted as "one or more" of the preceding item, and `*` should be interpreted as "zero or more" of the preceding item._
+_note: `,` is a concatenation operator, `+` should be interpreted as "one or more" of the preceding item, `*` should be interpreted as "zero or more" of the preceding item, and `[item]` should be interpeted as an optional item._
 
 #### Header
 
@@ -126,9 +126,13 @@ Under transaction validation rules `initcodes` are not validated for conforming 
 For these reasons, define cost of each of the `initcodes` items same as calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028). The intrinsic gas of an `InitcodeTransaction` is extended by the sum of all those items' costs.
 
 EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
-`InitcodeTransaction` is invalid if there are more than `MAX_INITCODE_COUNT` entries in `initcodes`, or if any exceeds `MAX_INITCODE_SIZE`.
 
-`InitcodeTransaction` is invalid if the `to` is `nil`.
+`InitcodeTransaction` is invalid if either:
+- there are more than `MAX_INITCODE_COUNT` entries in `initcodes`
+- `initcodes` is an empty array
+- length of any entry in `initcodes` exceeds `MAX_INITCODE_SIZE`
+- any entry in `initcodes` has zero length
+- the `to` is `nil`
 
 #### RLP and signature
 
@@ -165,7 +169,6 @@ Code executing within an EOF environment will behave differently than legacy cod
 - If instructions `CREATE` and `CREATE2` have EOF code as initcode (starting with `EF00` magic)
     - deployment fails (returns 0 on the stack)
     - caller's nonce is not updated and gas for initcode execution is not consumed
-- `DELEGATECALL` from an EOF contract to a legacy contract is disallowed, and it returns 0 to signal failure. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
 
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
 
@@ -190,7 +193,7 @@ The following instructions are introduced in EOF code:
     - otherwise interpret 2 byte operand at `pc + case * 2` as int16, call it `offset`, and set `pc += (max_index + 1) * 2 + offset`
 - introduce new vm context variables
     - `current_code_idx` which stores the actively executing code section index
-    - new `return_stack` which stores the pairs `(code_section`, `pc`)`.
+    - new `return_stack` which stores the pairs `(code_section, pc)`.
         - when instantiating a vm context, push an initial value to the *return stack* of `(0,0)`
 - `CALLF (0xe3)` instruction
     - deduct 5 gas
@@ -200,7 +203,7 @@ The following instructions are introduced in EOF code:
     - push new element to `return_stack` `(current_code_idx, pc+3)`
     - update `current_code_idx` to `idx` and set `pc` to 0
 - `RETF (0xe4)` instruction
-    - deduct 4 gas
+    - deduct 3 gas
     - pops `val` from `return_stack` and sets `current_code_idx` to `val.code_section` and `pc` to `val.pc`
 - `JUMPF (0xe5)` instruction
     - deduct 5 gas
@@ -211,11 +214,15 @@ The following instructions are introduced in EOF code:
 - `EOFCREATE (0xec)` instruction
     - deduct `32000` gas
     - read uint8 operand `initcontainer_index`
-    - pops `value`, `salt`, `data_offset`, `data_size` from the stack
+    - pops `value`, `salt`, `input_offset`, `input_size` from the stack
+    - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
-    - check whether caller balance is enough to transfer `value`
+    - check call depth limit and whether caller balance is enough to transfer `value`
+        - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
+    - copy memory starting at `input_offset` of `input_size` length into the call data
     - execute the container in "initcode-mode" and deduct gas for execution
+        - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
@@ -226,6 +233,7 @@ The following instructions are introduced in EOF code:
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
         - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
+        - "initcode-mode" _is not transitive_ - it is only active for the frame executing the initcontainer. If another (non-create) call is made from this frame, it _is not_ executed in "initcode-mode".
     - deduct `200 * deployed_code_size` gas
 - `TXCREATE (0xed)` instruction
     - Works the same as `EOFCREATE` except:
@@ -293,6 +301,7 @@ The following instructions are introduced in EOF code:
     - The `gas_limit` input is removed.
     - The `output_offset` and `output_size` is removed.
     - The `gas_limit` will be set to `(gas_left / 64) * 63` (as if the caller used `gas()` in place of `gas_limit`).
+    - `EXTDELEGATECALL` to a legacy contract is disallowed, and it returns `1` (same as when the callee frame `reverts`) to signal failure. Only initial gas cost of `EXTDELEGATECALL` is consumed (similarly to the call depth check) and the target address still becomes warm. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
 
     **NOTE**: The replacement instructions `EXT*CALL` continue being treated as **undefined** in legacy code.
 
@@ -301,7 +310,6 @@ The following instructions are introduced in EOF code:
 - no unassigned instructions used
 - instructions with immediate operands must not be truncated at the end of a code section
 - `RJUMP` / `RJUMPI` / `RJUMPV` operands must not point to an immediate operand and may not point outside of code bounds
-- `RJUMPV` `count` cannot be zero
 - `CALLF` and `JUMPF` operand may not exceed `num_code_sections`
 - `CALLF` operand must not point to to a section with `0x80` as outputs (non-returning)
 - `JUMPF` operand must point to a code section with equal or fewer number of outputs as the section in which it resides, or to a section with `0x80` as outputs (non-returning)
@@ -341,6 +349,10 @@ The following instructions are introduced in EOF code:
 - maximum data stack of a function must not exceed 1023
 - `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
 - Find full spec of the previous _more restrictive_ algorithm at https://eips.ethereum.org/EIPS/eip-5450#operand-stack-validation
+
+## Examples
+
+Annotated examples of EOF formatted containers demonstrating several key features of EOF can be found in [this test file within the `evmone` project repository](https://github.com/ethereum/evmone/blob/eof-examples/test/unittests/eof_example_test.cpp).
 
 ## Appendix: Creator Contract
 
