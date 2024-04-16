@@ -101,10 +101,10 @@ The following validity constraints are placed on the container format:
 - `version` must be `0x01`
 - `types_size` is divisible by `4`
 - the number of code sections must be equal to `types_size / 4`
-- the number of code sections must not exceed 1024
+- the number of code sections must be greater than `0` and not exceed `1024`
 - `code_size` may not be 0
-- the number of container sections must not exceed 256
-- `container_size` may not be 0, but container sections are optional
+- the number of container sections must not exceed `256`. The number of container sections may not be `0`, if declared in the header
+- `container_size` may not be 0
 - the total size of a deployed container without container sections must be `13 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size`
 - the total size of a deployed container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 2*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
 - the total size of not yet deployed container might be up to `data_size` lower than the above values due to how the data section is rewritten and resized during deployment (see [Data Section Lifecycle](#data-section-lifecycle))
