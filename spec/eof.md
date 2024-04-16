@@ -222,7 +222,7 @@ The following instructions are introduced in EOF code:
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
     - copy memory starting at `input_offset` of `input_size` length into the call data
-    - execute the container in "initcode-mode" and deduct gas for execution
+    - execute the container in "initcode-mode" and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
