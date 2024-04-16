@@ -217,6 +217,7 @@ The following instructions are introduced in EOF code:
     - pops `value`, `salt`, `input_offset`, `input_size` from the stack
     - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
+        - let `initcontainer_size` be the declared size of that EOF subcontainer in its parent container header
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
@@ -242,6 +243,7 @@ The following instructions are introduced in EOF code:
         - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
+            - let `initcontainer_size` be the length of that EOF container in bytes
         - in addition to hashing charge as in `EOFCREATE`, deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
         - just before executing the initcode container:
             - **validates the initcode container and all its subcontainers recursively**
