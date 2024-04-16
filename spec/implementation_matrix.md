@@ -3,7 +3,7 @@
 |              |    3540 |      3670 | 4200 | 4750 | 5450 | 6206 | 7480 | 7069 | 7620     | 663   |
 |--------------|---------|-----------|------|------|------|------|------|------|----------|-------|
 | **Megaspec** | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     |  :+1: |
-| **EIP**      | 🚧      | :+1:      | :+1: | 🚧   | 🚧   | :+1: | :+1:  | :+1: | :+1:     |  :+1: |
+| **EIP**      | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1:  | :+1: | :+1:    |  :+1: |
 | **testing**  | :+1:    | :+1:      | :+1: | :+1: | :+1: | 🚧   |      | :+1: | :+1:     |       |
 | besu         | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧        | :+1:  |
 | erigon       |         |           |      |      |      |      |      |      |          |       |
@@ -21,12 +21,14 @@
 
 [**Megaspec**](./eof.md) is ready and main source of truth.
 
+- Alternative version without an irregular state change is discussed: https://github.com/ipsilon/eof/pull/78
+
 ## EIP updates in progress 🚧
 
 EIP contents are being updated to match up with the **Megaspec**:
 
-- **EIP-3540** - ethereum/EIPs#8152
-- **EIP-4750** - ethereum/EIPs#8312
+- **EIP-7620** - ethereum/EIPs#8358 (mostly clarifications)
+- **EIP-7620** - irregular state change discussion pending, to be filed after https://github.com/ipsilon/eof/pull/78 concludes
 
 # Implementations
 
