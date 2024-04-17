@@ -47,7 +47,7 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 
 * EIP-3670 - Code Validation
   * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP3670
-  * Validation tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/evmone-eof-validation-tests/EOFTests/eof_validation
+  * Validation tests generated from evmone unit tests - https://github.com/ethereum/tests/tree/develop/EOFTests/efValidation
     * these cover validation rules from all EIPs
 
 * EIP-4200 - Static Relative Jumps
@@ -61,7 +61,7 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 * EIP-5450 - Stack Validation
   * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP5450
   * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP5450
-  * Validation tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/evmone-eof-validation-tests/EOFTests/eof_validation/stack
+  * Validation tests generated from evmone unit tests - https://github.com/ethereum/tests/tree/develop/EOFTests/efStack
 
 * EIP-6206 - JUMPF and non-returning functions
 
