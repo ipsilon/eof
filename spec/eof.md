@@ -169,12 +169,13 @@ Code executing within an EOF environment will behave differently than legacy cod
 
 #### Creation transactions
 
-Creation transactions (tranactions with empty `to`), with `data` containing EOF code (starting with `EF00` magic) are interpreted as having an EOF `initcontainer` in the `data` and:
+Creation transactions (tranactions with empty `to`), with `data` containing EOF code (starting with `EF00` magic) are interpreted as having a concatenation of EOF `initcontainer` and `calldata` in the `data` and:
 
 - intrinsic gas cost rules and limits defined in EIP-3860 for legacy creation transaction apply. The entire `data` of the transaction is used for these calculations
 - **the initcontainer and all its subcontainers are validated recursively**
-- transaction fails if any of those checks were invalid (gas for initcode execution is not consumed. Only intrinsic creation transaction costs were consumed)
-- bytes after `data_size` bytes of the initcontainer's `data_section`, are treated as calldata to pass into the execution frame
+  - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size, therefore to find the split of transaction `data` into `initcontainer` and `calldata`  we can find `intcontainer` size by reading all section sizes from the header and calculating full size. Full validation of `initconainer` follows after finding its size this way.
+- transaction fails if any of validation checks are invalid (gas for initcode execution is not consumed. Only intrinsic creation transaction costs were consumed)
+- `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
 - execute the container in "initcode-mode" and deduct gas for execution
     - calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
     - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
