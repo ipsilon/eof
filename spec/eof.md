@@ -201,7 +201,7 @@ The following instructions are introduced in EOF code:
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
     - caller's memory slice [`input_offset`:`input_size`] is used as calldata
-    - execute the container in "initcode-mode" and deduct gas for execution. The 63/64th rule from EIP-150 applies.
+    - execute the container and deduct gas for execution
         - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
@@ -286,14 +286,17 @@ The following instructions are introduced in EOF code:
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
-- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must be an "initcode" subcontainer, that is, it *must not* contain either a `RETURN` or `STOP` instruction. it is allowed to not contain a `RETURNCONTRACT` instruction (that is, it may be terminated by `REVERT` or `INVALID`).
+- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must be an "initcode" subcontainer, that is, it *must not* contain either a `RETURN` or `STOP` instruction.
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
-- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` must not be an "initcode" subcontainer, that is, it *must not* contain a `RETURNCONTRACT` instruction.
+- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` must be a "runtime" subcontainer, that is, it *must not* contain a `RETURNCONTRACT` instruction.
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
-- whether or not a container is an "initcode" container is defined by whether or not it contains a `RETURNCONTRACT` instruction.
-- it is an error for an "initcode" container to contain `RETURN` or `STOP`. in other words, it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
+- it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
+- for terminology purposes, the following concepts are defined:
+  - an "initcode" container is one which does not contain `RETURN` or `STOP`
+  - a "runtime" container is one which does not contain `RETURNCONTRACT`
+  - note a container can be both "initcode" and "runtime" if it does not contain any of `RETURN`, `STOP` or `RETURNCONTRACT` (for instance, if it is only terminated with `REVERT` or `INVALID`).
 
 ## Stack Validation
 
