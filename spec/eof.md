@@ -54,7 +54,7 @@ _note: `,` is a concatenation operator, `+` should be interpreted as "one or mor
 | types_section | variable | n/a           | stores code section metadata |
 | inputs        | 1 byte | 0x00-0x7F       | number of stack elements the code section consumes |
 | outputs       | 1 byte | 0x00-0x80       | number of stack elements the code section returns or 0x80 for non-returning functions |
-| max_stack_height | 2 bytes | 0x0000-0x03FF | maximum number of elements ever placed onto the stack by the code section |
+| max_stack_height | 2 bytes | 0x0000-0x03FF | maximum number of elements ever placed onto the stack by the code section, incl. inputs |
 | code_section  | variable | n/a           | arbitrary sequence of bytes |
 | container_section | variable | n/a       | arbitrary sequence of bytes |
 | data_section  | variable | n/a           | arbitrary sequence of bytes |
@@ -350,7 +350,6 @@ The following instructions are introduced in EOF code:
 - no instruction may be unreachable
 - maximum data stack of a function must not exceed 1023
 - `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
-- Find full spec of the previous _more restrictive_ algorithm at https://eips.ethereum.org/EIPS/eip-5450#operand-stack-validation
 
 ## Examples
 
