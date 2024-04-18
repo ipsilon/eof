@@ -169,6 +169,8 @@ Code executing within an EOF environment will behave differently than legacy cod
 - If instructions `CREATE` and `CREATE2` have EOF code as initcode (starting with `EF00` magic)
     - deployment fails (returns 0 on the stack)
     - caller's nonce is not updated and gas for initcode execution is not consumed
+- `RETURNDATACOPY (0x3E)` instruction
+    - same behavior as legacy, but changes the exceptional halt behavior to zero-padding behavior (same behavior as `CALLDATACOPY`).
 
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
 
@@ -295,9 +297,7 @@ The following instructions are introduced in EOF code:
     - deduct 3 gas
     - pop `offset` from the stack
     - push 1 item onto the stack, the 32-byte word read from the returndata buffer starting at `offset`
-    - if `offset + 32 > len(returndata buffer)` the result is zero-padded (same behavior as `CALLDATALOAD`).
-- `RETURNDATACOPY (0x3E)` instruction
-    - same behavior as legacy, but changes the exceptional halt behavior to zero-padding behavior (same behavior as `CALLDATACOPY`).
+    - if `offset + 32 > len(returndata buffer)` the result is zero-padded (same behavior as `CALLDATALOAD`). see matching behavior of `RETURNDATACOPY` in `Modified Behavior` section.
 - `EXTCALL (0xf8)`, `EXTDELEGATECALL (0xf9)`, `EXTSTATICCALL (0xfb)`
     - Replacement of `CALL`, `DELEGATECALL` and `STATICCALL` instructions, as specced out in [EIP-7069](https://eips.ethereum.org/EIPS/eip-7069), except the runtime operand stack check. In particular:
     - The `gas_limit` input is removed.
