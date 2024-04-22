@@ -54,7 +54,7 @@ _note: `,` is a concatenation operator, `+` should be interpreted as "one or mor
 | types_section | variable | n/a           | stores code section metadata |
 | inputs        | 1 byte | 0x00-0x7F       | number of stack elements the code section consumes |
 | outputs       | 1 byte | 0x00-0x80       | number of stack elements the code section returns or 0x80 for non-returning functions |
-| max_stack_height | 2 bytes | 0x0000-0x03FF | maximum number of elements ever placed onto the stack by the code section |
+| max_stack_height | 2 bytes | 0x0000-0x03FF | maximum number of elements ever placed onto the stack by the code section, incl. inputs |
 | code_section  | variable | n/a           | arbitrary sequence of bytes |
 | container_section | variable | n/a       | arbitrary sequence of bytes |
 | data_section  | variable | n/a           | arbitrary sequence of bytes |
@@ -101,10 +101,10 @@ The following validity constraints are placed on the container format:
 - `version` must be `0x01`
 - `types_size` is divisible by `4`
 - the number of code sections must be equal to `types_size / 4`
-- the number of code sections must not exceed 1024
+- the number of code sections must be greater than `0` and not exceed `1024`
 - `code_size` may not be 0
-- the number of container sections must not exceed 256
-- `container_size` may not be 0, but container sections are optional
+- the number of container sections must not exceed `256`. The number of container sections may not be `0`, if declared in the header
+- `container_size` may not be 0
 - the total size of a deployed container without container sections must be `13 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size`
 - the total size of a deployed container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 2*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
 - the total size of not yet deployed container might be up to `data_size` lower than the above values due to how the data section is rewritten and resized during deployment (see [Data Section Lifecycle](#data-section-lifecycle))
@@ -217,11 +217,12 @@ The following instructions are introduced in EOF code:
     - pops `value`, `salt`, `input_offset`, `input_size` from the stack
     - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
+        - let `initcontainer_size` be the size of this EOF subcontainer in bytes
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
-    - copy memory starting at `input_offset` of `input_size` length into the call data
-    - execute the container in "initcode-mode" and deduct gas for execution
+    - caller's memory slice [`input_offset`:`input_size`] is used as calldata
+    - execute the container in "initcode-mode" and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
@@ -242,6 +243,7 @@ The following instructions are introduced in EOF code:
         - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
+            - let `initcontainer_size` be the length of that EOF container in bytes
         - in addition to hashing charge as in `EOFCREATE`, deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
         - just before executing the initcode container:
             - **validates the initcode container and all its subcontainers recursively**
@@ -348,7 +350,6 @@ The following instructions are introduced in EOF code:
 - no instruction may be unreachable
 - maximum data stack of a function must not exceed 1023
 - `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
-- Find full spec of the previous _more restrictive_ algorithm at https://eips.ethereum.org/EIPS/eip-5450#operand-stack-validation
 
 ## Examples
 
