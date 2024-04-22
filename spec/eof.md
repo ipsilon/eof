@@ -327,28 +327,48 @@ The following instructions are introduced in EOF code:
 ## Stack Validation
 
 - Code basic blocks must be ordered in a way that every block is reachable either by a forward jump or sequential flow of instructions. In other words, there is no basic block reachable only by a backward jump.
+  - This implies that no instruction may be unreachable, but is a stronger requirement.
 - Validation procedure does not require actual operand stack implementation, but only to keep track of its height.
 - The computational and space complexity is O(len(code)). Each instruction is visited exactly once.
+- Each code section is validated independently.
 - `stack_height_...` below refers to the number of stack values accessible by this function, i.e. it does not take into account values of caller functions’ frames (but does include this function’s inputs).
+- *Forward jump* refers to any of `RJUMP`/`RJUMPI`/`RJUMPV` instruction with relative offset greater than or equal to 0. *Backwards jump* refers to any of `RJUMP`/`RJUMPI`/`RJUMPV` instruction with relative offset less than 0, including jumps to the same jump instruction (e.g. `RJUMP(-3)`)
+- Terminating instructions: 
+  - ending function execution: `RETF`, `JUMPF`,
+  - ending whole EVM execution: `STOP`, `RETURN`, `RETURNCONTRACT`, `REVERT`, `INVALID`.
 - For each instruction in the code the operand stack height bounds are recorded as `stack_height_min` and `stack_height_max`. Instructions are scanned in a single linear pass over the code.
-- During scanning:
-  - first instruction has `stack_height_min = stack_height_max = types[current_section_index].inputs`;
-  - for each instruction reached from a forwards jump or sequential flow from previous instruction, update the target bounds so that they contain source bounds, i.e. `target_stack_min = min(target_stack_min, source_stack_min + change)` and `target_stack_max = max(target_stack_max, source_stack_max + change)`. `change` is the stack height change of the source instruction OPCODE or `outputs - inputs` in case of `CALLF`;
-  - for each instruction reached from a backwards jump, check if target bounds are same as source bounds, i.e. `target_stack_min == source_stack_min + change` and `target_stack_max == source_stack_max + change`.
-- No instruction may access more operand stack items than `stack_height_min`
-- Terminating instructions: `STOP`, `INVALID`, `RETURN`, `REVERT`, `RETURNCONTRACT`, `RETF`, `JUMPF`.
-- During `CALLF`, the following must hold: `stack_height_min >= types[target_section_index].inputs`
-- During `CALLF` and `JUMPF`, the following must hold: `stack_height_max + types[target_section_index].max_stack_height - types[target_section_index].inputs <= 1024`
-- Stack validation of `JUMPF` depends on "non-returning" status of target section
-    - `JUMPF` into returning section (can be only from returning section): `stack_height_min == stack_height_max == type[current_section_index].outputs + type[target_section_index].inputs - type[target_section_index].outputs`
-    - `JUMPF` into non-returning section: `stack_height_min >= types[target_section_index].inputs`
-- During `RETF`, the following must hold: `stack_height_max == stack_height_min == types[current_code_index].outputs`
-- During terminating instructions `STOP`, `INVALID`, `RETURN`, `REVERT`, `RETURNCONTRACT` operand stack may contain extra items below ones required by the instruction
-- the last instruction may be a terminating instruction or `RJUMP`
-- no instruction may be unreachable
+- first instruction has `stack_height_min = stack_height_max = types[current_section_index].inputs`.
+
+During scanning, for each instruction:
+
+1. Check if this instruction has recorded stack height bounds. If it does not, it means it was neither referenced by previous forward jump, nor is part of sequential instruction flow, and this code fails validation.
+2. Determine the effect the instruction has on the operand stack:
+   1. Check if the recorded stack height bounds satisfy the instruction requirements. Specifically:
+      - for `CALLF` the following must hold: `stack_height_min >= types[target_section_index].inputs`,
+      - for `RETF` the following must hold: `stack_height_max == stack_height_min == types[current_code_index].outputs`,
+      - Stack validation of `JUMPF` depends on "non-returning" status of target section
+         - `JUMPF` into returning section (can be only from returning section): `stack_height_min == stack_height_max == type[current_section_index].outputs + type[target_section_index].inputs - type[target_section_index].outputs`
+         - `JUMPF` into non-returning section: `stack_height_min >= types[target_section_index].inputs`
+      - for any other instruction `stack_height_min` must be at least the number of inputs required by instruction,
+      - there is no additional check for terminating instructions other than `RETF` and `JUMPF`, this implies that extra items left on stack at instruction ending EVM execution are allowed.
+   2. For `CALLF` and `JUMPF` check for possible stack overflow: if `stack_height_max > 1024 - types[target_section_index].max_stack_height + types[target_section_index].inputs`, validation fails.
+   3. Compute new stack `stack_height_main` and `stack_height_max` after the instruction execution, both heights are updated by the same value:
+      - for `CALLF`: `stack_height_min += types[target_section_index].outputs - types[target_section_index].inputs`, `stack_height_max += types[target_section_index].outputs - types[target_section_index].inputs`,
+      - for any other non-terminating instruction: `stack_height_min += instruction_outputs - instruction_inputs`, `stack_height_max += instruction_outputs - instruction_inputs`,
+      - terminating instructions do not need to update stack heights.
+3. Determine the list of successor instructions that can follow the current instructions:
+   1. The next instruction for all instructions other than terminating instructions and `RJUMP`.
+   2. All targets of a `RJUMPI` or `RJUMPV`.
+4. For each successor instruction:
+   1. Check if the instruction is present in the code (i.e. execution must not "fall off" the code).
+      - This implies that the last instruction may be a terminating instruction or `RJUMP`
+   2. If the successor is reached via forwards jump or sequential flow from previous instruction:
+      1. If the instruction does not have stack heights recorded (visited for the first time), record the instruction `stack_height_min` and `stack_height_max` equal to the value computed in 2.3.
+      2. Otherwise instruction was already visited (by previously seen forward jump). Update this instruction's recorded stack height bounds so that they contain the bounds computed in 2.3, i.e. `target_stack_min = min(target_stack_min, current_stack_min)` and `target_stack_max = max(target_stack_max, current_stack_min)`, where `(target_stack_min, target_stack_max)` are successor bounds and `(current_stack_min, current_stack_max)` are bounds computed in 2.3.
+   3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == target_stack_max == current_stack_min`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height.
+
 - maximum data stack of a function must not exceed 1023
 - `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
-- Find full spec of the previous _more restrictive_ algorithm at https://eips.ethereum.org/EIPS/eip-5450#operand-stack-validation
 
 ## Examples
 
