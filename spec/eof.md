@@ -217,7 +217,7 @@ The following instructions are introduced in EOF code:
     - pops `value`, `salt`, `input_offset`, `input_size` from the stack
     - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
-        - let `initcontainer_size` be the declared size of that EOF subcontainer in its parent container header
+        - let `initcontainer_size` be the size of this EOF subcontainer in bytes
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
