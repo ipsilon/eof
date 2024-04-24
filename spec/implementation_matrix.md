@@ -2,17 +2,17 @@
 
 |              |    3540 |      3670 | 4200 | 4750 | 5450 | 6206 | 7480 | 7069 | 7620     | 663   |
 |--------------|---------|-----------|------|------|------|------|------|------|----------|-------|
-| **Megaspec** | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     |  :+1: |
-| **EIP**      | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1:  | :+1: | :+1:    |  :+1: |
-| **testing**  | :+1:    | :+1:      | :+1: | :+1: | :+1: | 🚧   |      | :+1: | :+1:     |       |
-| besu         | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧        | :+1:  |
+| **Megaspec** | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     | :+1:  |
+| **EIP**      | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     | :+1:  |
+| **testing**  | :+1:    | :+1:      | :+1: | :+1: | :+1: | 🚧   | 🚧   | :+1: | :+1:     |  🚧   |
+| besu         | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     | :+1:  |
 | erigon       |         |           |      |      |      |      |      |      |          |       |
 | ethereumjs   |         |           |      |      |      |      |      |      |          |       |
-| evmone       | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧       | :+1:   |
+| evmone       | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧       | :+1:  |
 | geth         |         |           |      |      |      |      |      |      |          |       |
 | nethermind   |         |           |      |      |      |      |      |      |          |       |
-| revm         | :+1:    |  :+1:     | :+1: | :+1: |  🚧  | :+1: | :+1: |   🚧  |  🚧      | :+1:  |
-| solidity     | 🚧      | N/A       | 🚧    | 🚧   | N/A  |      |      |      |          |       |
+| revm         | :+1:    |  :+1:     | :+1: | :+1: |  🚧  | :+1: | :+1: |  🚧  |  🚧      | :+1:  |
+| solidity     | 🚧      | N/A       | 🚧   | 🚧   | N/A  |      |      |      |          |       |
 | vyper        |         |           |      |      |      |      |      |      |          |       |
 
 # Specs
@@ -66,6 +66,7 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 * EIP-6206 - JUMPF and non-returning functions
 
 * EIP-7480 - Data section access
+  * Execution - https://github.com/ethereum/execution-spec-tests/pull/518
 
 * EIP-7069 - Revamped CALL instructions
   * `EXT*CALL` state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/eof_calls
@@ -74,6 +75,7 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
   * Creation state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/stCreate
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
+  * Execution - https://github.com/ethereum/execution-spec-tests/pull/502
 
 ## Solidity
 
