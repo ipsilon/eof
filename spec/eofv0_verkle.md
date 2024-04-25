@@ -126,9 +126,9 @@ version is as dense as possible (without sacrificing on complexity).
 In *scheme 1*, for each entry in `invalid_jumpdests`:
 - 1-bit mode (`skip`, `value`)
 - For skip-mode:
-  - 10-bit delta-encoding of `chunk_no`
+  - 10-bit number of chunks to skip
 - For value-mode:
-  - 4-bit delta-encoding of `chunk_no`
+  - 4-bit number of chunks to skip
   - 6-bit `first_instruction_offest`
 
 Worst case encoding where each chunk contains an invalid `JUMPDEST`:
@@ -141,7 +141,7 @@ number_of_verkle_leafs = total_chunk_count / 32 = 33
 *Scheme 2* differs slightly:
 - 1-bit mode (`skip`, `value`)
 - For skip-mode:
-  - 10-bit delta-encoding of `chunk_no`
+  - 10-bit number of chunks to skip
 - For value-mode:
   - 6-bit `first_instruction_offest`
 
