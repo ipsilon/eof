@@ -134,7 +134,7 @@ In *scheme 1*, for each entry in `invalid_jumpdests`:
 Worst case encoding where each chunk contains an invalid `JUMPDEST`:
 ```
 total_chunk_count = 24576 / 32 = 768
-total_chunk_count * (1 + 4 + 6) / 8 = 1056 # bytes for the header
+total_chunk_count * (1 + 4 + 6) / 8 = 1056 # bytes for the header, i.e. 4.1% overhead
 number_of_verkle_leafs = total_chunk_count / 32 = 33
 ```
 
@@ -148,7 +148,7 @@ number_of_verkle_leafs = total_chunk_count / 32 = 33
 Worst case encoding:
 ```
 total_chunk_count = 24576 / 32 = 768
-total_chunk_count * (1 + 6) / 8 = 672 # bytes for the header
+total_chunk_count * (1 + 6) / 8 = 672 # bytes for the header, i.e. 2.7% overhead
 number_of_verkle_leafs = total_chunk_count / 32 = 21
 ```
 
