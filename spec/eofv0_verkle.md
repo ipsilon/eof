@@ -129,7 +129,7 @@ In *scheme 1*, for each entry in `invalid_jumpdests`:
 - For skip-mode:
   - 10-bit number of chunks to skip
 - For value-mode:
-  - 6-bit `first_instruction_offest`
+  - 6-bit `first_instruction_offset`
 
 Worst case encoding where each chunk contains an invalid `JUMPDEST`:
 ```
@@ -144,7 +144,7 @@ number_of_verkle_leafs = total_chunk_count / 32 = 21
   - 10-bit number of chunks to skip
 - For value-mode:
   - 4-bit number of chunks to skip
-  - 6-bit `first_instruction_offest`
+  - 6-bit `first_instruction_offset`
 
 Worst case encoding:
 ```
