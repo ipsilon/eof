@@ -118,7 +118,7 @@ source, there is a 12% probability ($1 - (255/256)^{32}$) that at least one of t
 will contain the `0x5b` value, which gives our minimum probability of having at least one invalid
 `JUMPDEST` in the contract.
 
-Let's create a map of `invalid_jumpdests[chunk_no] = position_in_chunk`. We can densely encode this
+Let's create a map of `invalid_jumpdests[chunk_no] = first_instruction_offset`. We can densely encode this
 map using techniques similar to *run-length encoding* to skip distances and delta-encode offsets.
 This map is always fully loaded prior to execution, and so it is important to ensure the encoded
 version is as dense as possible (without sacrificing on complexity).
@@ -129,7 +129,7 @@ In *scheme 1*, for each entry in `invalid_jumpdests`:
   - 10-bit delta-encoding of `chunk_no`
 - For value-mode:
   - 4-bit delta-encoding of `chunk_no`
-  - 6-bit `position_in_chunk`
+  - 6-bit `first_instruction_offest`
 
 Worst case encoding where each chunk contains an invalid `JUMPDEST`:
 ```
@@ -143,7 +143,7 @@ number_of_verkle_leafs = total_chunk_count / 32 = 33
 - For skip-mode:
   - 10-bit delta-encoding of `chunk_no`
 - For value-mode:
-  - 6-bit `position_in_chunk`
+  - 6-bit `first_instruction_offest`
 
 Worst case encoding:
 ```
