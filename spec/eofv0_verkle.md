@@ -105,6 +105,151 @@ The same as above except encode the values as 6-bit numbers
 (minimum number of bits needed for encoding `32`).
 Such encoding lowers the size overhead from 3.1% to 2.3%.
 
+### Encode only invalid pushdata (dense encoding)
+
+Alternate option is instead of encoding all valid `JUMPDEST` locations, to only encode invalid ones.
+
+This is beneficial if our assumption is correct that most contracts only contain a limited number
+of offending cases. Our initial analysis suggests this is the case, e.g. Uniswap router has 9 cases,
+one of the Arbitrum validator contracts has 6 cases.
+
+Since Solidity contracts have a trailing metadata, which contains a Keccak-256 (32-byte) hash of the
+source, there is a 12% probability ($1 - (255/256)^{32}$) that at least one of the bytes of the hash
+will contain the `0x5b` value, which gives our minimum probability of having at least one invalid `JUMPDEST`.
+
+Let's create a map of `invalid_jumpdests[chunk_no] = position_in_chunk`. We can densely encode this
+map using techniques similar to *run-length encoding* to skip distances and delta-encode offsets.
+
+In *scheme 1*, for each entry in `invalid_jumpdests`:
+- 1-bit mode (`skip`, `value`)
+- For skip-mode:
+  - 10-bit delta-encoding of `chunk_no`
+- For value-mode:
+  - 4-bit delta-encoding of `chunk_no`
+  - 6-bit `position_in_chunk`
+
+Worst case encoding where each chunk contains an invalid `JUMPDEST`:
+```
+total_chunk_count = 24576 / 32 = 768
+total_chunk_count * (1 + 4 + 6) / 8 = 1056 # bytes for the header
+number_of_verkle_leafs = total_chunk_count / 32 = 33
+```
+
+*Scheme 2* differs slightly:
+- 1-bit mode (`skip`, `value`)
+- For skip-mode:
+  - 10-bit delta-encoding of `chunk_no`
+- For value-mode:
+  - 6-bit `position_in_chunk`
+
+Worst case encoding:
+```
+total_chunk_count = 24576 / 32 = 768
+total_chunk_count * (1 + 6) / 8 = 672 # bytes for the header
+number_of_verkle_leafs = total_chunk_count / 32 = 21
+```
+
+The decision between *scheme 1* and *scheme 2*, as well as the best encoding sizes, can be determined
+through analysing existing code.
+
+#### Header location
+
+It is possible to place above as part of the "EOFv0" header, but given the upper bound of number of chunks occupied is low (33 vs 21),
+it is also possible to make this part of the Verkle account header.
+
+This second option allows for the simplification of the `code_size` value, as it does not need to change.
+
+#### Runtime after Verkle
+
+During runtime execution two checks must be done in this order:
+1) Check if the destination is on the invalid list, and abort if so.
+2) Check if the value in the chunk is an actual `JUMPDEST`, and abort if not.
+
+It is possible to reconstruct sparse account code prior to execution with all the submitted chunks of the transaction
+and perform `JUMPDEST`-validation to build up a relevant *valid `JUMPDEST` locations* map instead.
+
+#### Analysis
+
+We have analyzed two contracts, Arbitrum validator and Uniswap router.
+
+Arbitrum (2147-bytes long):
+```
+(chunk offset, chunk number, pushdata offset)
+malicious push byte: 85 2 21
+malicious push byte: 95 2 31
+malicious push byte: 116 3 20
+malicious push byte: 135 4 7
+malicious push byte: 216 6 24
+malicious push byte: 1334 41 22
+```
+
+Encoding with *scheme 1*:
+```
+[skip, 2]
+[value, 0, 21]
+[value, 0, 31]
+[value, 1, 20]
+[value, 1, 7]
+[value, 2, 24]
+[skip, 35, 22]
+```
+
+Encoding size: `2 skips (2 * 11 bits) + 5 values (5 * 11 bits)` = 10-bytes header (0.465%)
+
+Encoding with *scheme 2*:
+```
+[skip, 2]
+[value, 21]
+[value, 31]
+[skip, 1]
+[value, 20]
+[skip, 1]
+[value, 7]
+[skip, 2]
+[value, 24]
+[skip, 35]
+[value, 22]
+```
+
+Encoding size: `5 skips (5 * 11 bits) + 6 values (6 * 7 bits)` = 13-bytes header (0.605%)
+
+Uniswap router contract (17958 bytes):
+
+```
+(chunk offset, chunk number, pushdata offset)
+malicious push byte: 1646 51 14
+malicious push byte: 1989 62 5
+malicious push byte: 4239 132 15
+malicious push byte: 4533 141 21
+malicious push byte: 7043 220 3
+malicious push byte: 8036 251 4
+malicious push byte: 8604 268 28
+malicious push byte: 12345 385 25
+malicious push byte: 15761 492 17
+```
+
+Encoding using *scheme 1*:
+```
+[skip, 51]
+[value, 0, 14]
+[value, 11, 5]
+[skip, 70]
+[value, 0, 15]
+[value, 9, 21]
+[skip, 79]
+[value, 0, 3]
+[skip, 31]
+[value, 0, 4]
+[skip, 17]
+[value, 0, 28]
+[skip, 117]
+[value, 0, 25]
+[skip, 107]
+[value, 0, 17]
+```
+
+Encoding size: `7 skips (7 * 11 bits) + 9 values (9 * 11 bits)` = 22-bytes header (0.122%)
+
 ## Backwards Compatibility
 
 EOF-packaged code execution if fully compatible with the legacy code execution.
