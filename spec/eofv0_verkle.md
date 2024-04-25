@@ -128,14 +128,13 @@ In *scheme 1*, for each entry in `invalid_jumpdests`:
 - For skip-mode:
   - 10-bit number of chunks to skip
 - For value-mode:
-  - 4-bit number of chunks to skip
   - 6-bit `first_instruction_offest`
 
 Worst case encoding where each chunk contains an invalid `JUMPDEST`:
 ```
 total_chunk_count = 24576 / 32 = 768
-total_chunk_count * (1 + 4 + 6) / 8 = 1056 # bytes for the header, i.e. 4.1% overhead
-number_of_verkle_leafs = total_chunk_count / 32 = 33
+total_chunk_count * (1 + 6) / 8 = 672 # bytes for the header, i.e. 2.7% overhead
+number_of_verkle_leafs = total_chunk_count / 32 = 21
 ```
 
 *Scheme 2* differs slightly:
@@ -143,13 +142,14 @@ number_of_verkle_leafs = total_chunk_count / 32 = 33
 - For skip-mode:
   - 10-bit number of chunks to skip
 - For value-mode:
+  - 4-bit number of chunks to skip
   - 6-bit `first_instruction_offest`
 
 Worst case encoding:
 ```
 total_chunk_count = 24576 / 32 = 768
-total_chunk_count * (1 + 6) / 8 = 672 # bytes for the header, i.e. 2.7% overhead
-number_of_verkle_leafs = total_chunk_count / 32 = 21
+total_chunk_count * (1 + 4 + 6) / 8 = 1056 # bytes for the header, i.e. 4.1% overhead
+number_of_verkle_leafs = total_chunk_count / 32 = 33
 ```
 
 The decision between *scheme 1* and *scheme 2*, as well as the best encoding sizes, can be determined
@@ -189,19 +189,6 @@ malicious push byte: 1334 41 22
 Encoding with *scheme 1*:
 ```
 [skip, 2]
-[value, 0, 21]
-[value, 0, 31]
-[value, 1, 20]
-[value, 1, 7]
-[value, 2, 24]
-[skip, 35, 22]
-```
-
-Encoding size: `2 skips (2 * 11 bits) + 5 values (5 * 11 bits)` = 10-bytes header (0.465%)
-
-Encoding with *scheme 2*:
-```
-[skip, 2]
 [value, 21]
 [value, 31]
 [skip, 1]
@@ -215,6 +202,19 @@ Encoding with *scheme 2*:
 ```
 
 Encoding size: `5 skips (5 * 11 bits) + 6 values (6 * 7 bits)` = 13-bytes header (0.605%)
+
+Encoding with *scheme 2*:
+```
+[skip, 2]
+[value, 0, 21]
+[value, 0, 31]
+[value, 1, 20]
+[value, 1, 7]
+[value, 2, 24]
+[skip, 35, 22]
+```
+
+Encoding size: `2 skips (2 * 11 bits) + 5 values (5 * 11 bits)` = 10-bytes header (0.465%)
 
 Uniswap router contract (17958 bytes):
 
@@ -231,7 +231,7 @@ malicious push byte: 12345 385 25
 malicious push byte: 15761 492 17
 ```
 
-Encoding using *scheme 1*:
+Encoding using *scheme 2*:
 ```
 [skip, 51]
 [value, 0, 14]
