@@ -119,6 +119,8 @@ will contain the `0x5b` value, which gives our minimum probability of having at 
 
 Let's create a map of `invalid_jumpdests[chunk_no] = position_in_chunk`. We can densely encode this
 map using techniques similar to *run-length encoding* to skip distances and delta-encode offsets.
+This map is always fully loaded prior to execution, and so it is important to ensure the encoded
+version is as dense as possible (without sacrificing on complexity).
 
 In *scheme 1*, for each entry in `invalid_jumpdests`:
 - 1-bit mode (`skip`, `value`)
