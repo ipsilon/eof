@@ -115,7 +115,8 @@ one of the Arbitrum validator contracts has 6 cases.
 
 Since Solidity contracts have a trailing metadata, which contains a Keccak-256 (32-byte) hash of the
 source, there is a 12% probability ($1 - (255/256)^{32}$) that at least one of the bytes of the hash
-will contain the `0x5b` value, which gives our minimum probability of having at least one invalid `JUMPDEST`.
+will contain the `0x5b` value, which gives our minimum probability of having at least one invalid
+`JUMPDEST` in the contract.
 
 Let's create a map of `invalid_jumpdests[chunk_no] = position_in_chunk`. We can densely encode this
 map using techniques similar to *run-length encoding* to skip distances and delta-encode offsets.
