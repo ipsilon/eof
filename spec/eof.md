@@ -228,9 +228,10 @@ The following instructions are introduced in EOF code:
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
         - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
-            - load deploy EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
+            - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
             - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
-            - if updated deploy container size exceeds `MAX_CODE_SIZE` instruction exceptionally aborts
+            - let `deployed_code_size` be updated deploy container size
+            - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
         - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
