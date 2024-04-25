@@ -107,7 +107,8 @@ Such encoding lowers the size overhead from 3.1% to 2.3%.
 
 ### Encode only invalid jumpdests (dense encoding)
 
-Alternate option is instead of encoding all valid `JUMPDEST` locations, to only encode invalid ones. By invalid `JUMPDEST` we mean a `0x5b` byte in any pushdata.
+Alternate option is instead of encoding all valid `JUMPDEST` locations, to only encode invalid ones.
+By invalid `JUMPDEST` we mean a `0x5b` byte in any pushdata.
 
 This is beneficial if our assumption is correct that most contracts only contain a limited number
 of offending cases. Our initial analysis suggests this is the case, e.g. Uniswap router has 9 cases,
