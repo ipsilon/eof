@@ -254,6 +254,9 @@ Encoding using *scheme 2*:
 
 Encoding size: `7 skips (7 * 11 bits) + 9 values (9 * 11 bits)` = 22-bytes header (0.122%)
 
+Our current hunch is that in average contracts this results in a sub-1% overhead, while the worst case is 4.1%.
+This compares against the constant 3.2% overhead of the current Verkle code chunking.
+
 ## Backwards Compatibility
 
 EOF-packaged code execution if fully compatible with the legacy code execution.
