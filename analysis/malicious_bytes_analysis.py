@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 PUSH1 = 0x60
@@ -11,7 +11,7 @@ CHUNK_LEN = 32
 @dataclass
 class Chunk:
     first_instruction_offset: int
-    first_jumpdest_offset: int = CHUNK_LEN
+    jumpdests: List[int] = field(default_factory=list)
     contains_invalid_jumpdest: bool = False
 
 
@@ -33,7 +33,7 @@ def get_chunks(code):
             if PUSH1 <= op <= PUSH32:
                 pushdata_remaining = op - PUSH1 + 1
             elif op == JUMPDEST:
-                ch.first_jumpdest_offset = min(ch.first_jumpdest_offset, offset)
+                ch.jumpdests.append(offset)
 
     return chunks
 
@@ -65,18 +65,21 @@ def test_contains_invalid_jumpdest():
 
 def test_first_jumpdest_offset():
     def _(s):
-        return [ch.first_jumpdest_offset for ch in get_chunks(bytes.fromhex(s))]
+        return [ch.jumpdests for ch in get_chunks(bytes.fromhex(s))]
 
     assert _('') == []
-    assert _('00') == [32]
-    assert _('5b') == [0]
-    assert _('005b') == [1]
-    assert _('615b5b5b') == [3]
-    assert _('00' * 31 + '5b') == [31]
-    assert _('00' * 32 + '5b') == [32, 0]
-    assert _('00' * 32 + '005b') == [32, 1]
-    assert _('00' * 32 + '605b') == [32, 32]
-    assert _('7f' + '5b' * 31 + '605b') == [32, 1]
+    assert _('00') == [[]]
+    assert _('5b') == [[0]]
+    assert _('005b') == [[1]]
+    assert _('005b005b00') == [[1, 3]]
+    assert _('615b5b5b') == [[3]]
+    assert _('00' * 31 + '5b') == [[31]]
+    assert _('00' * 32 + '5b') == [[], [0]]
+    assert _('00' * 32 + '005b') == [[], [1]]
+    assert _('00' * 32 + '605b') == [[], []]
+    assert _('00' * 32 + '605b5b5b') == [[], [2, 3]]
+    assert _('7f' + '5b' * 31 + '605b') == [[], [1]]
+    assert _('7f' + '5b' * 31 + '605b605b60605b') == [[], [1,6]]
 
 
 def get_offsets_of_malicious_bytes(code):
@@ -115,7 +118,7 @@ def analyse_top_bytecodes():
         chunks = get_chunks(code)
         for i, ch in enumerate(chunks):
             if ch.contains_invalid_jumpdest:
-                print(f"  {i:4}, {ch.first_instruction_offset:4}, {ch.first_jumpdest_offset:4}")
+                print(f"  {i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
 
 
 if __name__ == '__main__':
