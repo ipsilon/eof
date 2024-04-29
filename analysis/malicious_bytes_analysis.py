@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from typing import List
 
@@ -101,3 +102,21 @@ def test_get_offsets_of_malicious_bytes():
     assert get_offsets_of_malicious_bytes(bytes.fromhex("615b5b")) == [1, 2]
     assert get_offsets_of_malicious_bytes(bytes.fromhex("FE7f5b5b0000005b005b")) == [2, 3, 7, 9]
     assert get_offsets_of_malicious_bytes(bytes.fromhex("6100001161005b11615b00")) == [6, 9]
+
+
+def analyse_top_bytecodes():
+    with open('top_bytecodes.json') as f:
+        data = json.load(f)
+    print(len(data))
+
+    for row in data:
+        code = bytes.fromhex(row["code"][2:])
+        print(f"{row['example_address']}, {len(code)}, {(len(code) + 31) // 32}:")
+        chunks = get_chunks(code)
+        for i, ch in enumerate(chunks):
+            if ch.contains_invalid_jumpdest:
+                print(f"  {i:4}, {ch.first_instruction_offset:4}, {ch.first_jumpdest_offset:4}")
+
+
+if __name__ == '__main__':
+    analyse_top_bytecodes()
