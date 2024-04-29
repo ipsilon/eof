@@ -14,9 +14,14 @@ class Chunk:
     jumpdests: List[int] = field(default_factory=list)
     contains_invalid_jumpdest: bool = False
 
+@dataclass
+class CodeAnalysis:
+    chunks: List[Chunk] = field(default_factory=list)
 
-def get_chunks(code):
-    chunks: List[Chunk] = []
+
+def analyse_code(code) -> CodeAnalysis:
+    analysis = CodeAnalysis()
+    chunks = analysis.chunks
     pushdata_remaining = 0
     for i, op in enumerate(code):
         offset = i % CHUNK_LEN
@@ -35,12 +40,12 @@ def get_chunks(code):
             elif op == JUMPDEST:
                 ch.jumpdests.append(offset)
 
-    return chunks
+    return analysis
 
 
 def test_first_instruction_offset():
     def _(s):
-        return [ch.first_instruction_offset for ch in get_chunks(bytes.fromhex(s))]
+        return [ch.first_instruction_offset for ch in analyse_code(bytes.fromhex(s)).chunks]
 
     assert _('') == []
     assert _('00') == [0]
@@ -54,7 +59,7 @@ def test_first_instruction_offset():
 
 def test_contains_invalid_jumpdest():
     def _(s):
-        return [ch.contains_invalid_jumpdest for ch in get_chunks(bytes.fromhex(s))]
+        return [ch.contains_invalid_jumpdest for ch in analyse_code(bytes.fromhex(s)).chunks]
 
     assert _('') == []
     assert _('00') == [False]
@@ -65,7 +70,7 @@ def test_contains_invalid_jumpdest():
 
 def test_first_jumpdest_offset():
     def _(s):
-        return [ch.jumpdests for ch in get_chunks(bytes.fromhex(s))]
+        return [ch.jumpdests for ch in analyse_code(bytes.fromhex(s)).chunks]
 
     assert _('') == []
     assert _('00') == [[]]
@@ -114,9 +119,9 @@ def analyse_top_bytecodes():
 
     for row in data:
         code = bytes.fromhex(row["code"][2:])
+        analysis = analyse_code(code)
         print(f"{row['example_address']}, {len(code)}, {(len(code) + 31) // 32}:")
-        chunks = get_chunks(code)
-        for i, ch in enumerate(chunks):
+        for i, ch in enumerate(analysis.chunks):
             if ch.contains_invalid_jumpdest:
                 print(f"  {i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
 
