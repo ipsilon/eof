@@ -179,9 +179,10 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
 - execute the container in "initcode-mode" and deduct gas for execution
     - calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
     - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
-        - load deploy EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
+        - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
         - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
-        - if updated deploy container size exceeds `MAX_CODE_SIZE` instruction exceptionally aborts
+        - let `deployed_code_size` be updated deploy container size
+        - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
         - set `state[new_address].code` to the updated deploy container
     - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
 - deduct `200 * deployed_code_size` gas
