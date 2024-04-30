@@ -115,8 +115,6 @@ Introduce new transaction type `InitcodeTransaction` which extends EIP-1559 (typ
 
 The `initcodes` can only be accessed via the `TXCREATE` instruction (see below), therefore `InitcodeTransactions` are intended to be sent to contracts including `TXCREATE` in their execution.
 
-We introduce a standardised Creator Contract (i.e. written in EVM, but existing at a known address, such as precompiles), which eliminates the need to have create transactions with empty `to`. Deployment of the Creator Contract will require an irregular state change at EOF activation block. Note that such introduction of the Creator Contract is needed, because only EOF contracts can create EOF contracts. See the appendix below for Creator Contract code.
-
 Under transaction validation rules `initcodes` are not validated for conforming to the EOF specification. They are only validated when accessed via `TXCREATE`. This avoids potential DoS attacks of the mempool. If during the execution of an `InitcodeTransaction` no `TXCREATE` instruction is called, such transaction is still valid.
 
 `initcodes` data is similar to calldata for two reasons:
@@ -165,10 +163,32 @@ Code executing within an EOF environment will behave differently than legacy cod
 - The instruction `JUMPDEST` is renamed to `NOP` and remains charging 1 gas without any effect.
     - Note: jumpdest-analysis is not performed anymore.
 - EOF contract may not deploy legacy code (it is naturally rejected on the code validation stage)
-- Legacy creation transactions (any tranactions with empty `to`) are invalid in case `data` contains EOF code (starts with `EF00` magic)
 - If instructions `CREATE` and `CREATE2` have EOF code as initcode (starting with `EF00` magic)
     - deployment fails (returns 0 on the stack)
     - caller's nonce is not updated and gas for initcode execution is not consumed
+
+#### Creation transactions
+
+Creation transactions (tranactions with empty `to`), with `data` containing EOF code (starting with `EF00` magic) are interpreted as having a concatenation of EOF `initcontainer` and `calldata` in the `data` and:
+
+1. intrinsic gas cost rules and limits defined in EIP-3860 for legacy creation transaction apply. The entire `data` of the transaction is used for these calculations
+2. Find the split of `data` into `initcontainer` and `calldata`:
+    - Parse EOF header
+    - Find `intcontainer` size by reading all section sizes from the header and adding them up with the header size to get the full container size.
+3. Validate the `initcontainer` and all its subcontainers recursively.
+   - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
+4. If EOF header parsing or full container validation fails, transaction is considered valid and failing. Gas for initcode execution is not consumed, only intrinsic creation transaction costs are charged.
+5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
+6. execute the container in "initcode-mode" and deduct gas for execution
+    1. Calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
+    2. A successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
+        - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
+        - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
+        - let `deployed_code_size` be updated deploy container size
+        - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
+        - set `state[new_address].code` to the updated deploy container
+    3. `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
+7. deduct `200 * deployed_code_size` gas
 
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
 
@@ -255,7 +275,8 @@ The following instructions are introduced in EOF code:
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
     - cost 0 gas + possible memory expansion for aux data
-    - ends initcode frame execution and returns control to `EOFCREATE` or `TXCREATE` caller frame where `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
+    - ends initcode frame execution and returns control to `EOFCREATE` or `TXCREATE` caller frame (unless called in the topmost frame of a creation transaction).
+    - `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
     - instruction exceptionally aborts if invoked not in "initcode-mode"
 - `DATALOAD (0xd0)` instruction
@@ -376,37 +397,6 @@ During scanning, for each instruction:
 ## Examples
 
 Annotated examples of EOF formatted containers demonstrating several key features of EOF can be found in [this test file within the `evmone` project repository](https://github.com/ethereum/evmone/blob/eof-examples/test/unittests/eof_example_test.cpp).
-
-## Appendix: Creator Contract
-
-```solidity
-{
-/// Takes [index][salt][init_data] as input,
-/// creates contract and returns the address or failure otherwise
-
-/// init_data.length can be 0, but the first 2 words are mandatory
-let size := calldatasize()
-if lt(size, 64) { revert(0, 0) }
-
-let tx_initcode_index := calldataload(0)
-let salt := calldataload(32)
-
-let init_data_size := sub(size, 64)
-calldatacopy(0, 64, init_data_size)
-
-let ret := txcreate(tx_initcode_index, callvalue(), salt, 0, init_data_size)
-if iszero(ret) { revert(0, 0) }
-
-mstore(0, ret)
-return(0, 32)
-
-// Helper to compile this with existing Solidity (with --strict-assembly mode)
-function txcreate(a, b, c, d, e) -> f {
-    f := verbatim_5i_1o(hex"ed", a, b, c, d, e)
-}
-    
-}
-```
 
 ## Appendix: Original EIPs
 
