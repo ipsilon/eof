@@ -361,4 +361,4 @@ Specifications contained within are **out-of-date**, use only for reference and 
 - 📃[EIP-663](https://eips.ethereum.org/EIPS/eip-663): Unlimited SWAP and DUP instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-663.md)
 - 📃[EIP-7069](https://eips.ethereum.org/EIPS/eip-7069): Revamped CALL instructions (*does not require EOF*) [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7069.md)
 - 📃[EIP-7620](https://eips.ethereum.org/EIPS/eip-7620): EOF - Contract Creation Instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7620.md)
-
+- 📃[EIP-7698](https://eips.ethereum.org/EIPS/eip-7698): EOF - Creation transaction [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7698.md)
