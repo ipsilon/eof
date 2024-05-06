@@ -14,7 +14,7 @@
 | nethermind   |      |      |      |      |      |      |      |      |      |      |       |
 | revm         | :+1: | :+1: | :+1: | :+1: |  🚧  | :+1: | :+1: |  🚧   |  🚧  |      | :+1:  |
 | solidity     | 🚧   | N/A  | 🚧    | 🚧   | N/A  |      |      |      |      |      |       |
-| vyper        |      |      |      |      |      |      |      |      |      |      |       |
+| vyper        | stale | N/A  | stale | stale | N/A  |      |      |      |      |      |       |
 
 # Specs
 
@@ -48,6 +48,10 @@ Current work-in-progress implementation resides at: https://github.com/ethereum/
 ## Solidity
 
 Last implementation resides at https://github.com/ethereum/solidity/pull/13825.  This is based on the December 2022 version of EOF.
+
+## Vyper
+
+There is a contributor submitted PR from mid 2023 implementing some of EOF: https://github.com/vyperlang/vyper/pull/3457
 
 # Column Descriptions
 
