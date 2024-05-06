@@ -7,6 +7,7 @@
 | **testing**  | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧   | 🚧    | :+1: | :+1: |      |  🚧   |
 | besu         | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: |      | :+1:  |
 | erigon       |      |      |      |      |      |      |      |      |      |      |       |
+| erigon++ (silkworm) | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧    | :+1:  |
 | ethereumjs   |      |      |      |      |      |      |      |      |      |      |       |
 | evmone       | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧    | :+1:  |
 | geth         | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
@@ -35,6 +36,10 @@ EIP contents are being updated to match up with the **Megaspec**:
 ## Besu
 
 Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof)
+
+## erigon++
+
+[Erigon++ is a version of Erigon using Silkworm as the execution engine.](https://erigon.tech/erigonpp/) Since Silkworm uses evmone, it receives the feature from upstream.
 
 ## geth
 
