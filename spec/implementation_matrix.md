@@ -36,6 +36,14 @@ EIP contents are being updated to match up with the **Megaspec**:
 
 Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof)
 
+## geth
+
+Current work-in-progress implementation resides at: https://github.com/ethereum/go-ethereum/pull/29518
+
+## Solidity
+
+Last implementation resides at https://github.com/ethereum/solidity/pull/13825.  This is based on the December 2022 version of EOF.
+
 # Column Descriptions
 
 * EIP-3540 - EOF Container
@@ -76,11 +84,3 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
   * Execution - https://github.com/ethereum/execution-spec-tests/pull/502
-
-## geth
-
-Current work-in-progress implementation resides at: https://github.com/ethereum/go-ethereum/pull/29518
-
-## Solidity
-
-Last implementation resides at https://github.com/ethereum/solidity/pull/13825.  This is based on the December 2022 version of EOF.
