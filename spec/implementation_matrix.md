@@ -9,7 +9,7 @@
 | erigon       |         |           |      |      |      |      |      |      |          |       |
 | ethereumjs   |         |           |      |      |      |      |      |      |          |       |
 | evmone       | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧       | :+1:  |
-| geth         |         |           |      |      |      |      |      |      |          |       |
+| geth         | 🚧      | 🚧         | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧       | 🚧    |
 | nethermind   |         |           |      |      |      |      |      |      |          |       |
 | revm         | :+1:    |  :+1:     | :+1: | :+1: |  🚧  | :+1: | :+1: |  🚧  |  🚧      | :+1:  |
 | solidity     | 🚧      | N/A       | 🚧   | 🚧   | N/A  |      |      |      |          |       |
@@ -76,6 +76,10 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
   * Execution - https://github.com/ethereum/execution-spec-tests/pull/502
+
+## geth
+
+Current work-in-progress implementation resides at: https://github.com/ethereum/go-ethereum/pull/29518
 
 ## Solidity
 
