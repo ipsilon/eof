@@ -11,7 +11,7 @@
 | ethereumjs   |      |      |      |      |      |      |      |      |      |      |       |
 | evmone       | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧    | :+1:  |
 | geth         | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
-| nethermind   |      |      |      |      |      |      |      |      |      |      |       |
+| nethermind   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
 | revm         | :+1: | :+1: | :+1: | :+1: |  🚧  | :+1: | :+1: |  🚧   |  🚧  |      | :+1:  |
 | solidity     | 🚧   | N/A  | 🚧    | 🚧   | N/A  |      |      |      |      |      |       |
 | vyper        | stale | N/A  | stale | stale | N/A  |      |      |      |      |      |       |
@@ -35,7 +35,7 @@ EIP contents are being updated to match up with the **Megaspec**:
 
 ## Besu
 
-Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof)
+Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof).
 
 ## erigon++
 
@@ -44,6 +44,10 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 ## geth
 
 Current work-in-progress implementation resides at: https://github.com/ethereum/go-ethereum/pull/29518
+
+## Nethermind
+
+Nethermind currently has EOF support in the branch [feature/evm/eof](https://github.com/NethermindEth/nethermind/commits/feature/evm/eof/)  ([PR#6896](https://github.com/NethermindEth/nethermind/pull/6896)).
 
 ## Solidity
 
