@@ -1,19 +1,19 @@
 # Readiness matrix
 
-|              |    3540 |      3670 | 4200 | 4750 | 5450 | 6206 | 7480 | 7069 | 7620     | 663   |
-|--------------|---------|-----------|------|------|------|------|------|------|----------|-------|
-| **Megaspec** | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     | :+1:  |
-| **EIP**      | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     | :+1:  |
-| **testing**  | :+1:    | :+1:      | :+1: | :+1: | :+1: | 🚧   | 🚧   | :+1: | :+1:     |  🚧   |
-| besu         | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:     | :+1:  |
-| erigon       |         |           |      |      |      |      |      |      |          |       |
-| ethereumjs   |         |           |      |      |      |      |      |      |          |       |
-| evmone       | :+1:    | :+1:      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧       | :+1:  |
-| geth         | 🚧      | 🚧         | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧       | 🚧    |
-| nethermind   |         |           |      |      |      |      |      |      |          |       |
-| revm         | :+1:    |  :+1:     | :+1: | :+1: |  🚧  | :+1: | :+1: |  🚧  |  🚧      | :+1:  |
-| solidity     | 🚧      | N/A       | 🚧   | 🚧   | N/A  |      |      |      |          |       |
-| vyper        |         |           |      |      |      |      |      |      |          |       |
+|              | 3540 | 3670 | 4200 | 4750 | 5450 | 6206 | 7480 | 7069 | 7620 | 7698 | 663  |
+|--------------|------|------|------|------|------|------|------|------|------|------|------|
+| **Megaspec** | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: |      | :+1:  |
+| **EIP**      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:  |
+| **testing**  | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧   | 🚧    | :+1: | :+1: |      |  🚧   |
+| besu         | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: |      | :+1:  |
+| erigon       |      |      |      |      |      |      |      |      |      |      |       |
+| ethereumjs   |      |      |      |      |      |      |      |      |      |      |       |
+| evmone       | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧    | :+1:  |
+| geth         | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
+| nethermind   |      |      |      |      |      |      |      |      |      |      |       |
+| revm         | :+1: | :+1: | :+1: | :+1: |  🚧  | :+1: | :+1: |  🚧   |  🚧  |      | :+1:  |
+| solidity     | 🚧   | N/A  | 🚧    | 🚧   | N/A  |      |      |      |      |      |       |
+| vyper        |      |      |      |      |      |      |      |      |      |      |       |
 
 # Specs
 
@@ -35,6 +35,14 @@ EIP contents are being updated to match up with the **Megaspec**:
 ## Besu
 
 Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof)
+
+## geth
+
+Current work-in-progress implementation resides at: https://github.com/ethereum/go-ethereum/pull/29518
+
+## Solidity
+
+Last implementation resides at https://github.com/ethereum/solidity/pull/13825.  This is based on the December 2022 version of EOF.
 
 # Column Descriptions
 
@@ -71,16 +79,10 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 * EIP-7069 - Revamped CALL instructions
   * `EXT*CALL` state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/eof_calls
 
-* EIP-7620 - EOF Create Instructions
+* EIP-7620 - EOF Create Instructions (mutually exclusive alternative of EIP-7620)
   * Creation state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/stCreate
+
+* EIP-7698 - EOF - Creation transaction (mutually exclusive alternative of EIP-7620)
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
   * Execution - https://github.com/ethereum/execution-spec-tests/pull/502
-
-## geth
-
-Current work-in-progress implementation resides at: https://github.com/ethereum/go-ethereum/pull/29518
-
-## Solidity
-
-Last implementation resides at https://github.com/ethereum/solidity/pull/13825.  This is based on the December 2022 version of EOF.
