@@ -37,7 +37,7 @@ EIP contents are being updated to match up with the **Megaspec**:
 
 Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof)
 
-## erigon++
+## erigon++
 
 [Erigon++ is a version of Erigon using Silkworm as the execution engine.](https://erigon.tech/erigonpp/) Since Silkworm uses evmone, it receives the feature from upstream.
 
