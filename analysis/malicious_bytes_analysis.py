@@ -14,8 +14,12 @@ class Chunk:
     jumpdests: List[int] = field(default_factory=list)
     contains_invalid_jumpdest: bool = False
 
+
 @dataclass
 class CodeAnalysis:
+    num_push_bytes = 0
+    num_jumpdests = 0
+    num_invalid_jumpdests = 0
     chunks: List[Chunk] = field(default_factory=list)
 
 
@@ -31,13 +35,16 @@ def analyse_code(code) -> CodeAnalysis:
         ch = chunks[len(chunks) - 1]
 
         if pushdata_remaining > 0:
+            analysis.num_push_bytes += 1
             if op == JUMPDEST:
+                analysis.num_invalid_jumpdests += 1
                 ch.contains_invalid_jumpdest = True
             pushdata_remaining -= 1
         else:
             if PUSH1 <= op <= PUSH32:
                 pushdata_remaining = op - PUSH1 + 1
             elif op == JUMPDEST:
+                analysis.num_jumpdests += 1
                 ch.jumpdests.append(offset)
 
     return analysis
@@ -84,7 +91,7 @@ def test_first_jumpdest_offset():
     assert _('00' * 32 + '605b') == [[], []]
     assert _('00' * 32 + '605b5b5b') == [[], [2, 3]]
     assert _('7f' + '5b' * 31 + '605b') == [[], [1]]
-    assert _('7f' + '5b' * 31 + '605b605b60605b') == [[], [1,6]]
+    assert _('7f' + '5b' * 31 + '605b605b60605b') == [[], [1, 6]]
 
 
 def get_offsets_of_malicious_bytes(code):
@@ -117,13 +124,31 @@ def analyse_top_bytecodes():
         data = json.load(f)
     print(len(data))
 
+    total_l = 0
+    total_d = 0
+    total_j = 0
+    total_v = 0
+
     for row in data:
         code = bytes.fromhex(row["code"][2:])
         analysis = analyse_code(code)
-        print(f"{row['example_address']}, {len(code)}, {(len(code) + 31) // 32}:")
+        l = len(code)
+        d = analysis.num_push_bytes
+        j = analysis.num_jumpdests
+        v = analysis.num_invalid_jumpdests
+        print(f"{row['example_address']}, {l}, {(l + 31) // 32}:")
+        print(
+            f"{d} ({d / l:.3}) {j} ({j / l:.3}) {v} ({v / l:.3})")
         for i, ch in enumerate(analysis.chunks):
             if ch.contains_invalid_jumpdest:
                 print(f"  {i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
+
+        total_l += l
+        total_d += d
+        total_j += j
+        total_v += v
+
+    print(f"total: {total_l} {total_d} ({total_d/total_l:.3}) {total_j} ({total_j/total_l:.3}) {total_v} ({total_v/total_l:.3}, {total_v/total_d:.3})")
 
 
 if __name__ == '__main__':
