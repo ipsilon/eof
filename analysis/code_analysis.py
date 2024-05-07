@@ -121,13 +121,6 @@ def test_get_offsets_of_malicious_bytes():
     assert get_offsets_of_malicious_bytes(bytes.fromhex("6100001161005b11615b00")) == [6, 9]
 
 
-@dataclass
-class Operation:
-    skip_only: bool
-    chunk_delta: int
-    fio: int
-
-
 class Scheme:
     def __init__(self, name: str, width: int, value_width: int):
         self.name = name
@@ -166,7 +159,7 @@ class Scheme:
 
 
 def encode_invalid_jumpdests(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> tuple[
-    list[Operation], int]:
+    list[int], int]:
     operations = []
     last_chunk_no = 0
     num_invalid_chunks = 0
