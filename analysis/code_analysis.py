@@ -1,3 +1,4 @@
+import csv
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -153,16 +154,28 @@ def transform_to_operation(invalid_jumpdests: list[Chunk]) -> list[Operation]:
     return operations
 
 
+def perc(x, t):
+    if x == 0:
+        return "0"
+    return f"{x * 100 / t:.2f}%"
+
+
 def analyse_top_bytecodes():
     with open('top_bytecodes.json') as f:
         data = json.load(f)
-    print(len(data))
 
+    w = [['example address', 'earliest block', 'latest block', 'gas used', 'code length',
+          'code chunks', 'push bytes', 'jumpdests', 'invalid jumpdests', 'scheme1 (1,10,4+6)'], []]
+
+    earliest_block = 1_000_000_000
+    latest_block = 0
+    total_gas = 0
     total_l = 0
     total_d = 0
     total_j = 0
     total_v = 0
 
+    total_encoding_len = 0
     encoding_dist = defaultdict(int)
     fio_dist = [0] * 33
     fio_dist_adj = [0] * 33
@@ -170,10 +183,12 @@ def analyse_top_bytecodes():
         code = bytes.fromhex(row["code"][2:])
         analysis = analyse_code(code)
         l = len(code)
+        num_code_chunks = (l + 31) // 32
         d = analysis.num_push_bytes
         j = analysis.num_jumpdests
         v = analysis.num_invalid_jumpdests
-        print(f"{row['example_address']}, {l}, {(l + 31) // 32}:")
+
+        print(f"{row['example_address']}, {l}, {num_code_chunks}:")
         print(
             f"{d} ({d / l:.3}) {j} ({j / l:.3}) {v} ({v / l:.3})")
         last_i = 0
@@ -186,12 +201,20 @@ def analyse_top_bytecodes():
 
         ops = transform_to_operation(analysis.chunks)
         encoding_bits = len(ops) * 11
-        encoding_len = (encoding_bits + 31) // 32
+        encoding_len = (encoding_bits + 7) // 8
+        total_encoding_len += encoding_len
         encoding_dist[encoding_len] += 1
         print(f"encoding: {encoding_bits}, {encoding_len}, {(encoding_len + 31) // 32}")
         # for op in ops:
         #     print(f"{op}")
 
+        w.append(
+            [row['example_address'], row['earliest_block'], row['latest_block'], row['gas_used'], l,
+             num_code_chunks, perc(d, l), perc(j, l), perc(v, l), encoding_len])
+
+        earliest_block = min(earliest_block, row['earliest_block'])
+        latest_block = max(latest_block, row['latest_block'])
+        total_gas += row['gas_used']
         total_l += l
         total_d += d
         total_j += j
@@ -206,9 +229,18 @@ def analyse_top_bytecodes():
     print("\nfio adjusted distribution:")
     for x, v in enumerate(fio_dist_adj):
         print(f"{x:4}: {v}")
-    print("\nencoding length distribution:")
+    print(f"\nencoding length distribution: {total_encoding_len}")
     for k, v in sorted(encoding_dist.items()):
         print(f"{k}: {v}")
+
+    w[1] = ['total', earliest_block, latest_block, total_gas, total_l, (total_l + 31) // 32,
+            perc(total_d, total_l), perc(total_j, total_l), perc(total_v, total_l),
+            total_encoding_len]
+
+    with open('code_analysis.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        for row in w:
+            writer.writerow(row)
 
 
 if __name__ == '__main__':
