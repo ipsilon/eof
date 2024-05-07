@@ -122,10 +122,12 @@ def test_get_offsets_of_malicious_bytes():
 
 
 class Scheme:
-    def __init__(self, name: str, width: int, value_width: int):
+    VALUE_MAX = 32
+    VALUE_WIDTH = VALUE_MAX.bit_length()
+
+    def __init__(self, name: str, width: int):
         self.name = name
         self.WIDTH = width
-        self.VALUE_WIDTH = value_width
         self.SKIP_ONLY = 1 << (self.WIDTH - 1)
         self.VALUE_SKIP_WIDTH = self.WIDTH - self.VALUE_WIDTH - 1
         self.VALUE_SKIP_MAX = 2 ** self.VALUE_SKIP_WIDTH - 1
@@ -195,7 +197,7 @@ def perc(x, t):
     return f"{x * 100 / t:.2f}%"
 
 
-SCHEME11 = Scheme("scheme f11", 11, 6)
+SCHEME11 = Scheme("scheme f11", 11)
 
 
 def analyse_top_bytecodes():
