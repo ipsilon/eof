@@ -124,13 +124,16 @@ def test_get_offsets_of_malicious_bytes():
 class Scheme:
     VALUE_MAX = 32
     VALUE_WIDTH = VALUE_MAX.bit_length()
+    VALUE_MOD = VALUE_MAX + 1
 
     def __init__(self, name: str, width: int):
         self.name = name
         self.WIDTH = width
+
+        payload_max = 2 ** (width - 1) - 1
+
         self.SKIP_ONLY = 1 << (self.WIDTH - 1)
-        self.VALUE_SKIP_WIDTH = self.WIDTH - self.VALUE_WIDTH - 1
-        self.VALUE_SKIP_MAX = 2 ** self.VALUE_SKIP_WIDTH - 1
+        self.VALUE_SKIP_MAX = (payload_max - self.VALUE_MAX) // self.VALUE_MOD
         self.SKIP_BIAS = self.VALUE_SKIP_MAX + 1
 
     def enc(self, delta: int, chunk: Chunk) -> tuple[list[int], int]:
@@ -146,11 +149,10 @@ class Scheme:
 
         assert 0 <= delta <= self.VALUE_SKIP_MAX
         assert 0 <= chunk.first_instruction_offset <= 32
-        operations.append((delta << self.VALUE_WIDTH) | chunk.first_instruction_offset)
+        operations.append(delta * self.VALUE_MOD + chunk.first_instruction_offset)
         return operations, self.WIDTH * len(operations)
 
     def dec(self, ops: list[int]) -> dict[int, int]:
-        value_mask = 2 ** self.VALUE_WIDTH - 1
         m = dict()
         i = 0
         for op in ops:
@@ -158,8 +160,8 @@ class Scheme:
                 delta = (op ^ self.SKIP_ONLY) + self.SKIP_BIAS
                 value = None
             else:
-                delta = op >> self.VALUE_WIDTH
-                value = op & value_mask
+                delta = op // self.VALUE_MOD
+                value = op % self.VALUE_MOD
             i += delta
             print(f"{delta:+4}")
             if value is not None:
