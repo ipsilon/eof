@@ -142,15 +142,32 @@ class Scheme:
         operations.append(Operation(False, delta, chunk.first_instruction_offset))
         return operations
 
+    def dec(self, ops: list[Operation]) -> dict[int, int]:
+        m = dict()
+        i = 0
+        for op in ops:
+            i += op.chunk_delta
+            if not op.skip_only:
+                m[i] = op.fio
+        return m
+
 
 def encode_invalid_jumpdests(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> list[Operation]:
     operations = []
     last_chunk_no = 0
+    num_invalid_chunks = 0
     for i, ch in enumerate(invalid_jumpdests):
         if not ch.contains_invalid_jumpdest:
             continue  # skip chunks without invalid jumpdests
         operations += scheme.enc(i - last_chunk_no, ch)
         last_chunk_no = i
+        num_invalid_chunks += 1
+
+    m = scheme.dec(operations)
+    assert len(m) == num_invalid_chunks
+    for i, fio in m.items():
+        assert fio == invalid_jumpdests[i].first_instruction_offset
+
     return operations
 
 
