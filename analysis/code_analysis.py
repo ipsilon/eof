@@ -199,15 +199,21 @@ def perc(x, t):
     return f"{x * 100 / t:.2f}%"
 
 
-SCHEME11 = Scheme("scheme f11", 11)
+SCHEMES = [
+    Scheme("scheme f11", 11),
+    Scheme("scheme f10", 10),
+    Scheme("scheme f9", 9),
+    Scheme("scheme f8", 8),
+]
 
 
 def analyse_top_bytecodes():
     with open('top_bytecodes.json') as f:
         data = json.load(f)
 
-    w = [['example address', 'earliest block', 'latest block', 'gas used', 'code length',
-          'code chunks', 'push bytes', 'jumpdests', 'invalid jumpdests', SCHEME11.name], []]
+    w = [['example address', 'earliest block', 'latest block', 'gas used',
+          'code length', 'code chunks', 'push bytes', 'jumpdests', 'invalid jumpdests']
+         + [s.name for s in SCHEMES], []]
 
     earliest_block = 1_000_000_000
     latest_block = 0
@@ -217,8 +223,8 @@ def analyse_top_bytecodes():
     total_j = 0
     total_v = 0
 
-    total_encoding_len = 0
-    encoding_dist = defaultdict(int)
+    total_encoding_len = [0] * len(SCHEMES)
+    encoding_dist = [defaultdict(int)] * len(SCHEMES)
     fio_dist = [0] * 33
     fio_dist_adj = [0] * 33
     for row in data:
@@ -241,17 +247,17 @@ def analyse_top_bytecodes():
                 print(f"  {i:4}, {i - last_i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
                 last_i = i
 
-        ops, encoding_bits = encode_invalid_jumpdests(SCHEME11, analysis.chunks)
-        encoding_len = (encoding_bits + 7) // 8
-        total_encoding_len += encoding_len
-        encoding_dist[encoding_len] += 1
-        print(f"encoding: {encoding_bits}, {encoding_len}, {(encoding_len + 31) // 32}")
-        # for op in ops:
-        #     print(f"{op}")
-
         w.append(
             [row['example_address'], row['earliest_block'], row['latest_block'], row['gas_used'], l,
-             num_code_chunks, perc(d, l), perc(j, l), perc(v, l), encoding_len])
+             num_code_chunks, perc(d, l), perc(j, l), perc(v, l)])
+
+        for i, sch in enumerate(SCHEMES):
+            _, encoding_bits = encode_invalid_jumpdests(sch, analysis.chunks)
+            encoding_len = (encoding_bits + 7) // 8
+            total_encoding_len[i] += encoding_len
+            encoding_dist[i][encoding_len] += 1
+            print(f"encoding: {encoding_bits}, {encoding_len}, {(encoding_len + 31) // 32}")
+            w[-1].append(encoding_len)
 
         earliest_block = min(earliest_block, row['earliest_block'])
         latest_block = max(latest_block, row['latest_block'])
@@ -276,8 +282,8 @@ def analyse_top_bytecodes():
     #     print(f"{k}: {v}")
 
     w[1] = ['total', earliest_block, latest_block, total_gas, total_l, (total_l + 31) // 32,
-            perc(total_d, total_l), perc(total_j, total_l), perc(total_v, total_l),
-            total_encoding_len]
+            perc(total_d, total_l), perc(total_j, total_l),
+            perc(total_v, total_l)] + total_encoding_len
 
     with open('code_analysis.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
