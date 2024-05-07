@@ -1,4 +1,4 @@
-example address,earliest block,latest block,gas used,code length,code chunks,push bytes,jumpdests,invalid jumpdests,"scheme1 (1,10,4+6)"
+example address,earliest block,latest block,gas used,code length,code chunks,push bytes,jumpdests,invalid jumpdests,scheme f11
 total,52029,19759709,179861783901613,10635333,332355,40.42%,3.11%,0.07%,13971
 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2,4753408,19759709,14946073640548,3124,98,49.52%,2.05%,0.16%,9
 0x00001bea43608c5ee487f82b773af8bd7cb20a6f,10008355,19759709,13147711796412,11293,353,52.43%,2.33%,0.03%,5

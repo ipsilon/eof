@@ -129,9 +129,11 @@ class Operation:
 
 
 class Scheme:
-    WIDTH = 11
-    VALUE_WIDTH = 6
-    SKIP_ONLY = 1 << (WIDTH - 1)
+    def __init__(self, name: str, width: int, value_width: int):
+        self.name = name
+        self.WIDTH = width
+        self.VALUE_WIDTH = value_width
+        self.SKIP_ONLY = 1 << (self.WIDTH - 1)
 
     def enc(self, delta: int, chunk: Chunk) -> tuple[list[int], int]:
         value_skip_width = self.WIDTH - self.VALUE_WIDTH - 1
@@ -192,12 +194,15 @@ def perc(x, t):
     return f"{x * 100 / t:.2f}%"
 
 
+SCHEME11 = Scheme("scheme f11", 11, 6)
+
+
 def analyse_top_bytecodes():
     with open('top_bytecodes.json') as f:
         data = json.load(f)
 
     w = [['example address', 'earliest block', 'latest block', 'gas used', 'code length',
-          'code chunks', 'push bytes', 'jumpdests', 'invalid jumpdests', 'scheme1 (1,10,4+6)'], []]
+          'code chunks', 'push bytes', 'jumpdests', 'invalid jumpdests', SCHEME11.name], []]
 
     earliest_block = 1_000_000_000
     latest_block = 0
@@ -231,7 +236,7 @@ def analyse_top_bytecodes():
                 print(f"  {i:4}, {i - last_i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
                 last_i = i
 
-        ops, encoding_bits = encode_invalid_jumpdests(Scheme(), analysis.chunks)
+        ops, encoding_bits = encode_invalid_jumpdests(SCHEME11, analysis.chunks)
         encoding_len = (encoding_bits + 7) // 8
         total_encoding_len += encoding_len
         encoding_dist[encoding_len] += 1
