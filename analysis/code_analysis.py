@@ -128,29 +128,29 @@ class Operation:
     fio: int
 
 
-def transform_to_operation(invalid_jumpdests: list[Chunk]) -> list[Operation]:
+class Scheme:
+    def enc(self, delta: int, chunk: Chunk) -> list[Operation]:
+        operations = []
+        # Generate skips if needed.
+        while delta > 15:
+            d = min(delta, 1023)
+            operations.append(Operation(True, d, 0))
+            delta -= d
+
+        assert delta <= 15
+        assert 0 <= chunk.first_instruction_offset <= 32
+        operations.append(Operation(False, delta, chunk.first_instruction_offset))
+        return operations
+
+
+def encode_invalid_jumpdests(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> list[Operation]:
     operations = []
     last_chunk_no = 0
-
     for i, ch in enumerate(invalid_jumpdests):
         if not ch.contains_invalid_jumpdest:
             continue  # skip chunks without invalid jumpdests
-
-        # Chunk delta compared to last encoded number.
-        chunk_delta = i - last_chunk_no
-
-        # Generate skips if needed.
-        while chunk_delta > 15:
-            d = min(chunk_delta, 1023)
-            operations.append(Operation(True, d, 0))
-            chunk_delta -= d
-
+        operations += scheme.enc(i - last_chunk_no, ch)
         last_chunk_no = i
-
-        assert (chunk_delta <= 15)
-        assert (0 <= ch.first_instruction_offset <= 32)
-        operations.append(Operation(False, chunk_delta, ch.first_instruction_offset))
-
     return operations
 
 
@@ -199,7 +199,7 @@ def analyse_top_bytecodes():
                 print(f"  {i:4}, {i - last_i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
                 last_i = i
 
-        ops = transform_to_operation(analysis.chunks)
+        ops = encode_invalid_jumpdests(Scheme(), analysis.chunks)
         encoding_bits = len(ops) * 11
         encoding_len = (encoding_bits + 7) // 8
         total_encoding_len += encoding_len
