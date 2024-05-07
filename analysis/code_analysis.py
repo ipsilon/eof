@@ -134,11 +134,8 @@ def transform_to_operation(invalid_jumpdests: list[Chunk]) -> list[Operation]:
         if not ch.contains_invalid_jumpdest:
             continue  # skip chunks without invalid jumpdests
 
-        # print(ch)
-
         # Chunk delta compared to last encoded number.
         chunk_delta = i - last_chunk_no
-        # print("Chunk", last_chunk_no, i, chunk_delta)
 
         # Generate skips if needed.
         while chunk_delta > 31:
@@ -179,9 +176,11 @@ def analyse_top_bytecodes():
         print(f"{row['example_address']}, {l}, {(l + 31) // 32}:")
         print(
             f"{d} ({d / l:.3}) {j} ({j / l:.3}) {v} ({v / l:.3})")
+        last_i = 0
         for i, ch in enumerate(analysis.chunks):
             if ch.contains_invalid_jumpdest:
-                print(f"  {i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
+                print(f"  {i:4}, {i - last_i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
+                last_i = i
 
         ops = transform_to_operation(analysis.chunks)
         for op in ops:
