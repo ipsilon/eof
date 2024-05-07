@@ -129,7 +129,7 @@ class Operation:
 
 
 class Scheme:
-    def enc(self, delta: int, chunk: Chunk) -> list[Operation]:
+    def enc(self, delta: int, chunk: Chunk) -> tuple[list[Operation], int]:
         operations = []
         # Generate skips if needed.
         while delta > 15:
@@ -140,7 +140,7 @@ class Scheme:
         assert delta <= 15
         assert 0 <= chunk.first_instruction_offset <= 32
         operations.append(Operation(False, delta, chunk.first_instruction_offset))
-        return operations
+        return operations, 11 * len(operations)
 
     def dec(self, ops: list[Operation]) -> dict[int, int]:
         m = dict()
@@ -152,14 +152,18 @@ class Scheme:
         return m
 
 
-def encode_invalid_jumpdests(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> list[Operation]:
+def encode_invalid_jumpdests(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> tuple[
+    list[Operation], int]:
     operations = []
     last_chunk_no = 0
     num_invalid_chunks = 0
+    length = 0
     for i, ch in enumerate(invalid_jumpdests):
         if not ch.contains_invalid_jumpdest:
             continue  # skip chunks without invalid jumpdests
-        operations += scheme.enc(i - last_chunk_no, ch)
+        o, l = scheme.enc(i - last_chunk_no, ch)
+        operations += o
+        length += l
         last_chunk_no = i
         num_invalid_chunks += 1
 
@@ -168,7 +172,7 @@ def encode_invalid_jumpdests(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> 
     for i, fio in m.items():
         assert fio == invalid_jumpdests[i].first_instruction_offset
 
-    return operations
+    return operations, length
 
 
 def perc(x, t):
@@ -216,8 +220,7 @@ def analyse_top_bytecodes():
                 print(f"  {i:4}, {i - last_i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
                 last_i = i
 
-        ops = encode_invalid_jumpdests(Scheme(), analysis.chunks)
-        encoding_bits = len(ops) * 11
+        ops, encoding_bits = encode_invalid_jumpdests(Scheme(), analysis.chunks)
         encoding_len = (encoding_bits + 7) // 8
         total_encoding_len += encoding_len
         encoding_dist[encoding_len] += 1
