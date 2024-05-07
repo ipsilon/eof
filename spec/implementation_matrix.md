@@ -8,7 +8,7 @@
 | besu         | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: |      | :+1:  |
 | erigon       |      |      |      |      |      |      |      |      |      |      |       |
 | erigon++ (silkworm) | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧    | :+1:  |
-| ethereumjs   |      |      |      |      |      |      |      |      |      |      |       |
+| ethereumjs   | stale | stale | stale | stale | stale |      |      |      |      |      |       |
 | evmone       | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧    | :+1:  |
 | geth         | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
 | nethermind   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
@@ -40,6 +40,10 @@ Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree
 ## erigon++
 
 [Erigon++ is a version of Erigon using Silkworm as the execution engine.](https://erigon.tech/erigonpp/) Since Silkworm uses evmone, it receives the feature from upstream.
+
+## ethereumjs
+
+Ethereumjs in 2022 has merged the initial EOF EIPs into mainline, and then worked on the late 2022 version in [PR#2453](https://github.com/ethereumjs/ethereumjs-monorepo/pull/2453). This code can be considered stale.
 
 ## geth
 
