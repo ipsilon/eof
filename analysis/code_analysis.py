@@ -127,20 +127,22 @@ class Scheme:
         self.WIDTH = width
         self.VALUE_WIDTH = value_width
         self.SKIP_ONLY = 1 << (self.WIDTH - 1)
+        self.VALUE_SKIP_WIDTH = self.WIDTH - self.VALUE_WIDTH - 1
+        self.VALUE_SKIP_MAX = 2 ** self.VALUE_SKIP_WIDTH - 1
+        self.SKIP_BIAS = self.VALUE_SKIP_MAX + 1
 
     def enc(self, delta: int, chunk: Chunk) -> tuple[list[int], int]:
-        value_skip_width = self.WIDTH - self.VALUE_WIDTH - 1
-        value_skip_max = 2 ** value_skip_width - 1
         skip_only_max = self.SKIP_ONLY - 1
 
         operations = []
         # Generate skips if needed.
-        while delta > value_skip_max:
-            d = min(delta - 1, skip_only_max)  # leave some skip for the value entry
+        while delta > self.VALUE_SKIP_MAX:
+            d = min(delta - self.SKIP_BIAS, skip_only_max)
+            assert 0 <= d <= skip_only_max
             operations.append(self.SKIP_ONLY | d)
-            delta -= d
+            delta -= d + self.SKIP_BIAS
 
-        assert delta <= value_skip_max
+        assert 0 <= delta <= self.VALUE_SKIP_MAX
         assert 0 <= chunk.first_instruction_offset <= 32
         operations.append((delta << self.VALUE_WIDTH) | chunk.first_instruction_offset)
         return operations, self.WIDTH * len(operations)
@@ -151,15 +153,16 @@ class Scheme:
         i = 0
         for op in ops:
             if op & self.SKIP_ONLY:
-                delta = op ^ self.SKIP_ONLY
+                delta = (op ^ self.SKIP_ONLY) + self.SKIP_BIAS
                 value = None
             else:
                 delta = op >> self.VALUE_WIDTH
                 value = op & value_mask
             i += delta
+            print(f"{delta:+4}")
             if value is not None:
                 m[i] = value
-            print(f"{delta:+4}   {value or ''}")
+                print(f"{i:4}: {value}")
         return m
 
 
@@ -253,19 +256,20 @@ def analyse_top_bytecodes():
         total_d += d
         total_j += j
         total_v += v
+        # break
 
     print(
         f"total: {total_l} {total_d} ({total_d / total_l:.3}) {total_j} ({total_j / total_l:.3}) {total_v} ({total_v / total_l:.3}, {total_v / total_d:.3})")
 
-    print("\nfio distribution:")
-    for x, v in enumerate(fio_dist):
-        print(f"{x:4}: {v}")
-    print("\nfio adjusted distribution:")
-    for x, v in enumerate(fio_dist_adj):
-        print(f"{x:4}: {v}")
+    # print("\nfio distribution:")
+    # for x, v in enumerate(fio_dist):
+    #     print(f"{x:4}: {v}")
+    # print("\nfio adjusted distribution:")
+    # for x, v in enumerate(fio_dist_adj):
+    #     print(f"{x:4}: {v}")
     print(f"\nencoding length distribution: {total_encoding_len}")
-    for k, v in sorted(encoding_dist.items()):
-        print(f"{k}: {v}")
+    # for k, v in sorted(encoding_dist.items()):
+    #     print(f"{k}: {v}")
 
     w[1] = ['total', earliest_block, latest_block, total_gas, total_l, (total_l + 31) // 32,
             perc(total_d, total_l), perc(total_j, total_l), perc(total_v, total_l),
