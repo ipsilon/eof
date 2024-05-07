@@ -129,26 +129,37 @@ class Operation:
 
 
 class Scheme:
-    def enc(self, delta: int, chunk: Chunk) -> tuple[list[Operation], int]:
+    WIDTH = 11
+    VALUE_WIDTH = 6
+    SKIP_ONLY = 1 << (WIDTH - 1)
+
+    def enc(self, delta: int, chunk: Chunk) -> tuple[list[int], int]:
+        value_skip_width = self.WIDTH - self.VALUE_WIDTH - 1
+        value_skip_max = 2 ** value_skip_width - 1
+        skip_only_max = self.SKIP_ONLY - 1
+
         operations = []
         # Generate skips if needed.
-        while delta > 15:
-            d = min(delta, 1023)
-            operations.append(Operation(True, d, 0))
+        while delta > value_skip_max:
+            d = min(delta, skip_only_max)
+            operations.append(self.SKIP_ONLY | d)
             delta -= d
 
-        assert delta <= 15
+        assert delta <= value_skip_max
         assert 0 <= chunk.first_instruction_offset <= 32
-        operations.append(Operation(False, delta, chunk.first_instruction_offset))
-        return operations, 11 * len(operations)
+        operations.append((delta << self.VALUE_WIDTH) | chunk.first_instruction_offset)
+        return operations, self.WIDTH * len(operations)
 
-    def dec(self, ops: list[Operation]) -> dict[int, int]:
+    def dec(self, ops: list[int]) -> dict[int, int]:
+        value_mask = 2 ** self.VALUE_WIDTH - 1
         m = dict()
         i = 0
         for op in ops:
-            i += op.chunk_delta
-            if not op.skip_only:
-                m[i] = op.fio
+            if op & self.SKIP_ONLY:
+                i += op ^ self.SKIP_ONLY
+            else:
+                i += op >> self.VALUE_WIDTH
+                m[i] = op & value_mask
         return m
 
 
