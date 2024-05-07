@@ -138,18 +138,14 @@ def transform_to_operation(invalid_jumpdests: list[Chunk]) -> list[Operation]:
         chunk_delta = i - last_chunk_no
 
         # Generate skips if needed.
-        while chunk_delta > 31:
-            # Too large chunks can only be skipped.
-            while chunk_delta > 1023:
-                operations.append(Operation(True, 1023, 0))
-                chunk_delta -= 1023
-
-            operations.append(Operation(True, 31, 0))
-            chunk_delta -= 31
+        while chunk_delta > 15:
+            d = min(chunk_delta, 1023)
+            operations.append(Operation(True, d, 0))
+            chunk_delta -= d
 
         last_chunk_no = i
 
-        assert (chunk_delta <= 31)
+        assert (chunk_delta <= 15)
         assert (0 <= ch.first_instruction_offset <= 32)
         operations.append(Operation(False, chunk_delta, ch.first_instruction_offset))
 
@@ -166,6 +162,8 @@ def analyse_top_bytecodes():
     total_j = 0
     total_v = 0
 
+    fio_dist = [0] * 33
+    fio_dist_adj = [0] * 33
     for row in data:
         code = bytes.fromhex(row["code"][2:])
         analysis = analyse_code(code)
@@ -179,6 +177,8 @@ def analyse_top_bytecodes():
         last_i = 0
         for i, ch in enumerate(analysis.chunks):
             if ch.contains_invalid_jumpdest:
+                fio_dist[ch.first_instruction_offset] += 1
+                fio_dist_adj[ch.first_instruction_offset if len(ch.jumpdests) > 0 else 32] += 1
                 print(f"  {i:4}, {i - last_i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
                 last_i = i
 
@@ -193,6 +193,11 @@ def analyse_top_bytecodes():
 
     print(
         f"total: {total_l} {total_d} ({total_d / total_l:.3}) {total_j} ({total_j / total_l:.3}) {total_v} ({total_v / total_l:.3}, {total_v / total_d:.3})")
+
+    for x, v in enumerate(fio_dist):
+        print(f"{x:4}: {v}")
+    for x, v in enumerate(fio_dist_adj):
+        print(f"{x:4}: {v}")
 
 
 if __name__ == '__main__':
