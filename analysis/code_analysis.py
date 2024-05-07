@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List
 
@@ -162,6 +163,7 @@ def analyse_top_bytecodes():
     total_j = 0
     total_v = 0
 
+    encoding_dist = defaultdict(int)
     fio_dist = [0] * 33
     fio_dist_adj = [0] * 33
     for row in data:
@@ -183,8 +185,12 @@ def analyse_top_bytecodes():
                 last_i = i
 
         ops = transform_to_operation(analysis.chunks)
-        for op in ops:
-            print(f"{op}")
+        encoding_bits = len(ops) * 11
+        encoding_len = (encoding_bits + 31) // 32
+        encoding_dist[encoding_len] += 1
+        print(f"encoding: {encoding_bits}, {encoding_len}, {(encoding_len + 31) // 32}")
+        # for op in ops:
+        #     print(f"{op}")
 
         total_l += l
         total_d += d
@@ -194,10 +200,15 @@ def analyse_top_bytecodes():
     print(
         f"total: {total_l} {total_d} ({total_d / total_l:.3}) {total_j} ({total_j / total_l:.3}) {total_v} ({total_v / total_l:.3}, {total_v / total_d:.3})")
 
+    print("\nfio distribution:")
     for x, v in enumerate(fio_dist):
         print(f"{x:4}: {v}")
+    print("\nfio adjusted distribution:")
     for x, v in enumerate(fio_dist_adj):
         print(f"{x:4}: {v}")
+    print("\nencoding length distribution:")
+    for k, v in sorted(encoding_dist.items()):
+        print(f"{k}: {v}")
 
 
 if __name__ == '__main__':
