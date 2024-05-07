@@ -136,7 +136,7 @@ class Scheme:
         operations = []
         # Generate skips if needed.
         while delta > value_skip_max:
-            d = min(delta, skip_only_max)
+            d = min(delta - 1, skip_only_max)  # leave some skip for the value entry
             operations.append(self.SKIP_ONLY | d)
             delta -= d
 
