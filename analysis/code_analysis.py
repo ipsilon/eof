@@ -151,10 +151,15 @@ class Scheme:
         i = 0
         for op in ops:
             if op & self.SKIP_ONLY:
-                i += op ^ self.SKIP_ONLY
+                delta = op ^ self.SKIP_ONLY
+                value = None
             else:
-                i += op >> self.VALUE_WIDTH
-                m[i] = op & value_mask
+                delta = op >> self.VALUE_WIDTH
+                value = op & value_mask
+            i += delta
+            if value is not None:
+                m[i] = value
+            print(f"{delta:+4}   {value or ''}")
         return m
 
 
