@@ -119,6 +119,46 @@ def test_get_offsets_of_malicious_bytes():
     assert get_offsets_of_malicious_bytes(bytes.fromhex("6100001161005b11615b00")) == [6, 9]
 
 
+@dataclass
+class Operation:
+    skip_only: bool
+    chunk_delta: int
+    fio: int
+
+
+def transform_to_operation(invalid_jumpdests: list[Chunk]) -> list[Operation]:
+    operations = []
+    last_chunk_no = 0
+
+    for i, ch in enumerate(invalid_jumpdests):
+        if not ch.contains_invalid_jumpdest:
+            continue  # skip chunks without invalid jumpdests
+
+        # print(ch)
+
+        # Chunk delta compared to last encoded number.
+        chunk_delta = i - last_chunk_no
+        # print("Chunk", last_chunk_no, i, chunk_delta)
+
+        # Generate skips if needed.
+        while chunk_delta > 31:
+            # Too large chunks can only be skipped.
+            while chunk_delta > 1023:
+                operations.append(Operation(True, 1023, 0))
+                chunk_delta -= 1023
+
+            operations.append(Operation(True, 31, 0))
+            chunk_delta -= 31
+
+        last_chunk_no = i
+
+        assert (chunk_delta <= 31)
+        assert (0 <= ch.first_instruction_offset <= 32)
+        operations.append(Operation(False, chunk_delta, ch.first_instruction_offset))
+
+    return operations
+
+
 def analyse_top_bytecodes():
     with open('top_bytecodes.json') as f:
         data = json.load(f)
@@ -143,12 +183,17 @@ def analyse_top_bytecodes():
             if ch.contains_invalid_jumpdest:
                 print(f"  {i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
 
+        ops = transform_to_operation(analysis.chunks)
+        for op in ops:
+            print(f"{op}")
+
         total_l += l
         total_d += d
         total_j += j
         total_v += v
 
-    print(f"total: {total_l} {total_d} ({total_d/total_l:.3}) {total_j} ({total_j/total_l:.3}) {total_v} ({total_v/total_l:.3}, {total_v/total_d:.3})")
+    print(
+        f"total: {total_l} {total_d} ({total_d / total_l:.3}) {total_j} ({total_j / total_l:.3}) {total_v} ({total_v / total_l:.3}, {total_v / total_d:.3})")
 
 
 if __name__ == '__main__':
