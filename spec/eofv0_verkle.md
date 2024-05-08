@@ -111,50 +111,34 @@ Alternate option is instead of encoding all valid `JUMPDEST` locations, to only 
 By invalid `JUMPDEST` we mean a `0x5b` byte in any pushdata.
 
 This is beneficial if our assumption is correct that most contracts only contain a limited number
-of offending cases. Our initial analysis suggests this is the case, e.g. Uniswap router has 9 cases,
-one of the Arbitrum validator contracts has 6 cases.
+of offending cases. Our initial analysis of the top 1000 used bytecodes suggests this is the case:
+only 0.07% of bytecode bytes are invalid jumpdests.
 
-Since Solidity contracts have a trailing metadata, which contains a Keccak-256 (32-byte) hash of the
-source, there is a 12% probability ($1 - (255/256)^{32}$) that at least one of the bytes of the hash
-will contain the `0x5b` value, which gives our minimum probability of having at least one invalid
-`JUMPDEST` in the contract.
-
-Let's create a map of `invalid_jumpdests[chunk_no] = first_instruction_offset`. We can densely encode this
-map using techniques similar to *run-length encoding* to skip distances and delta-encode offsets.
+Let's create a map of `invalid_jumpdests[chunk_index] = first_instruction_offset`. We can densely encode this
+map using techniques similar to *run-length encoding* to skip distances and delta-encode indexes.
 This map is always fully loaded prior to execution, and so it is important to ensure the encoded
 version is as dense as possible (without sacrificing on complexity).
 
-In *scheme 1*, for each entry in `invalid_jumpdests`:
+We propose the encoding using fixed-size 8-bit elements.
+For each entry in `invalid_jumpdests`:
 - 1-bit mode (`skip`, `value`)
 - For skip-mode:
-  - 10-bit number of chunks to skip
+  - 7-bit number of chunks to skip
 - For value-mode:
-  - 6-bit `first_instruction_offset`
+  - 7-bit number combining number of chunks to skip `s` and `first_instruction_offset`
+    produced as `s * 33 + first_instruction_offset`
 
-Worst case encoding where each chunk contains an invalid `JUMPDEST`:
-```
-total_chunk_count = 24576 / 32 = 768
-total_chunk_count * (1 + 6) / 8 = 672 # bytes for the header, i.e. 2.7% overhead
-number_of_verkle_leafs = total_chunk_count / 32 = 21
-```
+For the worst case where each chunk contains an invalid `JUMPDEST` the encoding length is equal
+to the number of chunks in the code. I.e. the size overhead is 3.1%.
 
-*Scheme 2* differs slightly:
-- 1-bit mode (`skip`, `value`)
-- For skip-mode:
-  - 10-bit number of chunks to skip
-- For value-mode:
-  - 4-bit number of chunks to skip
-  - 6-bit `first_instruction_offset`
+| code size limit | code chunks | encoding chunks |
+|-----------------|-------------|-----------------|
+| 24576           | 768         | 24              |
+| 32768           | 1024        | 32              |
+| 65536           | 2048        | 64              |
 
-Worst case encoding:
-```
-total_chunk_count = 24576 / 32 = 768
-total_chunk_count * (1 + 4 + 6) / 8 = 1056 # bytes for the header, i.e. 4.1% overhead
-number_of_verkle_leafs = total_chunk_count / 32 = 33
-```
-
-The decision between *scheme 1* and *scheme 2*, as well as the best encoding sizes, can be determined
-through analysing existing code.
+Our current hunch is that in average contracts this results in a sub-1% overhead, while the worst case is 3.1%.
+This is strictly better than the 3.2% overhead of the current Verkle code chunking.
 
 #### Header location
 
@@ -165,9 +149,12 @@ This second option allows for the simplification of the `code_size` value, as it
 
 #### Runtime after Verkle
 
-During runtime execution two checks must be done in this order:
-1) Check if the destination is on the invalid list, and abort if so.
-2) Check if the value in the chunk is an actual `JUMPDEST`, and abort if not.
+During execution of a jump two checks must be done in this order:
+
+1. Check if the jump destination is the `JUMPDEST` opcode.
+2. Check if the jump destination chunk is in the `invalid_jumpdests` map.
+   If yes, the jumpdest analysis of the chunk must be performed
+   to confirm the jump destination is not push data.
 
 It is possible to reconstruct sparse account code prior to execution with all the submitted chunks of the transaction
 and perform `JUMPDEST`-validation to build up a relevant *valid `JUMPDEST` locations* map instead.
