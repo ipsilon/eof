@@ -1,7 +1,9 @@
 import csv
 import json
+import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List
 
 PUSH1 = 0x60
@@ -207,8 +209,8 @@ SCHEMES = [
 ]
 
 
-def analyse_top_bytecodes():
-    with open('top_bytecodes.json') as f:
+def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
+    with open(dataset_file) as f:
         data = json.load(f)
 
     w = [['example address', 'earliest block', 'latest block', 'gas used',
@@ -285,11 +287,16 @@ def analyse_top_bytecodes():
             perc(total_d, total_l), perc(total_j, total_l),
             perc(total_v, total_l)] + total_encoding_len
 
-    with open('code_analysis.csv', 'w') as csvfile:
+    with open(result_file, 'w') as csvfile:
         writer = csv.writer(csvfile)
         for row in w:
             writer.writerow(row)
 
 
 if __name__ == '__main__':
-    analyse_top_bytecodes()
+    assert len(sys.argv) >= 2, "missing argument: dataset file"
+
+    dataset_file = Path(sys.argv[1])
+    result_file = dataset_file.with_stem(dataset_file.stem + "_analysis").with_suffix(".csv")
+
+    analyse_top_bytecodes(dataset_file, result_file)
