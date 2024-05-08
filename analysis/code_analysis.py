@@ -141,15 +141,12 @@ class Scheme:
         self.VALUE_SKIP_MAX = (payload_max - self.VALUE_MAX) // self.VALUE_MOD
         self.SKIP_BIAS = self.VALUE_SKIP_MAX + 1
 
-    def encode(self, chunks: list[Chunk]) -> tuple[list[int], int]:
+    def encode(self, chunks: dict[int, int]) -> tuple[list[int], int]:
         skip_only_max = self.SKIP_ONLY - 1
 
         ops = []
         last_chunk_index = 0
-        for i, ch in enumerate(chunks):
-            if not ch.contains_invalid_jumpdest:
-                continue  # skip chunks without invalid jumpdests
-
+        for i, fio in chunks.items():
             delta = i - last_chunk_index
 
             # Generate skips if needed.
@@ -160,8 +157,8 @@ class Scheme:
                 delta -= d + self.SKIP_BIAS
 
             assert 0 <= delta <= self.VALUE_SKIP_MAX
-            assert 0 <= ch.first_instruction_offset <= 32
-            ops.append(delta * self.VALUE_MOD + ch.first_instruction_offset)
+            assert 0 <= fio <= 32
+            ops.append(delta * self.VALUE_MOD + fio)
 
             last_chunk_index = i
 
@@ -190,182 +187,153 @@ def test_scheme_consecutive():
     assert sch.WIDTH == 10
     assert sch.VALUE_SKIP_MAX == 14
 
-    chunks = [Chunk(1, [], True), Chunk(2, [], True), Chunk(3, [], True)]
+    chunks = {0: 1, 1: 2, 2: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == 0 * sch.VALUE_MOD + 1
     assert ops[1] == 1 * sch.VALUE_MOD + 2
     assert ops[2] == 1 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert m[0] == 1
-    assert m[1] == 2
-    assert m[2] == 3
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_one():
     sch = Scheme("", 8)
     assert sch.VALUE_SKIP_MAX == 2
 
-    chunks = [Chunk(1, [], True), Chunk(2, [], False), Chunk(3, [], True)]
+    chunks = {0: 1, 2: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == 0 * sch.VALUE_MOD + 1
     assert ops[1] == 2 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert m[0] == 1
-    assert 1 not in m
-    assert m[2] == 3
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_first():
     sch = Scheme("", 8)
 
-    chunks = [Chunk(1, [], False), Chunk(2, [], True), Chunk(3, [], True)]
+    chunks = {1: 2, 2: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == 1 * sch.VALUE_MOD + 2
     assert ops[1] == 1 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert 0 not in m
-    assert m[1] == 2
-    assert m[2] == 3
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_sparse_values():
     sch = Scheme("", 8)
     gap = [Chunk(0, [], False)]
 
-    chunks = [Chunk(1, [], True)] + gap + [Chunk(2, [], True)] + gap + [Chunk(3, [], True)]
+    chunks = {0: 1, 2: 2, 4: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == 0 * sch.VALUE_MOD + 1
     assert ops[1] == 2 * sch.VALUE_MOD + 2
     assert ops[2] == 2 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert m == {0: 1, 2: 2, 4: 3}
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_entry_0():
     sch = Scheme("", 8)
-    assert sch.SKIP_BIAS == 3
-    uc = [Chunk(0, [], False)]
-    chunks = [Chunk(1, [], True)] + 129 * uc + [Chunk(3, [], True)]
+
+    chunks = {0: 1, 130: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == 0 * sch.VALUE_MOD + 1
     assert ops[1] == sch.SKIP_ONLY + 127
     assert ops[2] == 0 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert m == {0: 1, 130: 3}
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_entry_2():
     sch = Scheme("", 8)
     uc = [Chunk(0, [], False)]
-    chunks = [Chunk(1, [], True)] + 131 * uc + [Chunk(3, [], True)]
+    chunks = {0: 1, 132: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == 0 * sch.VALUE_MOD + 1
     assert ops[1] == sch.SKIP_ONLY + 127
     assert ops[2] == 2 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert len(m) == 2
-    assert m[0] == 1
-    assert m[132] == 3
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_entry_minimal():
     sch = Scheme("", 8)
-    assert sch.SKIP_BIAS == 3
-    gap = [Chunk(0, [], False)]
-    chunks = 3 * gap + [Chunk(1, [], True)]
+
+    chunks = {3: 1}
     ops, _ = sch.encode(chunks)
     assert ops[0] == sch.SKIP_ONLY + 0
     assert ops[1] == 0 * sch.VALUE_MOD + 1
 
-    m = sch.decode(ops)
-    assert m == {3: 1}
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_double_skip_entry():
     sch = Scheme("", 8)
-    assert sch.SKIP_BIAS == 3
-    uc = [Chunk(0, [], False)]
-    chunks = [Chunk(1, [], True)] + 261 * uc + [Chunk(3, [], True)]
+
+    chunks = {0: 1, 262: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == 0 * sch.VALUE_MOD + 1
     assert ops[1] == sch.SKIP_ONLY + 130 - sch.SKIP_BIAS
     assert ops[2] == sch.SKIP_ONLY + 130 - sch.SKIP_BIAS
     assert ops[3] == 2 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert len(m) == 2
-    assert m[0] == 1
-    assert m[262] == 3
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_entry_first_0():
     sch = Scheme("", 8)
-    assert sch.SKIP_BIAS == 3
-    uc = [Chunk(0, [], False)]
-    chunks = 130 * uc + [Chunk(3, [], True)]
+
+    chunks = {130: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == sch.SKIP_ONLY + 127
     assert ops[1] == 0 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert m == {130: 3}
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_entry_first_1():
     sch = Scheme("", 8)
-    assert sch.SKIP_BIAS == 3
-    uc = [Chunk(0, [], False)]
-    chunks = 131 * uc + [Chunk(3, [], True)]
+
+    chunks = {131: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == sch.SKIP_ONLY + 127
     assert ops[1] == 1 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert len(m) == 1
-    assert m[131] == 3
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_skip_entry_first_2():
     sch = Scheme("", 8)
-    assert sch.SKIP_BIAS == 3
-    uc = [Chunk(0, [], False)]
-    chunks = 132 * uc + [Chunk(3, [], True)]
+
+    chunks = {132: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == sch.SKIP_ONLY + 127
     assert ops[1] == 2 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert len(m) == 1
-    assert m[132] == 3
+    assert sch.decode(ops) == chunks
 
 
 def test_scheme_double_skip_entry_first():
     sch = Scheme("", 8)
-    assert sch.SKIP_BIAS == 3
-    uc = [Chunk(0, [], False)]
-    chunks = 262 * uc + [Chunk(3, [], True)]
+
+    chunks = {262: 3}
     ops, _ = sch.encode(chunks)
     assert ops[0] == sch.SKIP_ONLY + 130 - sch.SKIP_BIAS
     assert ops[1] == sch.SKIP_ONLY + 130 - sch.SKIP_BIAS
     assert ops[2] == 2 * sch.VALUE_MOD + 3
 
-    m = sch.decode(ops)
-    assert len(m) == 1
-    assert m[262] == 3
+    assert sch.decode(ops) == chunks
 
 
-def analyze_encoding(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> int:
+def analyze_encoding(scheme: Scheme, chunks: list[Chunk]) -> int:
+    invalid_jumpdests = {}
+    for i, ch in enumerate(chunks):
+        if ch.contains_invalid_jumpdest:
+            invalid_jumpdests[i] = ch.first_instruction_offset
+
     operations, length = scheme.encode(invalid_jumpdests)
     m = scheme.decode(operations)
-    assert len(m) == sum(ch.contains_invalid_jumpdest for ch in invalid_jumpdests)
-    for i, fio in m.items():
-        assert fio == invalid_jumpdests[i].first_instruction_offset
+    assert m == invalid_jumpdests
     return length
 
 
