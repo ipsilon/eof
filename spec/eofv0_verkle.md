@@ -159,7 +159,69 @@ During execution of a jump two checks must be done in this order:
 It is possible to reconstruct sparse account code prior to execution with all the submitted chunks of the transaction
 and perform `JUMPDEST`-validation to build up a relevant *valid `JUMPDEST` locations* map instead.
 
-#### Analysis
+#### Reference encoding implementation
+
+```python
+class Scheme:
+    VALUE_MAX = 32
+    VALUE_WIDTH = VALUE_MAX.bit_length()
+    VALUE_MOD = VALUE_MAX + 1
+
+    def __init__(self, name: str, width: int):
+        self.name = name
+        self.WIDTH = width
+
+        payload_max = 2 ** (width - 1) - 1
+
+        self.SKIP_ONLY = 1 << (self.WIDTH - 1)
+        self.VALUE_SKIP_MAX = (payload_max - self.VALUE_MAX) // self.VALUE_MOD
+        self.SKIP_BIAS = self.VALUE_SKIP_MAX + 1
+
+    def encode(self, chunks: list[Chunk]) -> tuple[list[int], int]:
+        skip_only_max = self.SKIP_ONLY - 1
+
+        ops = []
+        last_chunk_index = 0
+        for i, ch in enumerate(chunks):
+            if not ch.contains_invalid_jumpdest:
+                continue  # skip chunks without invalid jumpdests
+
+            delta = i - last_chunk_index
+
+            # Generate skips if needed.
+            while delta > self.VALUE_SKIP_MAX:
+                d = min(delta - self.SKIP_BIAS, skip_only_max)
+                assert 0 <= d <= skip_only_max
+                ops.append(self.SKIP_ONLY | d)
+                delta -= d + self.SKIP_BIAS
+
+            assert 0 <= delta <= self.VALUE_SKIP_MAX
+            assert 0 <= ch.first_instruction_offset <= 32
+            ops.append(delta * self.VALUE_MOD + ch.first_instruction_offset)
+
+            last_chunk_index = i
+
+        return ops, self.WIDTH * len(ops)
+
+    def decode(self, ops: list[int]) -> dict[int, int]:
+        m = dict()
+        i = 0
+        for op in ops:
+            if op & self.SKIP_ONLY:
+                delta = (op ^ self.SKIP_ONLY) + self.SKIP_BIAS
+                value = None
+            else:
+                delta = op // self.VALUE_MOD
+                value = op % self.VALUE_MOD
+            i += delta
+            print(f"{delta:+4}")
+            if value is not None:
+                m[i] = value
+                print(f"{i:4}: {value}")
+        return m
+```
+
+#### Example
 
 We have analyzed two contracts, Arbitrum validator and Uniswap router.
 
