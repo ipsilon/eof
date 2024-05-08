@@ -159,6 +159,31 @@ During execution of a jump two checks must be done in this order:
 It is possible to reconstruct sparse account code prior to execution with all the submitted chunks of the transaction
 and perform `JUMPDEST`-validation to build up a relevant *valid `JUMPDEST` locations* map instead.
 
+#### Example
+
+The top used bytecode: [0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2](https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2) (WETH).
+
+```
+length: 3124
+chunks: 98
+
+chunks with invalid jumpdests:
+chunk_index   first_instruction_offset
+37             4
+49            12
+50            14
+87            13
+
+encoding (7 bytes (0.22%), 1 chunk (1.02%)):
+[skip, 37]
+[value, 0, 4]
+[skip, 12]
+[value, 0, 12]
+[value, 1, 14]
+[skip, 37]
+[value, 0, 13]
+```
+
 #### Reference encoding implementation
 
 ```python
@@ -221,90 +246,6 @@ class Scheme:
         return m
 ```
 
-#### Example
-
-We have analyzed two contracts, Arbitrum validator and Uniswap router.
-
-Arbitrum (2147-bytes long):
-```
-(chunk offset, chunk number, pushdata offset)
-malicious push byte: 85 2 21
-malicious push byte: 95 2 31
-malicious push byte: 116 3 20
-malicious push byte: 135 4 7
-malicious push byte: 216 6 24
-malicious push byte: 1334 41 22
-```
-
-Encoding with *scheme 1*:
-```
-[skip, 2]
-[value, 21]
-[value, 31]
-[skip, 1]
-[value, 20]
-[skip, 1]
-[value, 7]
-[skip, 2]
-[value, 24]
-[skip, 35]
-[value, 22]
-```
-
-Encoding size: `5 skips (5 * 11 bits) + 6 values (6 * 7 bits)` = 13-bytes header (0.605%)
-
-Encoding with *scheme 2*:
-```
-[skip, 2]
-[value, 0, 21]
-[value, 0, 31]
-[value, 1, 20]
-[value, 1, 7]
-[value, 2, 24]
-[skip, 35, 22]
-```
-
-Encoding size: `2 skips (2 * 11 bits) + 5 values (5 * 11 bits)` = 10-bytes header (0.465%)
-
-Uniswap router contract (17958 bytes):
-
-```
-(chunk offset, chunk number, pushdata offset)
-malicious push byte: 1646 51 14
-malicious push byte: 1989 62 5
-malicious push byte: 4239 132 15
-malicious push byte: 4533 141 21
-malicious push byte: 7043 220 3
-malicious push byte: 8036 251 4
-malicious push byte: 8604 268 28
-malicious push byte: 12345 385 25
-malicious push byte: 15761 492 17
-```
-
-Encoding using *scheme 2*:
-```
-[skip, 51]
-[value, 0, 14]
-[value, 11, 5]
-[skip, 70]
-[value, 0, 15]
-[value, 9, 21]
-[skip, 79]
-[value, 0, 3]
-[skip, 31]
-[value, 0, 4]
-[skip, 17]
-[value, 0, 28]
-[skip, 117]
-[value, 0, 25]
-[skip, 107]
-[value, 0, 17]
-```
-
-Encoding size: `7 skips (7 * 11 bits) + 9 values (9 * 11 bits)` = 22-bytes header (0.122%)
-
-Our current hunch is that in average contracts this results in a sub-1% overhead, while the worst case is 4.1%.
-This compares against the constant 3.2% overhead of the current Verkle code chunking.
 
 ## Backwards Compatibility
 
