@@ -4,7 +4,7 @@
 
 ## Preface
 
-This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. See appendix for the list of EIPs.
+This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. See appendix for the list of EIPs, which stand as the official specification.
 
 While EOF is extensible, in this document we discuss the first version, EOFv1.
 
