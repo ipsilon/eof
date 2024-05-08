@@ -4,9 +4,7 @@
 
 ## Preface
 
-**This document describes all the changes which we previously dicussed titles as EOF 1.1 and EOF 2.0. Those changes do not have an EIP yet.**
-
-This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. The individual EIPs ~~still remain the official specification and should confusion arise those are to be consulted~~ are not fully updated yet, and this document serves as a main source of truth at the moment. See appendix for the original list of EIPs.
+This unified specification should be used as a guide to understand the various changes the EVM Object Format is proposing. See appendix for the list of EIPs.
 
 While EOF is extensible, in this document we discuss the first version, EOFv1.
 
@@ -348,8 +346,6 @@ Annotated examples of EOF formatted containers demonstrating several key feature
 ## Appendix: Original EIPs
 
 These are the individual EIPs which evolved into this spec.
-
-Specifications contained within are **out-of-date**, use only for reference and to look up motivation!
 
 - 📃[EIP-3540](https://eips.ethereum.org/EIPS/eip-3540): EOF - EVM Object Format v1 [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-3540.md)
 - 📃[EIP-3670](https://eips.ethereum.org/EIPS/eip-3670): EOF - Code Validation [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-3670.md)
