@@ -141,23 +141,33 @@ class Scheme:
         self.VALUE_SKIP_MAX = (payload_max - self.VALUE_MAX) // self.VALUE_MOD
         self.SKIP_BIAS = self.VALUE_SKIP_MAX + 1
 
-    def enc(self, delta: int, chunk: Chunk) -> tuple[list[int], int]:
+    def encode(self, chunks: list[Chunk]) -> tuple[list[int], int]:
         skip_only_max = self.SKIP_ONLY - 1
 
-        operations = []
-        # Generate skips if needed.
-        while delta > self.VALUE_SKIP_MAX:
-            d = min(delta - self.SKIP_BIAS, skip_only_max)
-            assert 0 <= d <= skip_only_max
-            operations.append(self.SKIP_ONLY | d)
-            delta -= d + self.SKIP_BIAS
+        ops = []
+        last_chunk_index = 0
+        for i, ch in enumerate(chunks):
+            if not ch.contains_invalid_jumpdest:
+                continue  # skip chunks without invalid jumpdests
 
-        assert 0 <= delta <= self.VALUE_SKIP_MAX
-        assert 0 <= chunk.first_instruction_offset <= 32
-        operations.append(delta * self.VALUE_MOD + chunk.first_instruction_offset)
-        return operations, self.WIDTH * len(operations)
+            delta = i - last_chunk_index
 
-    def dec(self, ops: list[int]) -> dict[int, int]:
+            # Generate skips if needed.
+            while delta > self.VALUE_SKIP_MAX:
+                d = min(delta - self.SKIP_BIAS, skip_only_max)
+                assert 0 <= d <= skip_only_max
+                ops.append(self.SKIP_ONLY | d)
+                delta -= d + self.SKIP_BIAS
+
+            assert 0 <= delta <= self.VALUE_SKIP_MAX
+            assert 0 <= ch.first_instruction_offset <= 32
+            ops.append(delta * self.VALUE_MOD + ch.first_instruction_offset)
+
+            last_chunk_index = i
+
+        return ops, self.WIDTH * len(ops)
+
+    def decode(self, ops: list[int]) -> dict[int, int]:
         m = dict()
         i = 0
         for op in ops:
@@ -175,27 +185,13 @@ class Scheme:
         return m
 
 
-def encode_invalid_jumpdests(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> tuple[
-    list[int], int]:
-    operations = []
-    last_chunk_no = 0
-    num_invalid_chunks = 0
-    length = 0
-    for i, ch in enumerate(invalid_jumpdests):
-        if not ch.contains_invalid_jumpdest:
-            continue  # skip chunks without invalid jumpdests
-        o, l = scheme.enc(i - last_chunk_no, ch)
-        operations += o
-        length += l
-        last_chunk_no = i
-        num_invalid_chunks += 1
-
-    m = scheme.dec(operations)
-    assert len(m) == num_invalid_chunks
+def analyze_encoding(scheme: Scheme, invalid_jumpdests: list[Chunk]) -> int:
+    operations, length = scheme.encode(invalid_jumpdests)
+    m = scheme.decode(operations)
+    assert len(m) == sum(ch.contains_invalid_jumpdest for ch in invalid_jumpdests)
     for i, fio in m.items():
         assert fio == invalid_jumpdests[i].first_instruction_offset
-
-    return operations, length
+    return length
 
 
 def perc(x, t):
@@ -260,7 +256,7 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
              num_code_chunks, perc(d, l), perc(z, l), perc(j, l), perc(v, l)])
 
         for i, sch in enumerate(SCHEMES):
-            _, encoding_bits = encode_invalid_jumpdests(sch, analysis.chunks)
+            encoding_bits = analyze_encoding(sch, analysis.chunks)
             encoding_len = (encoding_bits + 7) // 8
             total_encoding_len[i] += encoding_len
             encoding_dist[i][encoding_len] += 1
