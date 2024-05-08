@@ -22,6 +22,7 @@ class Chunk:
 @dataclass
 class CodeAnalysis:
     num_push_bytes = 0
+    num_push1_zeros = 0
     num_jumpdests = 0
     num_invalid_jumpdests = 0
     chunks: List[Chunk] = field(default_factory=list)
@@ -47,6 +48,8 @@ def analyse_code(code) -> CodeAnalysis:
         else:
             if PUSH1 <= op <= PUSH32:
                 pushdata_remaining = op - PUSH1 + 1
+                if op == PUSH1 and code[i + 1] == 0:
+                    analysis.num_push1_zeros += 1
             elif op == JUMPDEST:
                 analysis.num_jumpdests += 1
                 ch.jumpdests.append(offset)
@@ -214,7 +217,8 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
         data = json.load(f)
 
     w = [['example address', 'earliest block', 'latest block', 'gas used',
-          'code length', 'code chunks', 'push bytes', 'jumpdests', 'invalid jumpdests']
+          'code length', 'code chunks', 'push bytes', 'PUSH1 zeros', 'jumpdests',
+          'invalid jumpdests']
          + [s.name for s in SCHEMES], []]
 
     earliest_block = 1_000_000_000
@@ -222,6 +226,7 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
     total_gas = 0
     total_l = 0
     total_d = 0
+    total_z = 0
     total_j = 0
     total_v = 0
 
@@ -235,6 +240,7 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
         l = len(code)
         num_code_chunks = (l + 31) // 32
         d = analysis.num_push_bytes
+        z = analysis.num_push1_zeros
         j = analysis.num_jumpdests
         v = analysis.num_invalid_jumpdests
 
@@ -251,7 +257,7 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
 
         w.append(
             [row['example_address'], row['earliest_block'], row['latest_block'], row['gas_used'], l,
-             num_code_chunks, perc(d, l), perc(j, l), perc(v, l)])
+             num_code_chunks, perc(d, l), perc(z, l), perc(j, l), perc(v, l)])
 
         for i, sch in enumerate(SCHEMES):
             _, encoding_bits = encode_invalid_jumpdests(sch, analysis.chunks)
@@ -266,6 +272,7 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
         total_gas += row['gas_used']
         total_l += l
         total_d += d
+        total_z += z
         total_j += j
         total_v += v
         # break
@@ -284,7 +291,7 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
     #     print(f"{k}: {v}")
 
     w[1] = ['total', earliest_block, latest_block, total_gas, total_l, (total_l + 31) // 32,
-            perc(total_d, total_l), perc(total_j, total_l),
+            perc(total_d, total_l), perc(total_z, total_l), perc(total_j, total_l),
             perc(total_v, total_l)] + total_encoding_len
 
     with open(result_file, 'w') as csvfile:
