@@ -141,25 +141,30 @@ class Scheme:
         self.VALUE_SKIP_MAX = (payload_max - self.VALUE_MAX) // self.VALUE_MOD
         self.SKIP_BIAS = self.VALUE_SKIP_MAX + 1
 
-    def encode(self, chunks: dict[int, int]) -> tuple[list[int], int]:
+    def encode_entry(self, delta: int, value: int) -> list[int]:
+        assert 0 <= value <= self.VALUE_MAX
         skip_only_max = self.SKIP_ONLY - 1
+        ops = []
 
+        # Generate skips if needed.
+        while delta > self.VALUE_SKIP_MAX:
+            d = min(delta - self.SKIP_BIAS, skip_only_max)
+            assert 0 <= d <= skip_only_max
+            ops.append(self.SKIP_ONLY | d)
+            delta -= d + self.SKIP_BIAS
+
+        assert 0 <= delta <= self.VALUE_SKIP_MAX
+        encoded = delta * self.VALUE_MOD + value
+        assert encoded.bit_length() <= self.WIDTH
+        ops.append(encoded)
+        return ops
+
+    def encode(self, chunks: dict[int, int]) -> tuple[list[int], int]:
         ops = []
         last_chunk_index = 0
         for i, fio in chunks.items():
             delta = i - last_chunk_index
-
-            # Generate skips if needed.
-            while delta > self.VALUE_SKIP_MAX:
-                d = min(delta - self.SKIP_BIAS, skip_only_max)
-                assert 0 <= d <= skip_only_max
-                ops.append(self.SKIP_ONLY | d)
-                delta -= d + self.SKIP_BIAS
-
-            assert 0 <= delta <= self.VALUE_SKIP_MAX
-            assert 0 <= fio <= 32
-            ops.append(delta * self.VALUE_MOD + fio)
-
+            ops += self.encode_entry(delta, fio)
             last_chunk_index = i
 
         return ops, self.WIDTH * len(ops)
