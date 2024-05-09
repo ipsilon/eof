@@ -426,9 +426,10 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
         for i, sch in enumerate(SCHEMES):
             encoding_bits = analyze_encoding(sch, analysis.chunks)
             encoding_len = (encoding_bits + 7) // 8
+            encoding_chunks = (encoding_len + 31) // 32
             total_encoding_len[i] += encoding_len
-            encoding_dist[i][encoding_len] += 1
-            print(f"encoding: {encoding_bits}, {encoding_len}, {(encoding_len + 31) // 32}")
+            encoding_dist[i][encoding_chunks] += 1
+            print(f"encoding: {encoding_bits}, {encoding_len}, {encoding_chunks}")
             w[-1].append(encoding_len)
 
         earliest_block = min(earliest_block, row['earliest_block'])
@@ -451,8 +452,9 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
     # for x, v in enumerate(fio_dist_adj):
     #     print(f"{x:4}: {v}")
     print(f"\nencoding length distribution: {total_encoding_len}")
-    # for k, v in sorted(encoding_dist.items()):
-    #     print(f"{k}: {v}")
+    for d in encoding_dist:
+        for k, v in sorted(d.items()):
+            print(f"{k}: {v}")
 
     w[1] = ['total', earliest_block, latest_block, total_gas, total_l, (total_l + 31) // 32,
             perc(total_d, total_l), perc(total_z, total_l), perc(total_j, total_l),
