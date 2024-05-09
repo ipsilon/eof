@@ -2,7 +2,7 @@
 
 |              | 3540 | 3670 | 4200 | 4750 | 5450 | 6206 | 7480 | 7069 | 7620 | 7698 | 663  |
 |--------------|------|------|------|------|------|------|------|------|------|------|------|
-| **Megaspec** | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: |      | :+1:  |
+| **Megaspec** | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:  |
 | **EIP**      | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1:  |
 | **testing**  | :+1: | :+1: | :+1: | :+1: | :+1: | 🚧   | 🚧    | :+1: | :+1: |      |  🚧   |
 | besu         | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: | :+1: |      | :+1:  |
@@ -13,7 +13,7 @@
 | geth         | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
 | nethermind   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   | 🚧   | 🚧    | 🚧   |      | 🚧     |
 | revm         | :+1: | :+1: | :+1: | :+1: |  🚧  | :+1: | :+1: |  🚧   |  🚧  |      | :+1:  |
-| solidity     | 🚧   | N/A  | 🚧    | 🚧   | N/A  |      |      |      |      |      |       |
+| solidity     | 🚧   | N/A  | 🚧    | 🚧   | N/A  |      |      |      | 🚧   | 🚧   |       |
 | vyper        | stale | N/A  | stale | stale | N/A  |      |      |      |      |      |       |
 
 # Specs
@@ -22,14 +22,15 @@
 
 [**Megaspec**](./eof.md) is ready and main source of truth.
 
-- Alternative version without an irregular state change is discussed: https://github.com/ipsilon/eof/pull/78
+Pending updates addressing recent feedback:
 
-## EIP updates in progress 🚧
+- **A tweak to the EOF validation of creation opcodes** - https://github.com/ipsilon/eof/pull/86
+
+## EIP updates in progress
 
 EIP contents are being updated to match up with the **Megaspec**:
 
-- **EIP-7620** - ethereum/EIPs#8358 (mostly clarifications)
-- **EIP-7620** - irregular state change discussion pending, to be filed after https://github.com/ipsilon/eof/pull/78 concludes
+- **EIP-7620** - ethereum/EIPs#8522 (Remove TXCREATE, InitcodeTransaction and the Creator Contract)
 
 # Implementations
 
@@ -96,10 +97,10 @@ There is a contributor submitted PR from mid 2023 implementing some of EOF: http
 * EIP-7069 - Revamped CALL instructions
   * `EXT*CALL` state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/eof_calls
 
-* EIP-7620 - EOF Create Instructions (mutually exclusive alternative of EIP-7620)
+* EIP-7620 - EOF Create Instructions
   * Creation state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/stCreate
 
-* EIP-7698 - EOF - Creation transaction (mutually exclusive alternative of EIP-7620)
+* EIP-7698 - EOF - Creation transaction
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
   * Execution - https://github.com/ethereum/execution-spec-tests/pull/502
