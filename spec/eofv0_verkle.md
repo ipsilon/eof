@@ -110,8 +110,8 @@ Such encoding lowers the size overhead from 3.1% to 2.3%.
 Alternate option is instead of encoding all valid `JUMPDEST` locations, to only encode invalid ones.
 By invalid `JUMPDEST` we mean a `0x5b` byte in any pushdata.
 
-This is beneficial if our assumption is correct that most contracts only contain a limited number
-of offending cases. Our initial analysis of the top 1000 used bytecodes suggests this is the case:
+This is beneficial because most contracts only contain a limited number of offending cases.
+Our initial analysis of the top 1000 bytecodes used in last year confirms this:
 only 0.07% of bytecode bytes are invalid jumpdests.
 
 Let's create a map of `invalid_jumpdests[chunk_index] = first_instruction_offset`. We can densely encode this
@@ -119,14 +119,14 @@ map using techniques similar to *run-length encoding* to skip distances and delt
 This map is always fully loaded prior to execution, and so it is important to ensure the encoded
 version is as dense as possible (without sacrificing on complexity).
 
-We propose the encoding using fixed-size 8-bit elements.
-For each entry in `invalid_jumpdests`:
-- 1-bit mode (`skip`, `value`)
-- For skip-mode:
-  - 7-bit number of chunks to skip
-- For value-mode:
-  - 7-bit number combining number of chunks to skip `s` and `first_instruction_offset`
-    produced as `s * 33 + first_instruction_offset`
+We propose the encoding which uses [VLQ](https://en.wikipedia.org/wiki/Variable-length_quantity):
+
+For each entry `index, first_instruction_offset` in `invalid_jumpdests`:
+
+- Compute the chunk index distance to the previously encoded chunk `delta = index - last_chunk_index - 1`.
+- Combine two numbers into single unsigned integer `entry = delta * 33 + first_instruction_offset`.
+  This is reversible because `first_instruction_offset < 33`.
+- Encode `entry` into sequence of bytes using VLQ (e.g. LEB128). 
 
 For the worst case where each chunk contains an invalid `JUMPDEST` the encoding length is equal
 to the number of chunks in the code. I.e. the size overhead is 3.1%.
@@ -137,8 +137,36 @@ to the number of chunks in the code. I.e. the size overhead is 3.1%.
 | 32768           | 1024        | 32              |
 | 65536           | 2048        | 64              |
 
-Our current hunch is that in average contracts this results in a sub-1% overhead, while the worst case is 3.1%.
+Our current hunch is that in average contracts this results in ~0.1% overhead, while the worst case is 3.1%.
 This is strictly better than the 3.2% overhead of the current Verkle code chunking.
+
+Stats from "top 1000 bytecodes used in last year":
+
+```
+total code length: 11785831
+total encoding length: 11693 (0.099%)
+encoding chunks distribution:
+0: 109 (10.9%) 
+1: 838 (83.8%)
+2:  49 ( 4.9%)
+3:   4 ( 0.4%)
+```
+
+#### Encoding example
+
+The top used bytecode: [0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2](https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2) (WETH).
+
+```
+length: 3124
+chunks: 98
+
+chunks with invalid jumpdests:
+chunk_index  delta  first_instruction_offset  entry  leb128
+37           37      4                        1225   c909
+49           11     12                         375   f702
+50           0      14                          14   0e
+87           36     13                        1201   b109
+```
 
 #### Header location
 
@@ -159,91 +187,42 @@ During execution of a jump two checks must be done in this order:
 It is possible to reconstruct sparse account code prior to execution with all the submitted chunks of the transaction
 and perform `JUMPDEST`-validation to build up a relevant *valid `JUMPDEST` locations* map instead.
 
-#### Example
-
-The top used bytecode: [0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2](https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2) (WETH).
-
-```
-length: 3124
-chunks: 98
-
-chunks with invalid jumpdests:
-chunk_index   first_instruction_offset
-37             4
-49            12
-50            14
-87            13
-
-encoding (7 bytes (0.22%), 1 chunk (1.02%)):
-[skip, 37]
-[value, 0, 4]
-[skip, 12]
-[value, 0, 12]
-[value, 1, 14]
-[skip, 37]
-[value, 0, 13]
-```
-
 #### Reference encoding implementation
 
 ```python
-class Scheme:
-    VALUE_MAX = 32
-    VALUE_WIDTH = VALUE_MAX.bit_length()
-    VALUE_MOD = VALUE_MAX + 1
+import leb128
+import io
 
-    def __init__(self, name: str, width: int):
-        self.name = name
-        self.WIDTH = width
+class VLQM33:
+   VALUE_MOD = 33
 
-        payload_max = 2 ** (width - 1) - 1
+   def encode(self, chunks: dict[int, int]) -> tuple[bytes, int]:
+      ops = b''
+      last_chunk_index = 0
+      for index, value in chunks.items():
+         assert 0 <= value < self.VALUE_MOD
+         delta = index - last_chunk_index
+         e = delta * self.VALUE_MOD + value
+         ops += leb128.u.encode(e)
+         last_chunk_index = index + 1
+      return ops, 8 * len(ops)
 
-        self.SKIP_ONLY = 1 << (self.WIDTH - 1)
-        self.VALUE_SKIP_MAX = (payload_max - self.VALUE_MAX) // self.VALUE_MOD
-        self.SKIP_BIAS = self.VALUE_SKIP_MAX + 1
+   def decode(self, ops: bytes) -> dict[int, int]:
+      stream = io.BytesIO(ops)
+      stream.seek(0, 2)
+      end = stream.tell()
+      stream.seek(0, 0)
 
-    def encode(self, chunks: list[Chunk]) -> tuple[list[int], int]:
-        skip_only_max = self.SKIP_ONLY - 1
-
-        ops = []
-        last_chunk_index = 0
-        for i, ch in enumerate(chunks):
-            if not ch.contains_invalid_jumpdest:
-                continue  # skip chunks without invalid jumpdests
-
-            delta = i - last_chunk_index
-
-            # Generate skips if needed.
-            while delta > self.VALUE_SKIP_MAX:
-                d = min(delta - self.SKIP_BIAS, skip_only_max)
-                assert 0 <= d <= skip_only_max
-                ops.append(self.SKIP_ONLY | d)
-                delta -= d + self.SKIP_BIAS
-
-            assert 0 <= delta <= self.VALUE_SKIP_MAX
-            assert 0 <= ch.first_instruction_offset <= 32
-            ops.append(delta * self.VALUE_MOD + ch.first_instruction_offset)
-
-            last_chunk_index = i
-
-        return ops, self.WIDTH * len(ops)
-
-    def decode(self, ops: list[int]) -> dict[int, int]:
-        m = dict()
-        i = 0
-        for op in ops:
-            if op & self.SKIP_ONLY:
-                delta = (op ^ self.SKIP_ONLY) + self.SKIP_BIAS
-                value = None
-            else:
-                delta = op // self.VALUE_MOD
-                value = op % self.VALUE_MOD
-            i += delta
-            print(f"{delta:+4}")
-            if value is not None:
-                m[i] = value
-                print(f"{i:4}: {value}")
-        return m
+      m = {}
+      index = 0
+      while stream.tell() != end:
+         e, _ = leb128.u.decode_reader(stream)
+         delta = e // self.VALUE_MOD
+         value = e % self.VALUE_MOD
+         index += delta
+         m[index] = value
+         index += 1
+      return m
 ```
 
 
