@@ -1,6 +1,8 @@
 import csv
+import io
 import json
 import sys
+import leb128
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -195,6 +197,39 @@ class Scheme:
         return m
 
 
+class VLQM33:
+    name = "VLQM33"
+    VALUE_MOD = 33
+
+    def encode(self, chunks: dict[int, int]) -> tuple[bytes, int]:
+        ops = b''
+        last_chunk_index = 0
+        for i, value in chunks.items():
+            assert 0 <= value < self.VALUE_MOD
+            delta = i - last_chunk_index
+            e = delta * self.VALUE_MOD + value
+            ops += leb128.u.encode(e)
+            last_chunk_index = i + 1
+        return ops, 8 * len(ops)
+
+    def decode(self, ops: bytes) -> dict[int, int]:
+        stream = io.BytesIO(ops)
+        stream.seek(0, 2)
+        end = stream.tell()
+        stream.seek(0, 0)
+
+        m = {}
+        index = 0
+        while stream.tell() != end:
+            e, _ = leb128.u.decode_reader(stream)
+            delta = e // self.VALUE_MOD
+            value = e % self.VALUE_MOD
+            index += delta
+            m[index] = value
+            index += 1
+        return m
+
+
 def test_scheme_consecutive():
     sch = Scheme("", 10)
     assert sch.WIDTH == 10
@@ -373,6 +408,7 @@ SCHEMES = [
     Scheme("scheme f10", 10),
     Scheme("scheme f9", 9),
     Scheme("scheme f8", 8),
+    VLQM33(),
 ]
 
 
