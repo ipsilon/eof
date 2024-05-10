@@ -431,7 +431,7 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
     total_v = 0
 
     total_encoding_len = [0] * len(SCHEMES)
-    encoding_dist = [defaultdict(int)] * len(SCHEMES)
+    encoding_dist = [defaultdict(int) for _ in SCHEMES]
     fio_dist = [0] * 33
     fio_dist_adj = [0] * 33
     for row in data:
