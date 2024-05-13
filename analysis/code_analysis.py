@@ -19,6 +19,7 @@ class Chunk:
     first_instruction_offset: int
     jumpdests: List[int] = field(default_factory=list)
     contains_invalid_jumpdest: bool = False
+    push = -1
 
 
 @dataclass
@@ -34,6 +35,7 @@ def analyse_code(code) -> CodeAnalysis:
     analysis = CodeAnalysis()
     chunks = analysis.chunks
     pushdata_remaining = 0
+    last_push = -1
     for i, op in enumerate(code):
         offset = i % CHUNK_LEN
         if offset == 0:
@@ -46,10 +48,12 @@ def analyse_code(code) -> CodeAnalysis:
             if op == JUMPDEST:
                 analysis.num_invalid_jumpdests += 1
                 ch.contains_invalid_jumpdest = True
+                ch.push = last_push
             pushdata_remaining -= 1
         else:
             if PUSH1 <= op <= PUSH32:
                 pushdata_remaining = op - PUSH1 + 1
+                last_push = pushdata_remaining
                 if op == PUSH1 and code[i + 1] == 0:
                     analysis.num_push1_zeros += 1
             elif op == JUMPDEST:
@@ -447,12 +451,13 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
         print(f"{row['example_address']}, {l}, {num_code_chunks}:")
         print(
             f"{d} ({d / l:.3}) {j} ({j / l:.3}) {v} ({v / l:.3})")
-        last_i = 0
+        last_i = -1
         for i, ch in enumerate(analysis.chunks):
             if ch.contains_invalid_jumpdest:
                 fio_dist[ch.first_instruction_offset] += 1
                 fio_dist_adj[ch.first_instruction_offset if len(ch.jumpdests) > 0 else 32] += 1
-                print(f"  {i:4}, {i - last_i:4}, {ch.first_instruction_offset:4}, {ch.jumpdests}")
+                print(
+                    f"  {i:4}, {i - last_i - 1:4}, {ch.first_instruction_offset:4}, {ch.push:4}, {ch.jumpdests}")
                 last_i = i
 
         w.append(
