@@ -271,6 +271,7 @@ The following instructions are introduced in EOF code:
     - The `output_offset` and `output_size` is removed.
     - The `gas_limit` will be set to `(gas_left / 64) * 63` (as if the caller used `gas()` in place of `gas_limit`).
     - `EXTDELEGATECALL` to a legacy contract is disallowed, and it returns `1` (same as when the callee frame `reverts`) to signal failure. Only initial gas cost of `EXTDELEGATECALL` is consumed (similarly to the call depth check) and the target address still becomes warm. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
+    - No address trimming is performed on the `target_address`, and if the address has more than 20 bytes the operation halts with an exceptional failure.
 
     **NOTE**: The replacement instructions `EXT*CALL` continue being treated as **undefined** in legacy code.
 
