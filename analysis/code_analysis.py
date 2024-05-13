@@ -11,6 +11,8 @@ from typing import List
 PUSH1 = 0x60
 PUSH32 = 0x7f
 JUMPDEST = 0x5b
+BLOCKHASH = 0x40
+INVALID = 0xFE
 CHUNK_LEN = 32
 
 
@@ -28,6 +30,8 @@ class CodeAnalysis:
     num_push1_zeros = 0
     num_jumpdests = 0
     num_invalid_jumpdests = 0
+    has_invalid = False
+    has_blockhash = False
     chunks: List[Chunk] = field(default_factory=list)
 
 
@@ -59,6 +63,11 @@ def analyse_code(code) -> CodeAnalysis:
             elif op == JUMPDEST:
                 analysis.num_jumpdests += 1
                 ch.jumpdests.append(offset)
+            elif op == INVALID:
+                analysis.has_invalid = True
+            elif op == BLOCKHASH:
+                if not analysis.has_invalid:
+                    analysis.has_blockhash = True
 
     return analysis
 
@@ -434,6 +443,8 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
     total_j = 0
     total_v = 0
 
+    blockhash_users = []
+
     total_encoding_len = [0] * len(SCHEMES)
     encoding_dist = [defaultdict(int) for _ in SCHEMES]
     fio_dist = [0] * 33
@@ -441,6 +452,10 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
     for row in data:
         code = bytes.fromhex(row["code"][2:])
         analysis = analyse_code(code)
+
+        if analysis.has_blockhash:
+            blockhash_users.append(row['example_address'])
+
         l = len(code)
         num_code_chunks = (l + 31) // 32
         d = analysis.num_push_bytes
@@ -496,6 +511,8 @@ def analyse_top_bytecodes(dataset_file: Path, result_file: Path):
     for d in encoding_dist:
         for k, v in sorted(d.items()):
             print(f"{k}: {v}")
+
+    print(f"BLOCKHASH users ({len(blockhash_users)}): {blockhash_users}")
 
     w[1] = ['total', earliest_block, latest_block, total_gas, total_l, (total_l + 31) // 32,
             perc(total_d, total_l), perc(total_z, total_l), perc(total_j, total_l),
