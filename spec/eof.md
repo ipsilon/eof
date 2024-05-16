@@ -136,6 +136,7 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
     - Find `intcontainer` size by reading all section sizes from the header and adding them up with the header size to get the full container size.
 3. Validate the `initcontainer` and all its subcontainers recursively.
    - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
+  - validation includes checking that the container is an "initcode" container as defined in the validation section, that is, it does not contain `RETURN` or `STOP`
 4. If EOF header parsing or full container validation fails, transaction is considered valid and failing. Gas for initcode execution is not consumed, only intrinsic creation transaction costs are charged.
 5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
 6. execute the container in "initcode-mode" and deduct gas for execution
