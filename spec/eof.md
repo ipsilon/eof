@@ -139,7 +139,7 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
     - validation includes checking that the container is an "initcode" container as defined in the validation section, that is, it does not contain `RETURN` or `STOP`
 4. If EOF header parsing or full container validation fails, transaction is considered valid and failing. Gas for initcode execution is not consumed, only intrinsic creation transaction costs are charged.
 5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
-6. execute the container in "initcode-mode" and deduct gas for execution
+6. execute the container and deduct gas for execution
     1. Calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
     2. A successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
         - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
@@ -147,7 +147,6 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
         - let `deployed_code_size` be updated deploy container size
         - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
         - set `state[new_address].code` to the updated deploy container
-    3. `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
 7. deduct `200 * deployed_code_size` gas
 
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
