@@ -6,7 +6,7 @@ import leb128
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 PUSH1 = 0x60
 PUSH32 = 0x7f
@@ -14,6 +14,42 @@ JUMPDEST = 0x5b
 BLOCKHASH = 0x40
 INVALID = 0xFE
 CHUNK_LEN = 32
+
+
+# uintmax_t decode_varint(const unsigned char **bufp)
+# {
+# 	const unsigned char *buf = *bufp;
+# 	unsigned char c = *buf++;
+# 	uintmax_t val = c & 127;
+# 	while (c & 128) {
+# 		val += 1;
+# 		if (!val || MSB(val, 7))
+# 			return 0; /* overflow */
+# 		c = *buf++;
+# 		val = (val << 7) + (c & 127);
+# 	}
+# 	*bufp = buf;
+# 	return val;
+# }
+
+def decode_varint(buf: bytes) -> Tuple[int, int]:
+    i = 0
+    c = buf[i]
+    i += 1
+    val = c & 127
+    while c & 128:
+        val += 1
+        c = buf[i]
+        i += 1
+        val = (val << 7) + (c & 127)
+    return val, i
+
+
+def test_decode_varint():
+    assert decode_varint(bytes([0])) == (0, 1)
+    assert decode_varint(bytes([1])) == (1, 1)
+    assert decode_varint(bytes([0x80, 0])) == (128, 2)
+    assert decode_varint(bytes([0xFF, 0xFF, 0x7f])) == (2113663, 3)
 
 
 @dataclass
