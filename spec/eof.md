@@ -294,9 +294,9 @@ The following instructions are introduced in EOF code:
 - no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
 - it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
 - for terminology purposes, the following concepts are defined:
-  - an "initcode" container is one which does not contain `RETURN` or `STOP`
-  - a "runtime" container is one which does not contain `RETURNCONTRACT`
-  - note a container can be both "initcode" and "runtime" if it does not contain any of `RETURN`, `STOP` or `RETURNCONTRACT` (for instance, if it is only terminated with `REVERT` or `INVALID`).
+    - an "initcode" container is one which does not contain `RETURN` or `STOP`
+    - a "runtime" container is one which does not contain `RETURNCONTRACT`
+    - note a container can be both "initcode" and "runtime" if it does not contain any of `RETURN`, `STOP` or `RETURNCONTRACT` (for instance, if it is only terminated with `REVERT` or `INVALID`).
 
 ## Stack Validation
 
