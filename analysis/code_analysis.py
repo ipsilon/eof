@@ -1,8 +1,6 @@
 import csv
-import io
 import json
 import sys
-import leb128
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -50,6 +48,36 @@ def test_decode_varint():
     assert decode_varint(bytes([1])) == (1, 1)
     assert decode_varint(bytes([0x80, 0])) == (128, 2)
     assert decode_varint(bytes([0xFF, 0xFF, 0x7f])) == (2113663, 3)
+
+
+# int encode_varint(uintmax_t value, unsigned char *buf)
+# {
+# 	unsigned char varint[16];
+# 	unsigned pos = sizeof(varint) - 1;
+# 	varint[pos] = value & 127;
+# 	while (value >>= 7)
+# 		varint[--pos] = 128 | (--value & 127);
+# 	if (buf)
+# 		memcpy(buf, varint + pos, sizeof(varint) - pos);
+# 	return sizeof(varint) - pos;
+# }
+
+def encode_varint(value) -> bytes:
+    varint = bytearray()
+    varint.append(value & 127)
+    while value := value >> 7:
+        value -= 1
+        varint.append(128 | (value & 127))
+    ret = bytes(reversed(varint))
+    return ret
+
+
+def test_encode_varint():
+    assert encode_varint(0) == bytes([0])
+    assert encode_varint(1) == bytes([1])
+    assert encode_varint(127) == bytes([127])
+    assert encode_varint(128) == bytes([0x80, 0])
+    assert encode_varint(2113663) == bytes([0xFF, 0xFF, 0x7f])
 
 
 @dataclass
@@ -257,20 +285,16 @@ class VLQM33:
             assert 0 <= value < self.VALUE_MOD
             delta = i - last_chunk_index
             e = delta * self.VALUE_MOD + value
-            ops += leb128.u.encode(e)
+            ops += encode_varint(e)
             last_chunk_index = i + 1
         return ops, 8 * len(ops)
 
     def decode(self, ops: bytes) -> dict[int, int]:
-        stream = io.BytesIO(ops)
-        stream.seek(0, 2)
-        end = stream.tell()
-        stream.seek(0, 0)
-
         m = {}
         index = 0
-        while stream.tell() != end:
-            e, _ = leb128.u.decode_reader(stream)
+        while ops:
+            e, move = decode_varint(ops)
+            ops = ops[move:]
             delta = e // self.VALUE_MOD
             value = e % self.VALUE_MOD
             index += delta
