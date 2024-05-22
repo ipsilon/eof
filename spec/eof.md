@@ -128,27 +128,21 @@ Code executing within an EOF environment will behave differently than legacy cod
 
 #### Creation transactions
 
-Creation transactions (tranactions with empty `to`), with `data` containing EOF code (starting with `EF00` magic) are interpreted as having a concatenation of EOF `initcontainer` and `calldata` in the `data` and:
+Creation transactions (tranactions with empty `to`), with `data` containing EOF code (starting with `EF00` magic) are interpreted as having a concatenation of an EOF `txcontainer` and `calldata` in the `data` and:
 
-1. intrinsic gas cost rules and limits defined in EIP-3860 for legacy creation transaction apply. The entire `data` of the transaction is used for these calculations
-2. Find the split of `data` into `initcontainer` and `calldata`:
+1. intrinsic gas cost rules and limits defined in EIP-3860 for legacy creation transaction apply. The entire `data` of the transaction is used for these calculations, as if it were the initcode
+2. Find the split of `data` into `txcontainer` and `calldata`:
     - Parse EOF header
-    - Find `intcontainer` size by reading all section sizes from the header and adding them up with the header size to get the full container size.
-3. Validate the `initcontainer` and all its subcontainers recursively.
-    - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
-    - validation includes checking that the container is an "initcode" container as defined in the validation section, that is, it does not contain `RETURN` or `STOP`
+    - Find `txcontainer` size by reading all section sizes from the header and adding them up with the header size to get the full container size.
+3. Validate the `txcontainer` and all its subcontainers recursively.
+    - unlike in general validation `txcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
+    - validation includes checking that the container is a "runtime" container as defined in the validation section, that is, it does not contain `RETURNCONTRACT`
 4. If EOF header parsing or full container validation fails, transaction is considered valid and failing. Gas for initcode execution is not consumed, only intrinsic creation transaction costs are charged.
-5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
-6. execute the container and deduct gas for execution
-    1. Calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
-    2. A successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
-        - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
-        - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
-        - let `deployed_code_size` be updated deploy container size
-        - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
-        - set `state[new_address].code` to the updated deploy container
-7. deduct `200 * deployed_code_size` gas
+5. `calldata` part of transaction `data` that follows `txcontainer` is treated as calldata to pass into the execution frame
+6. Execute the container and deduct gas for execution, with `tx_address = keccak256(sender || sender_nonce)[12:]` set as the executing address
 
+**NOTE** No code is ever set to `tx_address` but storage may be set and receives transaction value.
+**NOTE** It is implied, that the creation transaction invokes `EOFCREATE` in order to create a contract.
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
 
 ### New Behavior
@@ -218,7 +212,7 @@ The following instructions are introduced in EOF code:
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
     - cost 0 gas + possible memory expansion for aux data
-    - ends initcode frame execution and returns control to `EOFCREATE` caller frame (unless called in the topmost frame of a creation transaction).
+    - ends initcode frame execution and returns control to `EOFCREATE` caller frame.
     - `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
 - `DATALOAD (0xd0)` instruction
