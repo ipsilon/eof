@@ -135,10 +135,11 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
     - Parse EOF header
     - Find `intcontainer` size by reading all section sizes from the header and adding them up with the header size to get the full container size.
 3. Validate the `initcontainer` and all its subcontainers recursively.
-   - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
+    - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
+    - validation includes checking that the container is an "initcode" container as defined in the validation section, that is, it does not contain `RETURN` or `STOP`
 4. If EOF header parsing or full container validation fails, transaction is considered valid and failing. Gas for initcode execution is not consumed, only intrinsic creation transaction costs are charged.
 5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
-6. execute the container in "initcode-mode" and deduct gas for execution
+6. execute the container and deduct gas for execution
     1. Calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
     2. A successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
         - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
@@ -146,7 +147,6 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
         - let `deployed_code_size` be updated deploy container size
         - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
         - set `state[new_address].code` to the updated deploy container
-    3. `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
 7. deduct `200 * deployed_code_size` gas
 
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
@@ -201,7 +201,7 @@ The following instructions are introduced in EOF code:
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
     - caller's memory slice [`input_offset`:`input_size`] is used as calldata
-    - execute the container in "initcode-mode" and deduct gas for execution. The 63/64th rule from EIP-150 applies.
+    - execute the container and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
@@ -213,8 +213,6 @@ The following instructions are introduced in EOF code:
             - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
-        - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
-        - "initcode-mode" _is not transitive_ - it is only active for the frame executing the initcontainer. If another (non-create) call is made from this frame, it _is not_ executed in "initcode-mode".
     - deduct `200 * deployed_code_size` gas
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
@@ -223,7 +221,6 @@ The following instructions are introduced in EOF code:
     - ends initcode frame execution and returns control to `EOFCREATE` caller frame (unless called in the topmost frame of a creation transaction).
     - `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
-    - instruction exceptionally aborts if invoked not in "initcode-mode"
 - `DATALOAD (0xd0)` instruction
     - deduct 4 gas
     - pop one value, `offset`, from the stack
@@ -289,10 +286,17 @@ The following instructions are introduced in EOF code:
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
+- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must be an "initcode" subcontainer, that is, it *must not* contain either a `RETURN` or `STOP` instruction.
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
+- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` must be a "runtime" subcontainer, that is, it *must not* contain a `RETURNCONTRACT` instruction.
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
+- it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
+- for terminology purposes, the following concepts are defined:
+    - an "initcode" container is one which does not contain `RETURN` or `STOP`
+    - a "runtime" container is one which does not contain `RETURNCONTRACT`
+    - note a container can be both "initcode" and "runtime" if it does not contain any of `RETURN`, `STOP` or `RETURNCONTRACT` (for instance, if it is only terminated with `REVERT` or `INVALID`).
 
 ## Stack Validation
 
