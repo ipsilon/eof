@@ -1,22 +1,21 @@
 # Readiness matrix
 
-|                     | [3540] | [3670] | [4200] | [4750] | [5450] | [6206] | [7480] | [7069] | [7620] | [7698] | [663] |
-|---------------------|--------|--------|-------|-------|--------|-------|-------|--------|-------|--------|-------|
-| **Megaspec**        | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:   | :+1:  |
-| **EIP**             | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:   | :+1:  |
-| **testing**         | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | 🚧    | 🚧    | :+1:   | :+1:  |        |  🚧   |
-| besu                | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  |        | :+1:  |
-| erigon              |        |        |       |       |        |       |       |        |       |        |       |
-| erigon++ (silkworm) | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   |  🚧   | :+1:   | :+1:  |
-| ethereumjs          | stale  | stale  | stale | stale | stale  |       |       |        |       |        |       |
-| evmone              | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   |  🚧   | :+1:   | :+1:  |
-| geth                | 🚧     | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    |        | 🚧     |
-| nethermind          | 🚧     | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    |        | 🚧     |
-| revm                | :+1:   | :+1:   | :+1:  | :+1:  | 🚧     | :+1:  | :+1:  | 🚧     | 🚧    |  🚧   | :+1:  |
-| [solidity POC]      | :+1:     | N/A    | 🚧    | :+1:  | N/A    |   :+1:  |   :+1:  | :+1:   | :+1:  | :+1:     |       |
-| vyper               | stale  | N/A    | stale | stale | N/A    |       |       |        |       |        |       |
+|                     | [3540] | [3670] | [4200]  | [4750] | [5450] | [6206] | [7480] | [7069] | [7620] | [7698] | [663] |
+|---------------------|--------|--------|---------|--------|--------|--------|--------|--------|--------|--------|-------|
+| [**Megaspec**]        | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
+| **EIP**             | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
+| **testing**         | 👍     | 👍     | 👍      | 👍     | 👍     | 🚧     | 🚧     | 👍     | 👍     |        |  🚧   |
+| [besu]                | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     |        | 👍    |
+| erigon              |        |        |         |        |        |        |        |        |        |        |       |
+| erigon++ (silkworm) | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍     | 👍    |
+| [ethereumjs]          | stale  | stale  | stale   | stale  | stale  |        |        |        |        |        |       |
+| [evmone]              | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍     | 👍    |
+| [geth]                | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     |        | 🚧     |
+| [nethermind]          | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     |        | 🚧     |
+| revm                | 👍     | 👍     | 👍      | 👍     | 🚧     | 👍     | 👍     | 🚧     | 🚧     | 🚧       | 👍    |
+| [solidity POC]            | 👍     | N/A    | 🚧      | 👍     | N/A    | 👍      | 👍      | 👍      | 👍     | 👍     |       |
+| [vyper]               | stale  | N/A    | stale   | stale  | N/A    |        |        |        |        |        |       |
 
-[solidity POC]: https://github.com/ipsilon/solidity/tree/eof-functions-rebased/libsolidity
 [3540]: https://eips.ethereum.org/EIPS/eip-3540
 [3670]: https://eips.ethereum.org/EIPS/eip-3670
 [4200]: https://eips.ethereum.org/EIPS/eip-4200
@@ -28,6 +27,15 @@
 [7620]: https://eips.ethereum.org/EIPS/eip-7620 
 [7698]: https://eips.ethereum.org/EIPS/eip-7698 
 [663]: https://eips.ethereum.org/EIPS/eip-663
+
+[**Megaspec**]: https://github.com/ipsilon/eof/blob/main/spec/eof.md
+[besu]: https://github.com/hyperledger/besu/tree/mega-eof
+[ethereumjs]: https://github.com/ethereumjs/ethereumjs-monorepo/pull/2453
+[evmone]: https://github.com/ethereum/evmone
+[geth]: https://github.com/ethereum/go-ethereum/pull/29518
+[nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
+[solidity POC]: https://github.com/ipsilon/solidity/tree/eof-functions-rebased/libsolidity
+[vyper]: https://github.com/vyperlang/vyper/pull/3457
 
 # Specs
 
