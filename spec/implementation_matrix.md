@@ -7,12 +7,12 @@
 | **testing**         | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | 🚧    | 🚧    | :+1:   | :+1:  |        |  🚧   |
 | besu                | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  |        | :+1:  |
 | erigon              |        |        |       |       |        |       |       |        |       |        |       |
-| erigon++ (silkworm) | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | 🚧     | :+1:  |
+| erigon++ (silkworm) | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   |  🚧   | :+1:   | :+1:  |
 | ethereumjs          | stale  | stale  | stale | stale | stale  |       |       |        |       |        |       |
-| evmone              | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | 🚧     | :+1:  |
+| evmone              | :+1:   | :+1:   | :+1:  | :+1:  | :+1:   | :+1:  | :+1:  | :+1:   |  🚧   | :+1:   | :+1:  |
 | geth                | 🚧     | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    |        | 🚧     |
 | nethermind          | 🚧     | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    | 🚧    | 🚧     | 🚧    |        | 🚧     |
-| revm                | :+1:   | :+1:   | :+1:  | :+1:  | 🚧     | :+1:  | :+1:  | 🚧     | 🚧    |        | :+1:  |
+| revm                | :+1:   | :+1:   | :+1:  | :+1:  | 🚧     | :+1:  | :+1:  | 🚧     | 🚧    |  🚧   | :+1:  |
 | [solidity POC]      | :+1:     | N/A    | 🚧    | :+1:  | N/A    |   :+1:  |   :+1:  | :+1:   | :+1:  | :+1:     |       |
 | vyper               | stale  | N/A    | stale | stale | N/A    |       |       |        |       |        |       |
 
@@ -35,15 +35,9 @@
 
 [**Megaspec**](./eof.md) is ready and main source of truth.
 
-Pending updates addressing recent feedback:
+## EIPs
 
-- **A tweak to the EOF validation of creation opcodes** - https://github.com/ipsilon/eof/pull/86
-
-## EIP updates in progress
-
-EIP contents are being updated to match up with the **Megaspec**:
-
-- **EIP-7620** - ethereum/EIPs#8522 (Remove TXCREATE, InitcodeTransaction and the Creator Contract)
+Are aligned with the Megaspec, Meta EOF EIP at https://eips.ethereum.org/EIPS/eip-7692.
 
 # Implementations
 
