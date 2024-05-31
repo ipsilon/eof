@@ -56,6 +56,7 @@ The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) `ReceiptPayload` for thi
         - in addition to hashing charge as in `EOFCREATE`, deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
         - just before executing the initcode container:
             - **validates the initcode container and all its subcontainers recursively**
+            - validation includes checking that the container is an "initcode" container as defined in the validation section, that is, it does not contain `RETURN` or `STOP`
             - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
                 - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant, EIP-3860 gas and hashing gas were consumed

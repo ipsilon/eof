@@ -116,15 +116,17 @@ Code executing within an EOF environment will behave differently than legacy cod
 - Execution starts at the first byte of code section 0, and `pc` is set to 0.
 - `pc` is scoped to the executing code section
 - The instructions `CALL`, `CALLCODE`, `DELEGATECALL`, `STATICCALL`, `SELFDESTRUCT`, `JUMP`, `JUMPI`, `PC`, `CREATE`, `CREATE2`, `CODESIZE`, `CODECOPY`, `EXTCODESIZE`, `EXTCODECOPY`, `EXTCODEHASH`, `GAS` are deprecated and rejected by validation in EOF contracts. They are only available in legacy contracts.
-- If the target account of `EXTCODECOPY` is an EOF contract, then it will copy up to 2 bytes from `EF00`, as if that would be the code.
-- If the target account of `EXTCODEHASH` is an EOF contract, then it will return `0x9dbf3648db8210552e9c4f75c6a1c3057c0ca432043bd648be15fe7be05646f5` (the hash of `EF00`, as if that would be the code).
-- If the target account of `EXTCODESIZE` is an EOF contract, then it will return 2.
+- When executed from a legacy contract, if the target account of `EXTCODECOPY` is an EOF contract, then it will copy up to 2 bytes from `EF00`, as if that would be the code.
+- When executed from a legacy contract, if the target account of `EXTCODEHASH` is an EOF contract, then it will return `0x9dbf3648db8210552e9c4f75c6a1c3057c0ca432043bd648be15fe7be05646f5` (the hash of `EF00`, as if that would be the code).
+- When executed from a legacy contract, if the target account of `EXTCODESIZE` is an EOF contract, then it will return 2.
 - The instruction `JUMPDEST` is renamed to `NOP` and remains charging 1 gas without any effect.
     - Note: jumpdest-analysis is not performed anymore.
 - EOF contract may not deploy legacy code (it is naturally rejected on the code validation stage)
-- If instructions `CREATE` and `CREATE2` have EOF code as initcode (starting with `EF00` magic)
+- When executed from a legacy contract, if instructions `CREATE` and `CREATE2` have EOF code as initcode (starting with `EF00` magic)
     - deployment fails (returns 0 on the stack)
     - caller's nonce is not updated and gas for initcode execution is not consumed
+- `RETURNDATACOPY (0x3E)` instruction
+    - same behavior as legacy, but changes the exceptional halt behavior to zero-padding behavior (same behavior as `CALLDATACOPY`).
 
 #### Creation transactions
 
@@ -135,10 +137,11 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
     - Parse EOF header
     - Find `intcontainer` size by reading all section sizes from the header and adding them up with the header size to get the full container size.
 3. Validate the `initcontainer` and all its subcontainers recursively.
-   - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
+    - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
+    - validation includes checking that the container is an "initcode" container as defined in the validation section, that is, it does not contain `RETURN` or `STOP`
 4. If EOF header parsing or full container validation fails, transaction is considered valid and failing. Gas for initcode execution is not consumed, only intrinsic creation transaction costs are charged.
 5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
-6. execute the container in "initcode-mode" and deduct gas for execution
+6. execute the container and deduct gas for execution
     1. Calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
     2. A successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
         - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
@@ -146,7 +149,6 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
         - let `deployed_code_size` be updated deploy container size
         - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
         - set `state[new_address].code` to the updated deploy container
-    3. `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
 7. deduct `200 * deployed_code_size` gas
 
 **NOTE** Legacy contract and legacy creation transactions may not deploy EOF code, that is behavior from [EIP-3541](https://eips.ethereum.org/EIPS/eip-3541) is not modified.
@@ -201,7 +203,7 @@ The following instructions are introduced in EOF code:
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
     - caller's memory slice [`input_offset`:`input_size`] is used as calldata
-    - execute the container in "initcode-mode" and deduct gas for execution. The 63/64th rule from EIP-150 applies.
+    - execute the container and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
@@ -213,8 +215,6 @@ The following instructions are introduced in EOF code:
             - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
-        - `RETURN` and `STOP` are not allowed in "initcode-mode" (abort execution)
-        - "initcode-mode" _is not transitive_ - it is only active for the frame executing the initcontainer. If another (non-create) call is made from this frame, it _is not_ executed in "initcode-mode".
     - deduct `200 * deployed_code_size` gas
 - `RETURNCONTRACT (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
@@ -223,7 +223,6 @@ The following instructions are introduced in EOF code:
     - ends initcode frame execution and returns control to `EOFCREATE` caller frame (unless called in the topmost frame of a creation transaction).
     - `deploy_container_index` and `aux_data` are used to construct deployed contract (see above)
     - instruction exceptionally aborts if after the appending, data section size would overflow the maximum data section size or underflow (i.e. be less than data section size declared in the header)
-    - instruction exceptionally aborts if invoked not in "initcode-mode"
 - `DATALOAD (0xd0)` instruction
     - deduct 4 gas
     - pop one value, `offset`, from the stack
@@ -263,8 +262,8 @@ The following instructions are introduced in EOF code:
 - `RETURNDATALOAD (0xf7)` instruction
     - deduct 3 gas
     - pop `offset` from the stack
-    - if `offset + 32 > len(returndata buffer)`, execution results in an exceptional halt
     - push 1 item onto the stack, the 32-byte word read from the returndata buffer starting at `offset`
+    - if `offset + 32 > len(returndata buffer)` the result is zero-padded (same behavior as `CALLDATALOAD`). see matching behavior of `RETURNDATACOPY` in `Modified Behavior` section.
 - `EXTCALL (0xf8)`, `EXTDELEGATECALL (0xf9)`, `EXTSTATICCALL (0xfb)`
     - Replacement of `CALL`, `DELEGATECALL` and `STATICCALL` instructions, as specced out in [EIP-7069](https://eips.ethereum.org/EIPS/eip-7069), except the runtime operand stack check. In particular:
     - The `gas_limit` input is removed.
@@ -289,10 +288,18 @@ The following instructions are introduced in EOF code:
 - the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
 - `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
+- `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must be an "initcode" subcontainer, that is, it *must not* contain either a `RETURN` or `STOP` instruction.
 - `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
+- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` must be a "runtime" subcontainer, that is, it *must not* contain a `RETURNCONTRACT` instruction.
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
-- no unreachable sections are allowed, i.e. every section is referenced by at least one non-recursive `CALLF` or `JUMPF`, and section 0 is implicitly reachable.
+- no unreachable code sections are allowed, i.e. every code section can be reached from the 0th code section with a series of CALLF / JUMPF instructions, and section 0 is implicitly reachable.
+- it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
+- it is an error for a subcontainer to never be referenced in code sections of its parent container
+- for terminology purposes, the following concepts are defined:
+    - an "initcode" container is one which does not contain `RETURN` or `STOP`
+    - a "runtime" container is one which does not contain `RETURNCONTRACT`
+    - note a container can be both "initcode" and "runtime" if it does not contain any of `RETURN`, `STOP` or `RETURNCONTRACT` (for instance, if it is only terminated with `REVERT` or `INVALID`).
 
 ## Stack Validation
 
@@ -322,7 +329,7 @@ During scanning, for each instruction:
       - for any other instruction `stack_height_min` must be at least the number of inputs required by instruction,
       - there is no additional check for terminating instructions other than `RETF` and `JUMPF`, this implies that extra items left on stack at instruction ending EVM execution are allowed.
    2. For `CALLF` and `JUMPF` check for possible stack overflow: if `stack_height_max > 1024 - types[target_section_index].max_stack_height + types[target_section_index].inputs`, validation fails.
-   3. Compute new stack `stack_height_main` and `stack_height_max` after the instruction execution, both heights are updated by the same value:
+   3. Compute new stack `stack_height_min` and `stack_height_max` after the instruction execution, both heights are updated by the same value:
       - for `CALLF`: `stack_height_min += types[target_section_index].outputs - types[target_section_index].inputs`, `stack_height_max += types[target_section_index].outputs - types[target_section_index].inputs`,
       - for any other non-terminating instruction: `stack_height_min += instruction_outputs - instruction_inputs`, `stack_height_max += instruction_outputs - instruction_inputs`,
       - terminating instructions do not need to update stack heights.
@@ -334,7 +341,7 @@ During scanning, for each instruction:
       - This implies that the last instruction may be a terminating instruction or `RJUMP`
    2. If the successor is reached via forwards jump or sequential flow from previous instruction:
       1. If the instruction does not have stack heights recorded (visited for the first time), record the instruction `stack_height_min` and `stack_height_max` equal to the value computed in 2.3.
-      2. Otherwise instruction was already visited (by previously seen forward jump). Update this instruction's recorded stack height bounds so that they contain the bounds computed in 2.3, i.e. `target_stack_min = min(target_stack_min, current_stack_min)` and `target_stack_max = max(target_stack_max, current_stack_min)`, where `(target_stack_min, target_stack_max)` are successor bounds and `(current_stack_min, current_stack_max)` are bounds computed in 2.3.
+      2. Otherwise instruction was already visited (by previously seen forward jump). Update this instruction's recorded stack height bounds so that they contain the bounds computed in 2.3, i.e. `target_stack_min = min(target_stack_min, current_stack_min)` and `target_stack_max = max(target_stack_max, current_stack_max)`, where `(target_stack_min, target_stack_max)` are successor bounds and `(current_stack_min, current_stack_max)` are bounds computed in 2.3.
    3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == target_stack_max == current_stack_min`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height.
 
 - maximum data stack of a function must not exceed 1023

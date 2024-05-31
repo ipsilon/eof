@@ -7,13 +7,13 @@
 | **testing**         | 👍     | 👍     | 👍      | 👍     | 👍     | 🚧     | 🚧     | 👍     | 👍     |        |  🚧   |
 | [besu]                | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     |        | 👍    |
 | erigon              |        |        |         |        |        |        |        |        |        |        |       |
-| erigon++ (silkworm) | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍    |
+| erigon++ (silkworm) | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍     | 👍    |
 | [ethereumjs]          | stale  | stale  | stale   | stale  | stale  |        |        |        |        |        |       |
-| [evmone]              | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍    |
+| [evmone]              | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍     | 👍    |
 | [geth]                | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     |        | 🚧     |
 | [nethermind]          | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     |        | 🚧     |
-| revm                | 👍     | 👍     | 👍      | 👍     | 🚧     | 👍     | 👍     | 🚧     | 🚧     |        | 👍    |
-| [solidity]            | 🚧     | N/A    | 🚧      | 🚧     | N/A    |        |        | 🚧      | 🚧     | 🚧     |       |
+| revm                | 👍     | 👍     | 👍      | 👍     | 🚧     | 👍     | 👍     | 🚧     | 🚧     | 🚧       | 👍    |
+| [solidity]            | 👍     | N/A    | 🚧      | 👍     | N/A    | 👍      | 👍      | 👍      | 👍     | 👍     |       |
 | [vyper]               | stale  | N/A    | stale   | stale  | N/A    |        |        |        |        |        |       |
 
 [3540]: https://eips.ethereum.org/EIPS/eip-3540
@@ -34,7 +34,7 @@
 [evmone]: https://github.com/ethereum/evmone
 [geth]: https://github.com/ethereum/go-ethereum/pull/29518
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
-[solidity]: https://github.com/ethereum/solidity/pull/13825
+[solidity POC]: https://github.com/ipsilon/solidity/tree/eof-functions-rebased/libsolidity
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
 
 # Specs
@@ -43,15 +43,9 @@
 
 [**Megaspec**](./eof.md) is ready and main source of truth.
 
-Pending updates addressing recent feedback:
+## EIPs
 
-- **A tweak to the EOF validation of creation opcodes** - https://github.com/ipsilon/eof/pull/86
-
-## EIP updates in progress
-
-EIP contents are being updated to match up with the **Megaspec**:
-
-- **EIP-7620** - ethereum/EIPs#8522 (Remove TXCREATE, InitcodeTransaction and the Creator Contract)
+Are aligned with the Megaspec, Meta EOF EIP at https://eips.ethereum.org/EIPS/eip-7692.
 
 # Implementations
 
