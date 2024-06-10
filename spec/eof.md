@@ -128,6 +128,8 @@ Code executing within an EOF environment will behave differently than legacy cod
 - `RETURNDATACOPY (0x3E)` instruction
     - same behavior as legacy, but changes the exceptional halt behavior to zero-padding behavior (same behavior as `CALLDATACOPY`).
 
+**NOTE** Like for legacy targets, the aforementioned behavior of `EXTCODECOPY`, `EXTCODEHASH` and `EXTCODESIZE` does not apply to EOF contract targets mid-creation, i.e. those report same as accounts without code.
+
 #### Creation transactions
 
 Creation transactions (tranactions with empty `to`), with `data` containing EOF code (starting with `EF00` magic) are interpreted as having a concatenation of EOF `initcontainer` and `calldata` in the `data` and:
