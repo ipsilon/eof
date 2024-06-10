@@ -335,7 +335,7 @@ During scanning, for each instruction:
       - terminating instructions do not need to update stack heights.
 3. Determine the list of successor instructions that can follow the current instructions:
    1. The next instruction for all instructions other than terminating instructions and `RJUMP`.
-   2. All targets of a `RJUMPI` or `RJUMPV`.
+   2. All targets of an `RJUMP`, `RJUMPI` or `RJUMPV`.
 4. For each successor instruction:
    1. Check if the instruction is present in the code (i.e. execution must not "fall off" the code).
       - This implies that the last instruction may be a terminating instruction or `RJUMP`
