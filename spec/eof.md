@@ -138,7 +138,7 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
     - Find `intcontainer` size by reading all section sizes from the header and adding them up with the header size to get the full container size.
 3. Validate the `initcontainer` and all its subcontainers recursively.
     - unlike in general validation `initcontainer` is additionally required to have `data_size` declared in the header equal to actual `data_section` size.
-    - validation includes checking that the container does not contain `RETURN` or `STOP`
+    - validation includes checking that the `initcontainer` does not contain `RETURN` or `STOP`
 4. If EOF header parsing or full container validation fails, transaction is considered valid and failing. Gas for initcode execution is not consumed, only intrinsic creation transaction costs are charged.
 5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
 6. execute the container and deduct gas for execution
@@ -198,7 +198,7 @@ The following instructions are introduced in EOF code:
     - pops `value`, `salt`, `input_offset`, `input_size` from the stack
     - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
-        - let `initcontainer_size` be the size of this EOF subcontainer in bytes
+        - let `initcontainer` be that EOF container, and `initcontainer_size` its length in bytes
     - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
@@ -295,7 +295,7 @@ The following instructions are introduced in EOF code:
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable code sections are allowed, i.e. every code section can be reached from the 0th code section with a series of CALLF / JUMPF instructions, and section 0 is implicitly reachable.
 - it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
-- it is an error for a subcontainer to never be referenced in code sections of its parent container
+- it is an error for a subcontainer to never be referenced in its parent container
 - it is an error for a given subcontainer to be referenced by both `RETURNCONTRACT` and `EOFCREATE`
 
 ## Stack Validation
