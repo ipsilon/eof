@@ -107,7 +107,6 @@ The following validity constraints are placed on the container format:
 - the total size of a deployed container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 2*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
 - the total size of not yet deployed container might be up to `data_size` lower than the above values due to how the data section is rewritten and resized during deployment (see [Data Section Lifecycle](#data-section-lifecycle))
 - the total size of a container must not exceed `MAX_INITCODE_SIZE` (as defined in EIP-3860)
-    - **NOTE** this condition, in combination with the container format defined above, implies that validation should fail at the moment any section is found to be declared to end after the last byte of the container
 
 ## Execution Semantics
 
