@@ -352,7 +352,7 @@ During scanning, for each instruction:
 
 ## Examples
 
-Annotated examples of EOF formatted containers demonstrating several key features of EOF can be found in [this test file within the `evmone` project repository](https://github.com/ethereum/evmone/blob/eof-examples/test/unittests/eof_example_test.cpp).
+Annotated examples of EOF formatted containers demonstrating several key features of EOF can be found in [this test file within the `evmone` project repository](https://github.com/ethereum/evmone/blob/master/test/unittests/eof_example_test.cpp).
 
 ## Appendix: Original EIPs
 
