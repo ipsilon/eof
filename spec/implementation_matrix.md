@@ -3,7 +3,7 @@
 |                       | [3540] | [3670] | [4200]  | [4750] | [5450] | [6206] | [7480] | [7069] | [7620] | [7698] | [663] |
 |-----------------------|--------|--------|---------|--------|--------|--------|--------|--------|--------|--------|-------|
 | [**Megaspec**]        | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
-| **EIP**               | 🚧     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
+| **EIP**               | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
 | **testing**           | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 🚧     | 👍     | 👍     |        | 👍    |
 | [besu]                | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍      | 👍   |
 | erigon                |        |        |         |        |        |        |        |        |        |        |        |
@@ -45,9 +45,7 @@
 
 ## EIPs
 
-Are (almost) aligned with the Megaspec, Meta EOF EIP at https://eips.ethereum.org/EIPS/eip-7692.
-
-- new rule to limit containers to `MAX_INITCODE_SIZE` during EOF validation - https://github.com/ethereum/EIPs/pull/8670
+Are aligned with the Megaspec, Meta EOF EIP at https://eips.ethereum.org/EIPS/eip-7692.
 
 # Implementations
 
