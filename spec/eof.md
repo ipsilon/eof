@@ -299,6 +299,7 @@ The following instructions are introduced in EOF code:
 - no unreachable code sections are allowed, i.e. every code section can be reached from the 0th code section with a series of CALLF / JUMPF instructions, and section 0 is implicitly reachable.
 - it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
 - it is an error for a subcontainer to never be referenced in code sections of its parent container
+- it is an error for a given subcontainer to be referenced by both `RETURNCONTRACT` and `EOFCREATE`
 - for terminology purposes, the following concepts are defined:
     - an "initcode" container is one which does not contain `RETURN` or `STOP`
     - a "runtime" container is one which does not contain `RETURNCONTRACT`
