@@ -52,11 +52,11 @@ The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) `ReceiptPayload` for thi
         - loads the initcode EOF container from the transaction `initcodes` array which hashes to `tx_initcode_hash`
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
-            - let `initcontainer_size` be the length of that EOF container in bytes
+            - let `initcontainer` be that EOF container, and `initcontainer_size` its length in bytes
         - in addition to hashing charge as in `EOFCREATE`, deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
         - just before executing the initcode container:
             - **validates the initcode container and all its subcontainers recursively**
-            - validation includes checking that the container is an "initcode" container as defined in the validation section, that is, it does not contain `RETURN` or `STOP`
+            - validation includes checking that the `initcontainer` does not contain `RETURN` or `STOP`
             - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
                 - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant, EIP-3860 gas and hashing gas were consumed
