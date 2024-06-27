@@ -15,6 +15,7 @@
 | revm                  | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
 | [solidity POC]        | 👍     | N/A    | 👍      | 👍     | N/A    | 👍     | 👍     | 👍     | 👍     | 👍     |       |
 | [vyper]               | stale  | N/A    | stale   | stale  | N/A    |        |        |        |        |        |       |
+| [EELS]                | 🚧     | 🚧     | 🚧      |        |        |        |        |        |        |        |       |
 
 [3540]: https://eips.ethereum.org/EIPS/eip-3540
 [3670]: https://eips.ethereum.org/EIPS/eip-3670
@@ -36,6 +37,7 @@
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
 [solidity POC]: https://github.com/ipsilon/solidity/tree/eof-functions-rebased/libsolidity
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
+[EELS]: https://github.com/ethereum/execution-specs/pull/972
 
 # Specs
 
@@ -76,6 +78,9 @@ Last implementation resides at https://github.com/ethereum/solidity/pull/13825. 
 ## Vyper
 
 There is a contributor submitted PR from mid 2023 implementing some of EOF: https://github.com/vyperlang/vyper/pull/3457
+
+## EELS
+There is a draft PR with some of the EIPs implemented. The other EIPs are in progress and will be built on top: https://github.com/ethereum/execution-specs/pull/972
 
 # Column Descriptions
 
