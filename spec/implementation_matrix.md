@@ -8,7 +8,7 @@
 | [besu]                | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍      | 👍   |
 | erigon                | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     |        |        |        | 🚧    |
 | erigon++ (silkworm)   | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍     | 👍    |
-| [ethereumjs]          | stale  | stale  | stale   | stale  | stale  |        |        |        |        |        |        |
+| [ethereumjs]          | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧    |
 | [evmone]              | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 🚧     | 👍     | 👍    |
 | [geth]                | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     |        | 🚧    |
 | [nethermind]          | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     |        | 🚧    |
@@ -31,7 +31,7 @@
 
 [**Megaspec**]: https://github.com/ipsilon/eof/blob/main/spec/eof.md
 [besu]: https://github.com/hyperledger/besu/tree/mega-eof
-[ethereumjs]: https://github.com/ethereumjs/ethereumjs-monorepo/pull/2453
+[ethereumjs]: https://github.com/ethereumjs/ethereumjs-monorepo/pull/3440
 [evmone]: https://github.com/ethereum/evmone
 [geth]: https://github.com/ethereum/go-ethereum/pull/29518
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
