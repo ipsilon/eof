@@ -202,13 +202,13 @@ The following instructions are introduced in EOF code:
     - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
         - let `initcontainer` be that EOF container, and `initcontainer_size` its length in bytes
-    - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
+    - deduct `6 * ((initcontainer_size + 31) // 32 + (input_size + 31) // 32)` gas (hashing charge)
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
-    - caller's memory slice [`input_offset`:`input_size`] is used as calldata
+    - caller's memory slice [`input_offset`:`input_size`] is used as calldata (`input`)
     - execute the container and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
-        - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
+        - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer) || keccak256(input))[12:]`
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
         - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
