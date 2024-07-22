@@ -34,9 +34,9 @@ _note: `,` is a concatenation operator, `+` should be interpreted as "one or mor
 | magic             | 2 bytes  | 0xEF00        | EOF prefix  |
 | version           | 1 byte   | 0x01          | EOF version |
 | kind_types        | 1 byte   | 0x01          | kind marker for types size section |
-| types_size        | 2 bytes  | 0x0004-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the type section content |
+| types_size        | 2 bytes  | 0x0004-0x1000 | 16-bit unsigned big-endian integer denoting the length of the type section content |
 | kind_code         | 1 byte   | 0x02          | kind marker for code size section |
-| num_code_sections | 2 bytes  | 0x0001-0xFFFF | 16-bit unsigned big-endian integer denoting the number of the code sections |
+| num_code_sections | 2 bytes  | 0x0001-0x0400 | 16-bit unsigned big-endian integer denoting the number of the code sections |
 | code_size         | 2 bytes  | 0x0001-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the code section content |
 | kind_container    | 1 byte   | 0x03          | kind marker for container size section |
 | num_container_sections | 2 bytes  | 0x0001-0x0100 | 16-bit unsigned big-endian integer denoting the number of the container sections |
@@ -93,16 +93,11 @@ This impacts the validation and behavior of data-section-accessing instructions:
 
 ### Container Validation
 
-The following validity constraints are placed on the container format:
+On top of the types defined in the table above, the following validity constraints are placed on the container format:
 
 - minimum valid header size is `15` bytes
-- `version` must be `0x01`
 - `types_size` is divisible by `4`
 - the number of code sections must be equal to `types_size / 4`
-- the number of code sections must be greater than `0` and not exceed `1024`
-- `code_size` may not be 0
-- the number of container sections must not exceed `256`. The number of container sections may not be `0`, if declared in the header
-- `container_size` may not be 0
 - the total size of a deployed container without container sections must be `13 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size`
 - the total size of a deployed container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 2*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
 - the total size of not yet deployed container might be up to `data_size` lower than the above values due to how the data section is rewritten and resized during deployment (see [Data Section Lifecycle](#data-section-lifecycle))
