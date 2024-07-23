@@ -204,6 +204,7 @@ The following instructions are introduced in EOF code:
     - execute the container and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
         - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
+        - behavior on `accessed_addresses` and address colission is same as `CREATE2` (rules for `CREATE2` from [EIP-684](https://eips.ethereum.org/EIPS/eip-684) and [EIP-2929](https://eips.ethereum.org/EIPS/eip-2929) apply to `EOFCREATE`)
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
         - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
