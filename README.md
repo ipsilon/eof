@@ -2,7 +2,7 @@
 
 ![EOF logo](./spec/assets/eof_logo.png)
 
-Home of the ["Mega EOF Endgame" Specification (EOFv1](./spec/eof.md).
+Home of the ["Mega EOF Endgame" Specification (EOFv1)](./spec/eof.md).
 
 See [Readiness matrix](./spec/implementation_matrix.md) for an overview of progress on EOF specification and implementation.
 
