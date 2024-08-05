@@ -39,6 +39,27 @@
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
 [EELS]: https://github.com/ethereum/execution-specs/pull/972
 
+## Testing readiness matrix
+
+|                                                      | [besu] |  erigon  | [ethereumjs] | [evmone] | [geth] | [nethermind] |  revm  | [EELS] |
+|------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
+| [EEST] `eip7692@v1.0.7` - `state_tests`              | ❓     |          | ✅           | ✅       |        |              | ✅     |        |
+| [EEST] `eip7692@v1.0.7` - `eof_tests`                | ❓     | ❓       | ✅           | ✅       |        |              | ✅     |        |
+| \[\*\] [tests] `v14.0` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              |        |        |
+| \[\*\] [tests] `v14.0` - `EOFTests`                  | ✅     |          |              | ✅       |        |              |        |        |
+| \[\*\*\] (`evmone` (old) `70ca837` - `state_tests`)  | ✅     |          | ✅           | ✅       |        |              |        |        |
+| \[\*\*\] (`evmone` (old) `70ca837` - `eof_tests`)    | ✅     |          | ✅           | ✅       |        |              |        |        |
+| [`evmone` exported] `v0.12.0` - `state_tests`        |        |          |              | ✅       |        |              | ✅     |        |
+| [`evmone` exported] `v0.12.0` - `eof_tests`          |        |          |              | ✅       |        |              | ✅     |        |
+
+[EEST]: https://github.com/ethereum/execution-spec-tests/releases/
+[tests]: https://github.com/ethereum/tests/releases/
+[`evmone` exported]: https://github.com/ethereum/evmone/releases/
+
+\[\*\] **NOTE:** several tests from this release are out-of-date and need to be skipped, see [besu's exclusions](https://github.com/hyperledger/besu/blob/965e757d81072f31d2a44bb5757ff46f7d102e36/ethereum/referencetests/src/reference-test/java/org/hyperledger/besu/ethereum/eof/EOFReferenceTestTools.java#L84-L102).
+
+\[\*\*\] **NOTE:** old version, will be dropped once clients report back with recent version passing
+
 # Specs
 
 ## Megaspec
