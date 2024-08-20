@@ -338,7 +338,7 @@ During scanning, for each instruction:
    2. If the successor is reached via forwards jump or sequential flow from previous instruction:
       1. If the instruction does not have stack heights recorded (visited for the first time), record the instruction `stack_height_min` and `stack_height_max` equal to the value computed in 2.3.
       2. Otherwise instruction was already visited (by previously seen forward jump). Update this instruction's recorded stack height bounds so that they contain the bounds computed in 2.3, i.e. `target_stack_min = min(target_stack_min, current_stack_min)` and `target_stack_max = max(target_stack_max, current_stack_max)`, where `(target_stack_min, target_stack_max)` are successor bounds and `(current_stack_min, current_stack_max)` are bounds computed in 2.3.
-   3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == target_stack_max == current_stack_min`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height.
+   3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == current_stack_min && target_stack_max == current_stack_max`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height.
 
 - maximum data stack of a function must not exceed 1023
 - `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
