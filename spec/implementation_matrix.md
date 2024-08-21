@@ -55,7 +55,7 @@
 
 [EEST]: https://github.com/ethereum/execution-spec-tests/releases/
 [tests]: https://github.com/ethereum/tests/releases/
-[`evmone` exported]: https://github.com/ethereum/evmone/releases/ - except for TXCRATE and related transaction tests.
+[`evmone` exported]: https://github.com/ethereum/evmone/releases/ - except for TXCREATE and related transaction tests.
 
 \[\*\] **NOTE:** several tests from this release are out-of-date and need to be skipped, see [besu's exclusions](https://github.com/hyperledger/besu/blob/965e757d81072f31d2a44bb5757ff46f7d102e36/ethereum/referencetests/src/reference-test/java/org/hyperledger/besu/ethereum/eof/EOFReferenceTestTools.java#L84-L102).
 
