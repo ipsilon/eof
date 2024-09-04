@@ -44,12 +44,12 @@
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
 | [EEST] `eip7692@v1.0.7` - `state_tests`              | ✅     |          | ✅           | ✅       |        |              | ✅     |        |
 | [EEST] `eip7692@v1.0.7` - `eof_tests`                | ✅     | ❓       | ✅           | ✅       |        |              | ✅     |        |
-| [EEST] `eip7692@v1.0.8` - `state_tests`              | ✅     |          |              | ✅       |        | ✅           | ✅       |        |
-| [EEST] `eip7692@v1.0.8` - `eof_tests`                | ✅     |          |              | ✅       |        |              | ✅    |        |
+| [EEST] `eip7692@v1.0.8` - `state_tests`              | ✅     |          |              | ✅       |        | ✅           | ✅     |        |
+| [EEST] `eip7692@v1.0.8` - `eof_tests`                | ✅     |          |              | ✅       |        |              | ✅     |        |
 | \[\*\] [tests] `v14.0` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅     |        |
 | \[\*\] [tests] `v14.0` - `EOFTests`                  | ✅     |          |              | ✅       |        |              | ✅     |        |
-| [tests] `v14.1` - `EIPTests/StateTests/stEOF`        |       |          |              | ✅       |        |              | ✅    |        |
-| [tests] `v14.1` - `EOFTests`                         |       |          |              | ✅       |        |              | ✅    |        |
+| [tests] `v14.1` - `EIPTests/StateTests/stEOF`        | ✅     |          |              | ✅       |        |              | ✅     |        |
+| [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     |        |
 | \[\*\*\] (`evmone` (old) `70ca837` - `state_tests`)  | ✅     |          | ✅           | ✅       |        |              |        |        |
 | \[\*\*\] (`evmone` (old) `70ca837` - `eof_tests`)    | ✅     |          | ✅           | ✅       |        |              |        |        |
 | [`evmone` exported] `v0.12.0` - `state_tests`        | ✅     |          |              | ✅       |        |              | ✅     |        |
