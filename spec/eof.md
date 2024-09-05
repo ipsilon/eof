@@ -192,6 +192,7 @@ The following instructions are introduced in EOF code:
     - set `pc = 0`
 - `EOFCREATE (0xec)` instruction
     - deduct `32000` gas
+    - halt with exceptional failure if the current frame is in `static-mode`.
     - read uint8 operand `initcontainer_index`
     - pops `value`, `salt`, `input_offset`, `input_size` from the stack
     - peform (and charge for) memory expansion using `[input_offset, input_size]`
