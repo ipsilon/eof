@@ -14,7 +14,7 @@
 | revm                  | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
 | [solidity POC]        | 👍     | N/A    | 👍      | 👍     | N/A    | 👍     | 👍     | 👍     | 👍     | 👍     |       |
 | [vyper]               | 🚧     | N/A    | 🚧      | 🚧     | N/A    |        |        |        |        |        |       |
-| [EELS]                | 🚧     | 🚧     | 🚧      |        |        |        |        |        |        |        |       |
+| [EELS]                | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍      | 👍   |
 
 [3540]: https://eips.ethereum.org/EIPS/eip-3540
 [3670]: https://eips.ethereum.org/EIPS/eip-3670
@@ -44,14 +44,14 @@
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
 | \[\*\] [EEST] `eip7692@v1.0.7` - `state_tests`       | ✅     |          | ✅           | ✅       |        |              | ✅     |        |
 | \[\*\] [EEST] `eip7692@v1.0.7` - `eof_tests`         | ✅     | ❓       | ✅           | ✅       |        |              | ✅     |        |
-| [EEST] `eip7692@v1.0.8` - `state_tests`              | ✅     |          |              | ✅       |        | ✅           | ✅     |        |
-| [EEST] `eip7692@v1.0.8` - `eof_tests`                | ✅     |          |              | ✅       |        | ✅             | ✅     |        |
-| [tests] `v14.1` - `EIPTests/StateTests/stEOF`        | ✅     |          |              | ✅       |        |              | ✅     |        |
-| [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     |        |
+| [EEST] `eip7692@v1.0.8` - `state_tests`              | ✅     |          |              | ✅       |        | ✅           | ✅     | ✅     |
+| [EEST] `eip7692@v1.0.8` - `eof_tests`                | ✅     |          |              | ✅       |        | ✅             | ✅     | ✅     |
+| [tests] `v14.1` - `EIPTests/StateTests/stEOF`        | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
+| [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | \[\*\] (`evmone` (old) `70ca837` - `state_tests`)    | ✅     |          | ✅           | ✅       |        |              |        |        |
 | \[\*\] (`evmone` (old) `70ca837` - `eof_tests`)      | ✅     |          | ✅           | ✅       |        |              |        |        |
-| [`evmone` exported] `v0.12.0` - `state_tests`        | ✅     |          |              | ✅       |        |              | ✅     |        |
-| [`evmone` exported] `v0.12.0` - `eof_tests`          | ✅     |          |              | ✅       |        |              | ✅     |        |
+| [`evmone` exported] `v0.12.0` - `state_tests`        | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
+| [`evmone` exported] `v0.12.0` - `eof_tests`          | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 
 [EEST]: https://github.com/ethereum/execution-spec-tests/releases/
 [tests]: https://github.com/ethereum/tests/releases/
