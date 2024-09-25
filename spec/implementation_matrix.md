@@ -42,24 +42,22 @@
 
 |                                                      | [besu] |  erigon  | [ethereumjs] | [evmone] | [geth] | [nethermind] |  revm  | [EELS] |
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
-| \[\*\] [EEST] `eip7692@v1.0.7` - `state_tests`       | ✅     |          | ✅           | ✅       |        |              | ✅     |        |
-| \[\*\] [EEST] `eip7692@v1.0.7` - `eof_tests`         | ✅     | ❓       | ✅           | ✅       |        |              | ✅     |        |
-| [EEST] `eip7692@v1.0.8` - `state_tests`              | ✅     |          |              | ✅       |        | ✅           | ✅     | ✅     |
-| [EEST] `eip7692@v1.0.8` - `eof_tests`                | ✅     |          |              | ✅       |        | ✅             | ✅     | ✅     |
+| \[\*\] [EEST] `eip7692@v1.0.8` - `state_tests`       | ✅     |          |              | ✅       |        | ✅            | ✅     | ✅     |
+| \[\*\] [EEST] `eip7692@v1.0.8` - `eof_tests`         | ✅     |          |              | ✅       |        | ✅            | ✅     | ✅     |
+| [EEST] `eip7692@v1.1.0` - `state_tests`              | ✅     | ✅       |              | ✅       |        |               |        | ✅     |
+| [EEST] `eip7692@v1.1.0` - `eof_tests`                | ✅     | ✅       |              | ✅       |        |               |        | ✅     |
 | [tests] `v14.1` - `EIPTests/StateTests/stEOF`        | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
-| \[\*\] (`evmone` (old) `70ca837` - `state_tests`)    | ✅     |          | ✅           | ✅       |        |              |        |        |
-| \[\*\] (`evmone` (old) `70ca837` - `eof_tests`)      | ✅     |          | ✅           | ✅       |        |              |        |        |
-| [`evmone` exported] `v0.12.0` - `state_tests`        | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
-| [`evmone` exported] `v0.12.0` - `eof_tests`          | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
+| \[\*\] [`evmone` exported] `v0.12.0` - `state_tests` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
+| \[\*\] [`evmone` exported] `v0.12.0` - `eof_tests`   | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
+| [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ❓     | ✅     |
+| [`evmone` exported] `v0.13.0` - `eof_tests`          | ❓     |          |              | ✅       |        |              | ❓     | ✅     |
 
 [EEST]: https://github.com/ethereum/execution-spec-tests/releases/
 [tests]: https://github.com/ethereum/tests/releases/
 [`evmone` exported]: https://github.com/ethereum/evmone/releases/ 
 
 \[\*\] **NOTE:** old version, will be dropped once clients report back with recent version passing.
-
-**NOTE:** **`evmone`** tests apply except for TXCREATE and related transaction tests.
 
 # Specs
 
