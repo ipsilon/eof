@@ -42,10 +42,10 @@
 
 |                                                      | [besu] |  erigon  | [ethereumjs] | [evmone] | [geth] | [nethermind] |  revm  | [EELS] |
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
-| \[\*\] [EEST] `eip7692@v1.0.8` - `state_tests`       | ✅     |          |              | ✅       |        | ✅            | ✅     | ✅     |
-| \[\*\] [EEST] `eip7692@v1.0.8` - `eof_tests`         | ✅     |          |              | ✅       |        | ✅            | ✅     | ✅     |
-| [EEST] `eip7692@v1.1.0` - `state_tests`              | ✅     | ✅       |              | ✅       |        |               | ✅     | ✅     |
-| [EEST] `eip7692@v1.1.0` - `eof_tests`                | ✅     | ✅       |              | ✅       |        |               | ✅     | ✅     |
+| \[\*\] [EEST] `eip7692@v1.1.0` - `state_tests`       | ✅     | ✅       |              | ✅       |        | ✅            | ✅     | ✅     |
+| \[\*\] [EEST] `eip7692@v1.1.0` - `eof_tests`         | ✅     | ✅       |              | ✅       |        | ✅            | ✅     | ✅     |
+| [EEST] `eip7692@v2.0.0` - `state_tests`              |        |          |              |          |        |              |        |        |
+| [EEST] `eip7692@v2.0.0` - `eof_tests`                |        |          |              |          |        |              |        |        |
 | [tests] `v14.1` - `EIPTests/StateTests/stEOF`        | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | \[\*\] [`evmone` exported] `v0.12.0` - `state_tests` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
