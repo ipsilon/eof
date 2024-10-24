@@ -108,8 +108,7 @@ There is a draft PR with some of the EIPs implemented. The other EIPs are in pro
   * Validation
     * https://github.com/ethereum/tests/tree/develop/EOFTests/EIP3540
     * https://github.com/ethereum/tests/tree/develop/EOFTests/ori
-  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP3540
-  * Legacy->EOF `EXTCODE*` state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/extcode
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip3540_eof_v1
 
 * EIP-3670 - Code Validation
   * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP3670
@@ -118,29 +117,31 @@ There is a draft PR with some of the EIPs implemented. The other EIPs are in pro
 
 * EIP-4200 - Static Relative Jumps
   * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP4200
-  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP4200
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip4200_relative_jumps
 
 * EIP-4750 - Functions
   * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP4750
-  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP4750
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip4750_functions
 
 * EIP-5450 - Stack Validation
   * Validation - https://github.com/ethereum/tests/tree/develop/EOFTests/EIP5450
-  * Execution - https://github.com/ethereum/tests/tree/develop/EIPTests/StateTests/stEOF/stEIP5450
   * Validation tests generated from evmone unit tests - https://github.com/ethereum/tests/tree/develop/EOFTests/efStack
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip5450_stack
 
 * EIP-6206 - JUMPF and non-returning functions
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip6206_jumpf
 
 * EIP-7480 - Data section access
-  * Execution - https://github.com/ethereum/execution-spec-tests/pull/518
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip7480_data_section
 
 * EIP-7069 - Revamped CALL instructions
-  * `EXT*CALL` state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/eof_calls
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip7069_extcall
 
 * EIP-7620 - EOF Create Instructions
-  * Creation state tests generated from evmone unit tests - https://github.com/ipsilon/tests/tree/eof-create3-evmone-generated/EIPTests/StateTests/stEOF/stCreate
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip7620_eof_create
 
 * EIP-7698 - EOF - Creation transaction
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip7698_eof_creation_tx
 
 * EIP-663 - SWAPN/DUPN/EXCHANGE
-  * Execution - https://github.com/ethereum/execution-spec-tests/pull/502
+  * https://github.com/ethereum/execution-spec-tests/tree/main/tests/osaka/eip7692_eof_v1/eip663_dupn_swapn_exchange
