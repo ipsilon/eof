@@ -44,12 +44,10 @@
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
 | \[\*\] [EEST] `eip7692@v1.1.0` - `state_tests`       | ✅     | ✅       |              | ✅       |        | ✅            | ✅     | ✅     |
 | \[\*\] [EEST] `eip7692@v1.1.0` - `eof_tests`         | ✅     | ✅       |              | ✅       |        | ✅            | ✅     | ✅     |
-| [EEST] `eip7692@v2.0.0` - `state_tests`              |        |          |              |          |        |              |        |        |
-| [EEST] `eip7692@v2.0.0` - `eof_tests`                |        |          |              |          |        |              |        |        |
+| [EEST] `eip7692@v2.0.0` - `state_tests`              |        |          |              | ✅       |        |              |        |        |
+| [EEST] `eip7692@v2.0.0` - `eof_tests`                |        |          |              | ✅       |        |              |        |        |
 | [tests] `v14.1` - `EIPTests/StateTests/stEOF`        | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
-| \[\*\] [`evmone` exported] `v0.12.0` - `state_tests` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
-| \[\*\] [`evmone` exported] `v0.12.0` - `eof_tests`   | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `eof_tests`          | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
 
