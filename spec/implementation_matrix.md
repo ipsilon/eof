@@ -29,12 +29,12 @@
 [663]: https://eips.ethereum.org/EIPS/eip-663
 
 [**Megaspec**]: https://github.com/ipsilon/eof/blob/main/spec/eof.md
-[besu]: https://github.com/hyperledger/besu/tree/mega-eof
-[ethereumjs]: https://github.com/ethereumjs/ethereumjs-monorepo/pull/3440
+[besu]: https://github.com/hyperledger/besu
+[ethereumjs]: https://github.com/ethereumjs/ethereumjs-monorepo
 [evmone]: https://github.com/ethereum/evmone
-[geth]: https://github.com/ethereum/go-ethereum/pull/29518
+[geth]: https://github.com/shemnon/go-ethereum/tree/eof/extcodecopy-oob
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
-[solidity POC]: https://github.com/ipsilon/solidity/tree/eof-functions-rebased/libsolidity
+[solidity POC]: https://github.com/ethereum/solidity/pulls?q=is%3Aopen+is%3Apr+label%3AEOF
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
 [EELS]: https://github.com/ethereum/execution-specs/pull/972
 
@@ -44,9 +44,9 @@
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
 | \[\*\] [EEST] `eip7692@v1.1.0` - `state_tests`       | ✅     | ✅       |              | ✅       |        | ✅            | ✅     | ✅     |
 | \[\*\] [EEST] `eip7692@v1.1.0` - `eof_tests`         | ✅     | ✅       |              | ✅       |        | ✅            | ✅     | ✅     |
-| [EEST] `eip7692@v2.0.0` - `state_tests`              |        |          |              | ✅       |        |              |        |        |
-| [EEST] `eip7692@v2.0.0` - `eof_tests`                |        |          |              | ✅       |        |              |        |        |
-| [tests] `v14.1` - `EIPTests/StateTests/stEOF`        | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
+| [EEST] `eip7692@v2.0.0` - `state_tests`              | ✅     |          |              | ✅       | ✅     | ✅           | ✅     |        |
+| [EEST] `eip7692@v2.0.0` - `eof_tests`                | ✅     |          |              | ✅       | ✅     | ✅           | ✅     |        |
+| \[\*\] [tests] `v14.1` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `eof_tests`          | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
@@ -67,23 +67,15 @@
 
 Are aligned with the Megaspec, Meta EOF EIP at https://eips.ethereum.org/EIPS/eip-7692.
 
-# Implementations
-
-## Besu
-
-Currently EOF is in a branch [mega-eof](https://github.com/hyperledger/besu/tree/mega-eof).
+# Implementation forks & branches
 
 ## erigon++
 
 [Erigon++ is a version of Erigon using Silkworm as the execution engine.](https://erigon.tech/erigonpp/) Since Silkworm uses evmone, it receives the feature from upstream.
 
-## ethereumjs
-
-Ethereumjs in 2022 has merged the initial EOF EIPs into mainline, and then worked on the late 2022 version in [PR#2453](https://github.com/ethereumjs/ethereumjs-monorepo/pull/2453). This code can be considered stale.
-
 ## geth
 
-Current work-in-progress implementation resides at: https://github.com/ethereum/go-ethereum/pull/29518
+Current work-in-progress implementation resides in a fork at: https://github.com/shemnon/go-ethereum/tree/eof/extcodecopy-oob
 
 ## Nethermind
 
@@ -91,14 +83,15 @@ Nethermind currently has EOF support in the branch [feature/evm/eof](https://git
 
 ## Solidity
 
-Last implementation resides at https://github.com/ethereum/solidity/pull/13825.  This is based on the December 2022 version of EOF.
+Current work-in-progress implementation split into PRs at: https://github.com/ethereum/solidity/pulls?q=is%3Aopen+is%3Apr+label%3AEOF
 
 ## Vyper
 
 There is a contributor submitted PR from mid 2023 implementing some of EOF: https://github.com/vyperlang/vyper/pull/3457
 
 ## EELS
-There is a draft PR with some of the EIPs implemented. The other EIPs are in progress and will be built on top: https://github.com/ethereum/execution-specs/pull/972
+
+There is a draft PR with the EIPs implemented: https://github.com/ethereum/execution-specs/pull/972
 
 # Column Descriptions
 
