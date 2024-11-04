@@ -32,7 +32,7 @@
 [besu]: https://github.com/hyperledger/besu
 [ethereumjs]: https://github.com/ethereumjs/ethereumjs-monorepo
 [evmone]: https://github.com/ethereum/evmone
-[geth]: https://github.com/shemnon/go-ethereum/tree/eof/extcodecopy-oob
+[geth]: https://github.com/shemnon/go-ethereum/tree/osaka-mega-eof
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
 [solidity POC]: https://github.com/ethereum/solidity/pulls?q=is%3Aopen+is%3Apr+label%3AEOF
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
@@ -75,7 +75,7 @@ Are aligned with the Megaspec, Meta EOF EIP at https://eips.ethereum.org/EIPS/ei
 
 ## geth
 
-Current work-in-progress implementation resides in a fork at: https://github.com/shemnon/go-ethereum/tree/eof/extcodecopy-oob
+Current work-in-progress implementation resides in a fork at: https://github.com/shemnon/go-ethereum/tree/osaka-mega-eof
 
 ## Nethermind
 
