@@ -256,9 +256,9 @@ The following instructions are introduced in EOF code:
 - `EXCHANGE (0xe8)` instruction
     - deduct 3 gas
     - read uint8 operand `imm`
-    - `n = imm >> 4 + 1`, `m = imm & 0x0F + 1`
-    - `n + 1`th stack item is swapped with `n + m + 1`th stack item (1-based).
-    - Stack validation: `stack_height >= n + m + 1`
+    - `n = imm >> 4 + 1`, `m = imm & 0x0F + n + 1`
+    - `n + 1`th stack item is swapped with `m + 1`th stack item (1-based).
+    - Stack validation: `stack_height >= m + 1`
 - `RETURNDATALOAD (0xf7)` instruction
     - deduct 3 gas
     - pop `offset` from the stack
