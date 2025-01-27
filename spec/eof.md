@@ -217,13 +217,12 @@ The following instructions are introduced in EOF code:
     - peform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
         - let `initcontainer` be that EOF container, and `initcontainer_size` its length in bytes
-    - deduct `6 * ((initcontainer_size + 31) // 32)` gas (hashing charge)
     - check call depth limit and whether caller balance is enough to transfer `value`
         - in case of failure returns 0 on the stack, caller's nonce is not updated and gas for initcode execution is not consumed.
     - caller's memory slice [`input_offset`:`input_size`] is used as calldata
     - execute the container and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
-        - calculate `new_address` as `keccak256(0xff || sender || salt || keccak256(initcontainer))[12:]`
+        - calculate `new_address` as `keccak256(0xff || sender || salt)[12:]`
         - behavior on `accessed_addresses` and address colission is same as `CREATE2` (rules for `CREATE2` from [EIP-684](https://eips.ethereum.org/EIPS/eip-684) and [EIP-2929](https://eips.ethereum.org/EIPS/eip-2929) apply to `EOFCREATE`)
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
@@ -243,13 +242,13 @@ The following instructions are introduced in EOF code:
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
             - let `initcontainer` be that EOF container, and `initcontainer_size` its length in bytes
-        - in addition to hashing charge as in `EOFCREATE`, deducts `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
+        - deduct `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
         - just before executing the initcode container:
             - **validates the initcode container and all its subcontainers recursively**
             - validation includes checking that the `initcontainer` does not contain `RETURN` or `STOP`
             - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
-                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant, EIP-3860 gas and hashing gas were consumed
+                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant and EIP-3860 gas were consumed
 - `RETURNCODE (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
