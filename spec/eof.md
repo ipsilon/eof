@@ -385,20 +385,20 @@ Annotated examples of EOF formatted containers demonstrating several key feature
 
 ```solidity
 {
-    /// Takes [index][salt][init_data] as input,
+    /// Takes [tx_initcode_hash][salt][init_data] as input,
     /// creates contract and returns the address or failure otherwise
 
     // init_data.length can be 0, but the first 2 words are mandatory
     let size := calldatasize()
     if lt(size, 64) { revert(0, 0) }
 
-    let tx_initcode_index := calldataload(0)
+    let tx_initcode_hash := calldataload(0)
     let salt := calldataload(32)
 
     let init_data_size := sub(size, 64)
     calldatacopy(0, 64, init_data_size)
 
-    let ret := txcreate(tx_initcode_index, callvalue(), salt, 0, init_data_size)
+    let ret := txcreate(tx_initcode_hash, callvalue(), salt, 0, init_data_size)
     if iszero(ret) { revert(0, 0) }
 
     mstore(0, ret)
