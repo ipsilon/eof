@@ -395,10 +395,13 @@ Annotated examples of EOF formatted containers demonstrating several key feature
     let tx_initcode_hash := calldataload(0)
     let salt := calldataload(32)
 
+    calldatacopy(0, 0, 64)  // copy tx_initcode_hash and salt to memory to hash
+    let final_salt := keccak256(0, 64)
+
     let init_data_size := sub(size, 64)
     calldatacopy(0, 64, init_data_size)
 
-    let ret := txcreate(tx_initcode_hash, callvalue(), salt, 0, init_data_size)
+    let ret := txcreate(tx_initcode_hash, callvalue(), final_salt, 0, init_data_size)
     if iszero(ret) { revert(0, 0) }
 
     mstore(0, ret)
