@@ -242,13 +242,12 @@ The following instructions are introduced in EOF code:
             - fails (returns 0 on the stack) if such initcode does not exist in the transaction, or if called from a transaction of `TransactionType` other than `INITCODE_TX_TYPE`
                 - caller's nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
             - let `initcontainer` be that EOF container, and `initcontainer_size` its length in bytes
-        - deduct `2 * ((initcontainer_size + 31) // 32)` gas (EIP-3860 charge)
         - just before executing the initcode container:
             - **validates the initcode container and all its subcontainers recursively**
             - validation includes checking that the `initcontainer` does not contain `RETURN` or `STOP`
             - in addition to this, checks if the initcode container has its `len(data_section)` equal to `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
             - fails (returns 0 on the stack) if any of those was invalid
-                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant and EIP-3860 gas were consumed
+                - caller’s nonce is not updated and gas for initcode execution is not consumed. Only `TXCREATE` constant gas was consumed
 - `RETURNCODE (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
