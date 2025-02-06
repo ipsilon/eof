@@ -82,8 +82,8 @@ pre_deploy_data_section | static_aux_data | dynamic_aux_data
 ```
 
 where:
-- `aux_data` is the data which is appended to `pre_deploy_data_section` on `RETURNCONTRACT` instruction [see New Behavior](#new-behavior).
-- `static_aux_data` is a subrange of `aux_data`, which size is known before `RETURNCONTRACT` and equals `pre_deploy_data_size - len(pre_deploy_data_section)`.
+- `aux_data` is the data which is appended to `pre_deploy_data_section` on `RETURNCODE` instruction [see New Behavior](#new-behavior).
+- `static_aux_data` is a subrange of `aux_data`, which size is known before `RETURNCODE` and equals `pre_deploy_data_size - len(pre_deploy_data_section)`.
 - `dynamic_aux_data` is the remainder of `aux_data`.
 
 `data_size` in the deployed container header is also updated to be equal `len(data_section)`.
@@ -141,8 +141,8 @@ Creation transactions (tranactions with empty `to`), with `data` containing EOF 
 5. `calldata` part of transaction `data` that follows `initcontainer` is treated as calldata to pass into the execution frame
 6. execute the container and deduct gas for execution
     1. Calculate `new_address` as `keccak256(sender || sender_nonce)[12:]`
-    2. A successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
-        - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
+    2. A successful execution ends with initcode executing `RETURNCODE{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
+        - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCODE` is executed
         - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
         - let `deployed_code_size` be updated deploy container size
         - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
@@ -208,15 +208,15 @@ The following instructions are introduced in EOF code:
         - behavior on `accessed_addresses` and address colission is same as `CREATE2` (rules for `CREATE2` from [EIP-684](https://eips.ethereum.org/EIPS/eip-684) and [EIP-2929](https://eips.ethereum.org/EIPS/eip-2929) apply to `EOFCREATE`)
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
-        - a successful execution ends with initcode executing `RETURNCONTRACT{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
-            - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCONTRACT` is executed
+        - a successful execution ends with initcode executing `RETURNCODE{deploy_container_index}(aux_data_offset, aux_data_size)` instruction (see below). After that:
+            - load deploy-contract from EOF subcontainer at `deploy_container_index` in the container from which `RETURNCODE` is executed
             - concatenate data section with `(aux_data_offset, aux_data_offset + aux_data_size)` memory segment and update data size in the header
             - let `deployed_code_size` be updated deploy container size
             - if `deployed_code_size > MAX_CODE_SIZE` instruction exceptionally aborts
             - set `state[new_address].code` to the updated deploy container
             - push `new_address` onto the stack
     - deduct `200 * deployed_code_size` gas
-- `RETURNCONTRACT (0xee)` instruction
+- `RETURNCODE (0xee)` instruction
     - loads `uint8` immediate `deploy_container_index`
     - pops two values from the stack: `aux_data_offset`, `aux_data_size` referring to memory section that will be appended to deployed container's data
     - cost 0 gas + possible memory expansion for aux data
@@ -289,14 +289,14 @@ The following instructions are introduced in EOF code:
 - `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` *must not* contain either a `RETURN` or `STOP` instruction.
-- `RETURNCONTRACT` `deploy_container_index` must be less than `num_container_sections`
-- `RETURNCONTRACT` the subcontainer pointed to `deploy_container_index` *must not* contain a `RETURNCONTRACT` instruction.
+- `RETURNCODE` `deploy_container_index` must be less than `num_container_sections`
+- `RETURNCODE` the subcontainer pointed to `deploy_container_index` *must not* contain a `RETURNCODE` instruction.
 - `DATALOADN`'s `immediate + 32` must be within `pre_deploy_data_size` (see [Data Section Lifecycle](#data-section-lifecycle))
      - the part of the data section which exceeds these bounds (the `dynamic_aux_data` portion) needs to be accessed using `DATALOAD` or `DATACOPY`
 - no unreachable code sections are allowed, i.e. every code section can be reached from the 0th code section with a series of CALLF / JUMPF instructions, and section 0 is implicitly reachable.
-- it is an error for a container to contain both `RETURNCONTRACT` and either of `RETURN` or `STOP`.
+- it is an error for a container to contain both `RETURNCODE` and either of `RETURN` or `STOP`.
 - it is an error for a subcontainer to never be referenced in its parent container
-- it is an error for a given subcontainer to be referenced by both `RETURNCONTRACT` and `EOFCREATE`
+- it is an error for a given subcontainer to be referenced by both `RETURNCODE` and `EOFCREATE`
 
 ## Stack Validation
 
@@ -309,7 +309,7 @@ The following instructions are introduced in EOF code:
 - *Forward jump* refers to any of `RJUMP`/`RJUMPI`/`RJUMPV` instruction with relative offset greater than or equal to 0. *Backwards jump* refers to any of `RJUMP`/`RJUMPI`/`RJUMPV` instruction with relative offset less than 0, including jumps to the same jump instruction (e.g. `RJUMP(-3)`)
 - Terminating instructions: 
   - ending function execution: `RETF`, `JUMPF`,
-  - ending whole EVM execution: `STOP`, `RETURN`, `RETURNCONTRACT`, `REVERT`, `INVALID`.
+  - ending whole EVM execution: `STOP`, `RETURN`, `RETURNCODE`, `REVERT`, `INVALID`.
 - For each instruction in the code the operand stack height bounds are recorded as `stack_height_min` and `stack_height_max`. Instructions are scanned in a single linear pass over the code.
 - first instruction has `stack_height_min = stack_height_max = types[current_section_index].inputs`.
 
