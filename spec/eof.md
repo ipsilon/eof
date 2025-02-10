@@ -117,9 +117,25 @@ Under transaction validation rules `initcodes` are not validated for conforming 
 1) It must be fully transmitted in the transaction.
 2) It is accessible to the EVM, but it can't be fully loaded into EVM memory.
 
-For these reasons, define cost of each of the `initcodes` items same as calldata (16 gas for non-zero bytes, 4 for zero bytes -- see EIP-2028). The intrinsic gas of an `InitcodeTransaction` is extended by the sum of all those items' costs.
+For these reasons, define cost of `initcodes` bytes same as calldata: formula for transaction gas from EIP-7623 is extened to include tokens in initcodes, priced the same as `tokens_in_calldata`:
 
-EIP-3860 and EIP-170 still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
+```python
+STANDARD_TOKEN_COST = 4
+TOTAL_COST_FLOOR_PER_TOKEN = 10
+
+tokens_in_initcodes = zero_bytes_in_initcodes + nonzero_bytes_in_initcodes * 4
+tx.gasUsed = (
+    21000
+    +
+    max(
+        STANDARD_TOKEN_COST * (tokens_in_calldata + tokens_in_initcodes)
+        + execution_gas_used,
+        TOTAL_COST_FLOOR_PER_TOKEN * (tokens_in_calldata + tokens_in_initcodes)
+    )
+)
+```
+
+EIP-3860 and EIP-170 limits still apply, i.e. `MAX_CODE_SIZE` as 24576, `MAX_INITCODE_SIZE` as `2 * MAX_CODE_SIZE`. Define `MAX_INITCODE_COUNT` as 256.
 
 `InitcodeTransaction` is invalid if either:
 - there are more than `MAX_INITCODE_COUNT` entries in `initcodes`
