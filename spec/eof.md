@@ -419,7 +419,11 @@ Annotated examples of EOF formatted containers demonstrating several key feature
     calldatacopy(0, 64, init_data_size)
 
     let ret := txcreate(tx_initcode_hash, callvalue(), final_salt, 0, init_data_size)
-    if iszero(ret) { revert(0, 0) }
+    if iszero(ret) {
+        let ret_data_size := returndatasize()
+        returndatacopy(0, ret_data_size)
+        revert(0, ret_data_size)
+    }
 
     mstore(0, ret)
     return(0, 32)
