@@ -407,18 +407,15 @@ Annotated examples of EOF formatted containers demonstrating several key feature
     let size := calldatasize()
     if lt(size, 64) { revert(0, 0) }
 
+    calldatacopy(0, 0, size)  // copy tx_initcode_hash, salt and init_data to memory to hash
+    let final_salt := keccak256(0, size)
+
     let tx_initcode_hash := calldataload(0)
-    let salt := calldataload(32)
-
-    mstore8(0, 0xff)  // a magic value to ensure a specific preimage space
-    calldatacopy(1, 0, size)  // copy tx_initcode_hash, salt and init_data to memory to hash
-    let commitment_size := add(size, 1)
-    let final_salt := keccak256(0, commitment_size)
-
     let init_data_size := sub(size, 64)
-    calldatacopy(0, 64, init_data_size)
 
-    let ret := txcreate(tx_initcode_hash, callvalue(), final_salt, 0, init_data_size)
+    // reuse init_data which has been already copied to memory above
+    let ret := txcreate(tx_initcode_hash, callvalue(), final_salt, 64, init_data_size)
+
     if iszero(ret) {
         let ret_data_size := returndatasize()
         returndatacopy(0, ret_data_size)
