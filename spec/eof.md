@@ -230,7 +230,7 @@ The following instructions are introduced in EOF code:
     - halt with exceptional failure if the current frame is in `static-mode`.
     - read uint8 operand `initcontainer_index`
     - pops `value`, `salt`, `input_offset`, `input_size` from the stack
-    - peform (and charge for) memory expansion using `[input_offset, input_size]`
+    - perform (and charge for) memory expansion using `[input_offset, input_size]`
     - load initcode EOF subcontainer at `initcontainer_index` in the container from which `EOFCREATE` is executed
         - let `initcontainer` be that EOF container, and `initcontainer_size` its length in bytes
     - check call depth limit and whether caller balance is enough to transfer `value`
