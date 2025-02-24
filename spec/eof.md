@@ -418,7 +418,7 @@ Annotated examples of EOF formatted containers demonstrating several key feature
 
     if iszero(ret) {
         let ret_data_size := returndatasize()
-        returndatacopy(0, ret_data_size)
+        returndatacopy(0, 0, ret_data_size)
         revert(0, ret_data_size)
     }
 
