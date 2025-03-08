@@ -45,9 +45,9 @@
 | \[\*\] [EEST] `eip7692@v2.1.0` - `state_tests`       |        |          |              | ✅       |        | ✅            |        |        |
 | \[\*\] [EEST] `eip7692@v2.1.0` - `blockchain_tests`  |        |          |              | ✅       |        | ❓            |        |        |
 | \[\*\] [EEST] `eip7692@v2.1.0` - `eof_tests`         |        |          |              | ✅       |        | ✅            |        |        |
-| [EEST] `eip7692@v2.2.0` - `state_tests`              |        |          | ✅           | ✅       |        |               |        |        |
-| [EEST] `eip7692@v2.2.0` - `blockchain_tests`         |        |          | ✅           | ✅       |        |               |        |        |
-| [EEST] `eip7692@v2.2.0` - `eof_tests`                |        |          | ✅           | ✅       |        |               |        |        |
+| [EEST] `eip7692@v2.2.0` - `state_tests`              |        |          | ✅           | ✅       |        | ✅           |        |        |
+| [EEST] `eip7692@v2.2.0` - `blockchain_tests`         |        |          | ✅           | ✅       |        | ✅           |        |        |
+| [EEST] `eip7692@v2.2.0` - `eof_tests`                |        |          | ✅           | ✅       |        | ✅           |        |        |
 | \[\*\] [tests] `v14.1` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
@@ -81,7 +81,7 @@ Current work-in-progress implementation resides in a fork at: https://github.com
 
 ## Nethermind
 
-Nethermind currently has EOF support in the branch [feature/evm/eof](https://github.com/NethermindEth/nethermind/commits/feature/evm/eof/)  ([PR#6896](https://github.com/NethermindEth/nethermind/pull/6896)).
+Nethermind currently has EOF support in the branch [feature/evm/eof](https://github.com/NethermindEth/nethermind/commits/feature/evm/eof/)  ([PR#8176](https://github.com/NethermindEth/nethermind/pull/8176)).
 
 ## Solidity
 
