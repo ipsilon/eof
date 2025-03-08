@@ -81,7 +81,7 @@ Current work-in-progress implementation resides in a fork at: https://github.com
 
 ## Nethermind
 
-Nethermind currently has EOF support in the branch [feature/evm/eof](https://github.com/NethermindEth/nethermind/commits/feature/evm/eof/)  ([PR#6896](https://github.com/NethermindEth/nethermind/pull/6896)).
+Nethermind currently has EOF support in the branch [feature/evm/eof](https://github.com/NethermindEth/nethermind/commits/feature/evm/eof/)  ([PR#8176](https://github.com/NethermindEth/nethermind/pull/8176)).
 
 ## Solidity
 
