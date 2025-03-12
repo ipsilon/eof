@@ -41,7 +41,7 @@ _note: `,` is a concatenation operator, `+` should be interpreted as "one or mor
 | kind_container    | 1 byte   | 0x03          | kind marker for container size section |
 | num_container_sections | 2 bytes  | 0x0001-0x0100 | 16-bit unsigned big-endian integer denoting the number of the container sections |
 | container_size    | 2 bytes  | 0x0001-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the container section content |
-| kind_data         | 1 byte   | 0x04          | kind marker for data size section |
+| kind_data         | 1 byte   | 0xff          | kind marker for data size section |
 | data_size         | 2 bytes  | 0x0000-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the data section content (for not yet deployed containers this can be more than the actual content, see [Data Section Lifecycle](#data-section-lifecycle))|
 | terminator        | 1 byte   | 0x00          | marks the end of the header |
 
