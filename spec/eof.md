@@ -238,7 +238,7 @@ The following instructions are introduced in EOF code:
     - caller's memory slice [`input_offset`:`input_size`] is used as calldata
     - execute the container and deduct gas for execution. The 63/64th rule from EIP-150 applies.
         - increment `sender` account's nonce
-        - calculate `new_address` as `keccak256(0xff || sender || salt)[12:]`
+        - calculate `new_address` as `keccak256(0xff || sender32 || salt)[12:]`, where `sender32` is the sender address left-padded to 32 bytes with zeros
         - behavior on `accessed_addresses` and address colission is same as `CREATE2` (rules for `CREATE2` from [EIP-684](https://eips.ethereum.org/EIPS/eip-684) and [EIP-2929](https://eips.ethereum.org/EIPS/eip-2929) apply to `EOFCREATE`)
         - an unsuccesful execution of initcode results in pushing `0` onto the stack
             - can populate returndata if execution `REVERT`ed
