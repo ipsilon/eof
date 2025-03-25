@@ -36,7 +36,7 @@
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
 [solidity POC]: https://github.com/ethereum/solidity/pulls?q=is%3Aopen+is%3Apr+label%3AEOF
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
-[EELS]: https://github.com/ethereum/execution-specs/pull/972
+[EELS]: https://github.com/ethereum/execution-specs/pull/1108
 
 ## Testing readiness matrix
 
@@ -45,9 +45,9 @@
 | \[\*\] [EEST] `eip7692@v2.1.0` - `state_tests`       |        |          |              | ✅       |        | ✅            |        |        |
 | \[\*\] [EEST] `eip7692@v2.1.0` - `blockchain_tests`  |        |          |              | ✅       |        | ❓            |        |        |
 | \[\*\] [EEST] `eip7692@v2.1.0` - `eof_tests`         |        |          |              | ✅       |        | ✅            |        |        |
-| [EEST] `eip7692@v2.2.0` - `state_tests`              |        | ✅       | ✅           | ✅       |        | ✅           |        |        |
-| [EEST] `eip7692@v2.2.0` - `blockchain_tests`         |        | ✅       | ✅           | ✅       |        | ✅           |        |        |
-| [EEST] `eip7692@v2.2.0` - `eof_tests`                |        | ✅       | ✅           | ✅       |        | ✅           |        |        |
+| [EEST] `eip7692@v2.2.0` - `state_tests`              |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| [EEST] `eip7692@v2.2.0` - `blockchain_tests`         |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| [EEST] `eip7692@v2.2.0` - `eof_tests`                |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
 | \[\*\] [tests] `v14.1` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
@@ -93,7 +93,7 @@ There is a contributor submitted PR from mid 2023 implementing some of EOF: http
 
 ## EELS
 
-There is a draft PR with the EIPs implemented: https://github.com/ethereum/execution-specs/pull/972
+There is a draft PR with the EIPs implemented: https://github.com/ethereum/execution-specs/pull/1108
 
 # Column Descriptions
 
