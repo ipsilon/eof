@@ -152,7 +152,7 @@ Given the definitions from [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) t
 [chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, to, value, data, access_list, initcodes, y_parity, r, s]
 ```
 
-`TransactionType` is `INITCODE_TX_TYPE` (`0x05`) and the signature values `y_parity`, `r`, and `s` are calculated by constructing a secp256k1 signature over the following digest:
+`TransactionType` is `INITCODE_TX_TYPE` (`0x06`) and the signature values `y_parity`, `r`, and `s` are calculated by constructing a secp256k1 signature over the following digest:
 
 ```
 keccak256(INITCODE_TX_TYPE || rlp([chain_id, nonce, max_priority_fee_per_gas, max_fee_per_gas, gas_limit, to, value, data, access_list, initcodes]))
