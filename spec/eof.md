@@ -109,8 +109,6 @@ Introduce new transaction type `InitcodeTransaction` which extends EIP-1559 (typ
 
 The `initcodes` can only be accessed via the `TXCREATE` instruction (see below), therefore `InitcodeTransactions` are intended to be sent to contracts including `TXCREATE` in their execution.
 
-We introduce a standardised Creator Contract (i.e. written in EVM, but existing at a known address, such as precompiles), which eliminates the need to have create transactions with empty `to`. The Creator Contract will be predeployed at the EOF activation block. Note that such introduction of the Creator Contract is needed, because only EOF contracts can create EOF contracts. See the appendix below for Creator Contract code.
-
 Under transaction validation rules `initcodes` are not validated for conforming to the EOF specification. They are only validated when accessed via `TXCREATE`. This avoids potential DoS attacks of the mempool. If during the execution of an `InitcodeTransaction` no `TXCREATE` instruction is called, such transaction is still valid.
 
 `initcodes` data is similar to calldata for two reasons:
@@ -322,6 +320,10 @@ The following instructions are introduced in EOF code:
 
     **NOTE**: The replacement instructions `EXT*CALL` continue being treated as **undefined** in legacy code.
 
+`TXCREATE` instruction is introduced also in legacy EVM code, with the exact behavior as when it occurs in EOF code. 
+
+**NOTE** `TXCREATE` is only such instruction from the above list of EOF instructions. All the other instructions from this list cause an exceptional halt if they occur in legacy EVM code.
+
 ## Code Validation
 
 - no unassigned instructions used
@@ -396,68 +398,6 @@ During scanning, for each instruction:
 
 Annotated examples of EOF formatted containers demonstrating several key features of EOF can be found in [this test file within the `evmone` project repository](https://github.com/ethereum/evmone/blob/master/test/unittests/eof_example_test.cpp).
 
-## Appendix: Creator Contract
-
-```solidity
-{
-    /// Takes [tx_initcode_hash][salt][unsafe_flag][init_data] as input,
-    /// creates contract and returns the address or failure otherwise.
-
-    /// tx_initcode_hash and salt are 32 bytes wide, unsafe_flag is 1 byte wide, init_data can be any width.
-    /// If unsafe_flag is 0x00, `CALLER` is included in the salt and impacts the target address of the created account.
-    /// If unsafe_flag is non-zero, `CALLER` is excluded, with 32 zero-bytes used instead. Deployment by any sender will result in same target address. 
-    /// Deployments using non-zero unsafe_flag are susceptible to front-running.
-
-    // init_data.length can be 0, but the first 65 bytes are mandatory
-    let size := calldatasize()
-    if lt(size, 65) { revert(0, 0) }
-
-    // copy tx_initcode_hash and salt to memory to hash.
-    // note that the unsafe_flag doesn't need to be included. If set to non-zero, 32 zero-bytes
-    // are used instead of the CALLER address bytes, which prevents hash collisions between
-    // deployments using unsafe_flag and those not using it.
-    calldatacopy(0, 0, 64)
-
-    // mask out the 31 bytes that follow the flag in input data
-    let unsafe_flag := byte(0, calldataload(64))
-
-    if iszero(unsafe_flag) {
-        // store caller in memory to hash, just after salt
-        mstore(64, caller())
-    } else {
-        // exclude sender from salt - susceptible to front-running
-        // assuming no bytes were written to memory word at 64 and it's all zeros
-    }
-
-    let init_data_size := sub(size, 65)
-
-    // copy init_data to memory to hash, just after caller (or zeros)
-    calldatacopy(96, 65, init_data_size)
-
-    // final_salt = keccak256(tx_initcode_hash | salt | caller_or_zeros | init_data)
-    let final_salt := keccak256(0, 96 + init_data_size)
-
-    let tx_initcode_hash := calldataload(0)
-
-    // reuse init_data which has been already copied to memory above
-    let ret := txcreate(tx_initcode_hash, callvalue(), final_salt, 96, init_data_size)
-
-    if iszero(ret) {
-        let ret_data_size := returndatasize()
-        returndatacopy(0, 0, ret_data_size)
-        revert(0, ret_data_size)
-    }
-
-    mstore(0, ret)
-    return(0, 32)
-
-    // Helper to compile this with existing Solidity (with --strict-assembly mode)
-    function txcreate(a, b, c, d, e) -> f {
-        f := verbatim_5i_1o(hex"ed", a, b, c, d, e)
-    }
-}
-```
-
 ## Appendix: Original EIPs
 
 These are the individual EIPs which evolved into this spec.
@@ -472,3 +412,4 @@ These are the individual EIPs which evolved into this spec.
 - 📃[EIP-663](https://eips.ethereum.org/EIPS/eip-663): Unlimited SWAP and DUP instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-663.md)
 - 📃[EIP-7069](https://eips.ethereum.org/EIPS/eip-7069): Revamped CALL instructions (*does not require EOF*) [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7069.md)
 - 📃[EIP-7620](https://eips.ethereum.org/EIPS/eip-7620): EOF - Contract Creation Instructions [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7620.md)
+- 📃[EIP-7873](https://eips.ethereum.org/EIPS/eip-7873): EOF - TXCREATE and InitcodeTransaction type [_history_](https://github.com/ethereum/EIPs/commits/master/EIPS/eip-7873.md)
