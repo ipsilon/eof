@@ -22,7 +22,7 @@ header :=
     kind_data, data_size,
     terminator
 body := types_section, code_section+, container_section*, data_section
-types_section := (inputs, outputs, max_stack_height)+
+types_section := (inputs, outputs, max_stack_increase)+
 ```
 
 _note: `,` is a concatenation operator, `+` should be interpreted as "one or more" of the preceding item, `*` should be interpreted as "zero or more" of the preceding item, and `[item]` should be interpeted as an optional item._
@@ -52,7 +52,7 @@ _note: `,` is a concatenation operator, `+` should be interpreted as "one or mor
 | types_section | variable | n/a           | stores code section metadata |
 | inputs        | 1 byte | 0x00-0x7F       | number of stack elements the code section consumes |
 | outputs       | 1 byte | 0x00-0x80       | number of stack elements the code section returns or 0x80 for non-returning functions |
-| max_stack_height | 2 bytes | 0x0000-0x03FF | maximum number of elements ever placed onto the stack by the code section, incl. inputs |
+| max_stack_increase | 2 bytes | 0x0000-0x03FF | maximum increase of the operand stack height by the code section |
 | code_section  | variable | n/a           | arbitrary sequence of bytes |
 | container_section | variable | n/a       | arbitrary sequence of bytes |
 | data_section  | variable | n/a           | arbitrary sequence of bytes |
@@ -210,7 +210,7 @@ The following instructions are introduced in EOF code:
 - `CALLF (0xe3)` instruction
     - deduct 5 gas
     - read uint16 operand `idx`
-    - if `1024 < len(stack) + types[idx].max_stack_height - types[idx].inputs`, execution results in an exceptional halt
+    - if `1024 < len(stack) + types[idx].max_stack_increase`, execution results in an exceptional halt
     - if `1024 <= len(return_stack)`, execution results in an exceptional halt
     - push new element to `return_stack` `(current_code_idx, pc+3)`
     - update `current_code_idx` to `idx` and set `pc` to 0
@@ -220,7 +220,7 @@ The following instructions are introduced in EOF code:
 - `JUMPF (0xe5)` instruction
     - deduct 5 gas
     - read uint16 operand `idx`
-    - if `1024 < len(stack) + types[idx].max_stack_height - types[idx].inputs`, execution results in an exceptional halt
+    - if `1024 < len(stack) + types[idx].max_stack_increase`, execution results in an exceptional halt
     - set `current_code_idx` to `idx`
     - set `pc = 0`
 - `EOFCREATE (0xec)` instruction
@@ -335,7 +335,7 @@ The following instructions are introduced in EOF code:
 - no section may have more than 127 inputs or outputs
 - section type has `0x80` as outputs value, and is non-returning, if and only if this section contains neither `RETF` instructions nor `JUMPF` into returning (`outputs <= 0x7f`) sections.
     - in particular, section having only `JUMPF`s to non-returning sections is non-returning itself.
-- the first code section must have a type signature `(0, 0x80, max_stack_height)` (0 inputs non-returning function)
+- the first code section must have a type signature `(0, 0x80, max_stack_increase)` (0 inputs non-returning function)
 - `EOFCREATE` `initcontainer_index` must be less than `num_container_sections`
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` must have its `len(data_section)` equal `data_size`, i.e. data section content is exactly as the size declared in the header (see [Data section lifecycle](#data-section-lifecycle))
 - `EOFCREATE` the subcontainer pointed to by `initcontainer_index` *must not* contain either a `RETURN` or `STOP` instruction.
@@ -375,7 +375,7 @@ During scanning, for each instruction:
          - `JUMPF` into non-returning section: `stack_height_min >= types[target_section_index].inputs`
       - for any other instruction `stack_height_min` must be at least the number of inputs required by instruction,
       - there is no additional check for terminating instructions other than `RETF` and `JUMPF`, this implies that extra items left on stack at instruction ending EVM execution are allowed.
-   2. For `CALLF` and `JUMPF` check for possible stack overflow: if `stack_height_max > 1024 - types[target_section_index].max_stack_height + types[target_section_index].inputs`, validation fails.
+   2. For `CALLF` and `JUMPF` check for possible stack overflow: if `stack_height_max > 1024 - types[target_section_index].max_stack_increase`, validation fails.
    3. Compute new stack `stack_height_min` and `stack_height_max` after the instruction execution, both heights are updated by the same value:
       - for `CALLF`: `stack_height_min += types[target_section_index].outputs - types[target_section_index].inputs`, `stack_height_max += types[target_section_index].outputs - types[target_section_index].inputs`,
       - for any other non-terminating instruction: `stack_height_min += instruction_outputs - instruction_inputs`, `stack_height_max += instruction_outputs - instruction_inputs`,
@@ -391,8 +391,10 @@ During scanning, for each instruction:
       2. Otherwise instruction was already visited (by previously seen forward jump). Update this instruction's recorded stack height bounds so that they contain the bounds computed in 2.3, i.e. `target_stack_min = min(target_stack_min, current_stack_min)` and `target_stack_max = max(target_stack_max, current_stack_max)`, where `(target_stack_min, target_stack_max)` are successor bounds and `(current_stack_min, current_stack_max)` are bounds computed in 2.3.
    3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == current_stack_min && target_stack_max == current_stack_max`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height.
 
-- maximum data stack of a function must not exceed 1023
-- `types[current_code_index].max_stack_height` must match the maximum stack height observed during validation
+- Compute the maximum stack height `max_stack_height` as the maximum of all recorded stack height upper bounds.
+- **Check** if the maximum stack height `max_stack_height` does not exceed the limit of 1024.
+- Compute the maximum stack height increase `max_stack_increase` as `max_stack_height - type[current_section_index].inputs`.
+- **Check** if the maximum stack height increase `max_stack_increase` matches the value corresponding code section's within the type section: `types[current_section_index].max_stack_increase`.
 
 ## Examples
 
