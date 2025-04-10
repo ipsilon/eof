@@ -40,7 +40,7 @@ _note: `,` is a concatenation operator, `+` should be interpreted as "one or mor
 | code_size         | 2 bytes  | 0x0001-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the code section content |
 | kind_container    | 1 byte   | 0x03          | kind marker for container size section |
 | num_container_sections | 2 bytes  | 0x0001-0x0100 | 16-bit unsigned big-endian integer denoting the number of the container sections |
-| container_size    | 2 bytes  | 0x0001-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the container section content |
+| container_size    | 4 bytes  | 0x00000001-0xFFFFFFFF | 32-bit unsigned big-endian integer denoting the length of the container section content |
 | kind_data         | 1 byte   | 0xff          | kind marker for data size section |
 | data_size         | 2 bytes  | 0x0000-0xFFFF | 16-bit unsigned big-endian integer denoting the length of the data section content (for not yet deployed containers this can be more than the actual content, see [Data Section Lifecycle](#data-section-lifecycle))|
 | terminator        | 1 byte   | 0x00          | marks the end of the header |
@@ -99,7 +99,7 @@ On top of the types defined in the table above, the following validity constrain
 - `types_size` is divisible by `4`
 - the number of code sections must be equal to `types_size / 4`
 - the total size of a deployed container without container sections must be `13 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size`
-- the total size of a deployed container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 2*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
+- the total size of a deployed container with at least one container section must be `16 + 2*num_code_sections + types_size + code_size[0] + ... + code_size[num_code_sections-1] + data_size + 4*num_container_sections + container_size[0] + ... + container_size[num_container_sections-1]`
 - the total size of not yet deployed container might be up to `data_size` lower than the above values due to how the data section is rewritten and resized during deployment (see [Data Section Lifecycle](#data-section-lifecycle))
 - the total size of a container must not exceed `MAX_INITCODE_SIZE` (as defined in EIP-3860)
 
