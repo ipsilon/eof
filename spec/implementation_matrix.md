@@ -36,15 +36,18 @@
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
 [solidity POC]: https://github.com/ethereum/solidity/pulls?q=is%3Aopen+is%3Apr+label%3AEOF
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
-[EELS]: https://github.com/ethereum/execution-specs/pull/1108
+[EELS]: https://github.com/ethereum/execution-specs/tree/eips/osaka/eip-7692
 
 ## Testing readiness matrix
 
 |                                                      | [besu] |  erigon  | [ethereumjs] | [evmone] | [geth] | [nethermind] |  revm  | [EELS] |
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
-| [EEST] `eip7692@v2.2.0` - `state_tests`              |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
-| [EEST] `eip7692@v2.2.0` - `blockchain_tests`         |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
-| [EEST] `eip7692@v2.2.0` - `eof_tests`                |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| [EEST] `eip7692@v2.3.0` - `state_tests`              |        |          |              |          |        |              |        | ✅     |
+| [EEST] `eip7692@v2.3.0` - `blockchain_tests`         |        |          |              |          |        |              |        | ✅     |
+| [EEST] `eip7692@v2.3.0` - `eof_tests`                |        |          |              |          |        |              |        | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `state_tests`              |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `blockchain_tests`         |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `eof_tests`                |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
 | \[\*\] [tests] `v14.1` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
@@ -90,7 +93,7 @@ There is a contributor submitted PR from mid 2023 implementing some of EOF: http
 
 ## EELS
 
-There is a draft PR with the EIPs implemented: https://github.com/ethereum/execution-specs/pull/1108
+The WIP implementation of EOF on EELS can be found here: https://github.com/ethereum/execution-specs/tree/eips/osaka/eip-7692
 
 # Column Descriptions
 
