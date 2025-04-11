@@ -42,12 +42,12 @@
 
 |                                                      | [besu] |  erigon  | [ethereumjs] | [evmone] | [geth] | [nethermind] |  revm  | [EELS] |
 |------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
-| [EEST] `eip7692@v2.3.0` - `state_tests`              |        |          |              |          |        |              |        | ✅     |
-| [EEST] `eip7692@v2.3.0` - `blockchain_tests`         |        |          |              |          |        |              |        | ✅     |
-| [EEST] `eip7692@v2.3.0` - `eof_tests`                |        |          |              |          |        |              |        | ✅     |
-| \[\*\] [EEST] `eip7692@v2.2.0` - `state_tests`              |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
-| \[\*\] [EEST] `eip7692@v2.2.0` - `blockchain_tests`         |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
-| \[\*\] [EEST] `eip7692@v2.2.0` - `eof_tests`                |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| [EEST] `eip7692@v2.3.0` - `state_tests`              |        | ✅       |              |          |        |              |        | ✅     |
+| [EEST] `eip7692@v2.3.0` - `blockchain_tests`         |        | ✅       |              |          |        |              |        | ✅     |
+| [EEST] `eip7692@v2.3.0` - `eof_tests`                |        | ✅       |              |          |        |              |        | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `state_tests`       |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `blockchain_tests`  |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `eof_tests`         |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
 | \[\*\] [tests] `v14.1` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
 | [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
