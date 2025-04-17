@@ -392,7 +392,6 @@ During scanning, for each instruction:
    3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == current_stack_min && target_stack_max == current_stack_max`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height.
 
 - Compute the maximum stack height `max_stack_height` as the maximum of all recorded stack height upper bounds.
-- **Check** if the maximum stack height `max_stack_height` does not exceed the limit of 1024.
 - Compute the maximum stack height increase `max_stack_increase` as `max_stack_height - type[current_section_index].inputs`.
 - **Check** if the maximum stack height increase `max_stack_increase` matches the value corresponding code section's within the type section: `types[current_section_index].max_stack_increase`.
 
