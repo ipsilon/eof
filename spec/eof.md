@@ -204,7 +204,7 @@ The following instructions are introduced in EOF code:
     - if `case > max_index` (out-of-bounds case), fall through and set `pc += (max_index + 1) * 2`
     - otherwise interpret 2 byte operand at `pc + case * 2` as int16, call it `offset`, and set `pc += (max_index + 1) * 2 + offset`
 - introduce new vm context variables
-    - `current_code_idx` which stores the actively executing code section index
+    - `current_section_index` which stores the actively executing code section index
     - new `return_stack` which stores the pairs `(code_section, pc)`.
         - when instantiating a vm context, push an initial value to the *return stack* of `(0,0)`
 - `CALLF (0xe3)` instruction
@@ -212,16 +212,16 @@ The following instructions are introduced in EOF code:
     - read uint16 operand `idx`
     - if `1024 < len(stack) + types[idx].max_stack_increase`, execution results in an exceptional halt
     - if `1024 <= len(return_stack)`, execution results in an exceptional halt
-    - push new element to `return_stack` `(current_code_idx, pc+3)`
-    - update `current_code_idx` to `idx` and set `pc` to 0
+    - push new element to `return_stack` `(current_section_index, pc+3)`
+    - update `current_section_index` to `idx` and set `pc` to 0
 - `RETF (0xe4)` instruction
     - deduct 3 gas
-    - pops `val` from `return_stack` and sets `current_code_idx` to `val.code_section` and `pc` to `val.pc`
+    - pops `val` from `return_stack` and sets `current_section_index` to `val.code_section` and `pc` to `val.pc`
 - `JUMPF (0xe5)` instruction
     - deduct 5 gas
     - read uint16 operand `idx`
     - if `1024 < len(stack) + types[idx].max_stack_increase`, execution results in an exceptional halt
-    - set `current_code_idx` to `idx`
+    - set `current_section_index` to `idx`
     - set `pc = 0`
 - `EOFCREATE (0xec)` instruction
     - deduct `32000` gas
@@ -369,9 +369,10 @@ During scanning, for each instruction:
 2. Determine the effect the instruction has on the operand stack:
    1. Check if the recorded stack height bounds satisfy the instruction requirements. Specifically:
       - for `CALLF` the following must hold: `stack_height_min >= types[target_section_index].inputs`,
-      - for `RETF` the following must hold: `stack_height_max == stack_height_min == types[current_code_index].outputs`,
+      - for `RETF` the following must hold: `stack_height_max == stack_height_min == types[current_section_index].outputs`,
       - Stack validation of `JUMPF` depends on "non-returning" status of target section
-         - `JUMPF` into returning section (can be only from returning section): `stack_height_min == stack_height_max == type[current_section_index].outputs + type[target_section_index].inputs - type[target_section_index].outputs`
+         - `JUMPF` into returning section (can be only from returning section): `stack_height_min == stack_height_max == type[current_section_index].outputs + type[target_section_index].inputs - type[target_section_index].outputs`.
+           **NOTE**: This means `JUMPF` must ensure target's inputs and its own outputs (to return control), but must take into account that the target section may leave extra output items after it finishes, so at `JUMPF` we may need this many fewer items on the operand stack
          - `JUMPF` into non-returning section: `stack_height_min >= types[target_section_index].inputs`
       - for any other instruction `stack_height_min` must be at least the number of inputs required by instruction,
       - there is no additional check for terminating instructions other than `RETF` and `JUMPF`, this implies that extra items left on stack at instruction ending EVM execution are allowed.
@@ -389,7 +390,7 @@ During scanning, for each instruction:
    2. If the successor is reached via forwards jump or sequential flow from previous instruction:
       1. If the instruction does not have stack heights recorded (visited for the first time), record the instruction `stack_height_min` and `stack_height_max` equal to the value computed in 2.3.
       2. Otherwise instruction was already visited (by previously seen forward jump). Update this instruction's recorded stack height bounds so that they contain the bounds computed in 2.3, i.e. `target_stack_min = min(target_stack_min, current_stack_min)` and `target_stack_max = max(target_stack_max, current_stack_max)`, where `(target_stack_min, target_stack_max)` are successor bounds and `(current_stack_min, current_stack_max)` are bounds computed in 2.3.
-   3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == current_stack_min && target_stack_max == current_stack_max`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height.
+   3. If the successor is reached via backwards jump, check if target bounds equal the value computed in 2.3, i.e. `target_stack_min == current_stack_min && target_stack_max == current_stack_max`. Validation fails if they are not equal, i.e. we see backwards jump to a different stack height. **NOTE**: Since instructions are scanned in a single linear pass, the existence of target stack heights is guaranteed for a backwards jump.
 
 - Compute the maximum stack height `max_stack_height` as the maximum of all recorded stack height upper bounds.
 - Compute the maximum stack height increase `max_stack_increase` as `max_stack_height - type[current_section_index].inputs`.
