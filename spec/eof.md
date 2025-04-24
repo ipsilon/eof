@@ -317,8 +317,16 @@ The following instructions are introduced in EOF code:
     - The `gas_limit` input is removed.
     - The `output_offset` and `output_size` is removed.
     - The `gas_limit` will be set to `(gas_left / 64) * 63` (as if the caller used `gas()` in place of `gas_limit`).
-    - `EXTDELEGATECALL` to a non-EOF contract (legacy contract, EOA, empty account) is disallowed, and it returns `1` (same as when the callee frame `reverts`) to signal failure. Only initial gas cost of `EXTDELEGATECALL` is consumed (similarly to the call depth check) and the target address still becomes warm. We allow legacy to EOF path for existing proxy contracts to be able to use EOF upgrades.
     - No address trimming is performed on the `target_address`, and if the address has more than 20 bytes the operation halts with an exceptional failure.
+    - Push a status code on the operand stack:
+      - `0` if the call was successful.
+      - `1` any of the following is true:
+        - Gas available to callee is less than `MIN_CALLEE_GAS` (2300).
+        - (only `EXTCALL`) Balance of the current account is less than `value`.
+        - Current call stack depth equals `1024`.
+        - (only `EXTDELEGATECALL`) `target_address` account in the state doesn't have EOF code to execute (in particular, [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) delegations should be resolved, as if `EXTCALL` was used) 
+        - the execution has reverted.
+      - `2` if the call has failed.      
 
     **NOTE**: The replacement instructions `EXT*CALL` continue being treated as **undefined** in legacy code.
 
