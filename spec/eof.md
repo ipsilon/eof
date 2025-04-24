@@ -121,7 +121,9 @@ For these reasons, define cost of `initcodes` bytes same as calldata: formula fo
 STANDARD_TOKEN_COST = 4
 TOTAL_COST_FLOOR_PER_TOKEN = 10
 
-tokens_in_initcodes = zero_bytes_in_initcodes + nonzero_bytes_in_initcodes * 4
+tokens_in_initcodes = 0
+for initcode in initcodes:
+    tokens_in_initcodes += zero_bytes_in_initcode + nonzero_bytes_in_initcode * 4
 tx.gasUsed = (
     21000
     +
