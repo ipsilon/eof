@@ -1,63 +1,72 @@
 # Readiness matrix
 
-|                       | [3540] | [3670] | [4200]  | [4750] | [5450] | [6206] | [7480] | [7069] | [7620] | [7698] | [663] |
-|-----------------------|--------|--------|---------|--------|--------|--------|--------|--------|--------|--------|-------|
-| [**Megaspec**]        | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
-| **EIP**               | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
-| **testing**           | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 🚧     | 🚧     | 🚧     |        | 👍    |
-| [besu]                | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍      | 👍   |
-| erigon                | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     |        |        |        | 🚧    |
-| [ethereumjs]          | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧    |
-| [evmone]              | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
-| [geth]                | 🚧     | 🚧     | 🚧      | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     | 🚧     |        | 🚧    |
-| [nethermind]          | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍      | 👍   |
-| revm                  | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍    |
-| [solidity POC]        | 👍     | N/A    | 👍      | 👍     | N/A    | 👍     | 👍     | 👍     | 👍     | 👍     |  👍   |
-| [vyper]               | 🚧     | N/A    | 🚧      | 🚧     | N/A    |        |        |        |        |        |       |
-| [EELS]                | 👍     | 👍     | 👍      | 👍     | 👍     | 👍     | 👍     | 👍     | 👍     | 👍      | 👍   |
+|                | [eof-devnet-0]           | [eof-devnet-1]       | eof-devnet-2 |
+|----------------|--------------------------|----------------------|--------------|
+| Megaspec       | ✅ [Megaspec v0.1.1]     | ✅ [Megaspec main]   | 🚧           |
+| **EIP**        | ✅ [EIP-7692 `8580af`]   | ✅ [EIP-7692]        | 🚧           |
+| **testing**    | ✅ [EEST eip7692@v2.3.0] | ✅ [EEST v4.3.0]     | 🚧           |
+| [besu]         | ✅                       | ✅                   |              |
+| [erigon]       | ✅                       |                      |              |
+| [ethereumjs]   | ✅                       |                      |              |
+| [evmone]       | ✅                       | ✅                   |              |
+| [geth]         | ✅                       | ✅                   |              |
+| [nethermind]   | ✅                       |                      |              |
+| [revm]         | ✅                       |                      |              |
+| [EELS]         | ✅                       |                      |              |
+| [solidity]     | ✅                       |                      |              |
+| [vyper]        |                          |                      |              |
 
-[3540]: https://eips.ethereum.org/EIPS/eip-3540
-[3670]: https://eips.ethereum.org/EIPS/eip-3670
-[4200]: https://eips.ethereum.org/EIPS/eip-4200
-[4750]: https://eips.ethereum.org/EIPS/eip-4750
-[5450]: https://eips.ethereum.org/EIPS/eip-5450
-[6206]: https://eips.ethereum.org/EIPS/eip-6206
-[7480]: https://eips.ethereum.org/EIPS/eip-7480 
-[7069]: https://eips.ethereum.org/EIPS/eip-7069 
-[7620]: https://eips.ethereum.org/EIPS/eip-7620 
-[7698]: https://eips.ethereum.org/EIPS/eip-7698 
-[663]: https://eips.ethereum.org/EIPS/eip-663
+**NOTE**: Compiling to EOF with [solidity] requires one to use the `--experimental-eof-version 1` flag, more details [here](https://soliditylang.org/blog/2025/03/12/solidity-0.8.29-release-announcement/)
 
-[**Megaspec**]: https://github.com/ipsilon/eof/blob/main/spec/eof.md
+[eof-devnet-0]: https://notes.ethereum.org/@ethpandaops/eof-devnet-0
+[eof-devnet-1]: https://notes.ethereum.org/@ethpandaops/eof-devnet-1
+
+[Megaspec v0.1.1]: https://github.com/ipsilon/eof/blob/v0.1.1/spec/eof.md
+[Megaspec main]: https://github.com/ipsilon/eof/blob/main/spec/eof.md
+
+[EIP-7692 `8580af`]: https://github.com/ethereum/EIPs/blob/8580af761332f72cdb8b90232d31e85c70f87423/EIPS/eip-7692.md
+[EIP-7692]: https://eips.ethereum.org/EIPS/eip-7692
+
+[EEST eip7692@v2.3.0]: https://github.com/ethereum/execution-spec-tests/releases/tag/eip7692%40v2.3.0
+[EEST v4.3.0]: https://github.com/ethereum/execution-spec-tests/releases/tag/v4.3.0
+
 [besu]: https://github.com/hyperledger/besu
 [ethereumjs]: https://github.com/ethereumjs/ethereumjs-monorepo
 [evmone]: https://github.com/ethereum/evmone
 [geth]: https://github.com/shemnon/go-ethereum/tree/osaka-mega-eof
 [nethermind]: https://github.com/NethermindEth/nethermind/commits/feature/evm/eof
-[solidity POC]: https://github.com/ethereum/solidity/pulls?q=is%3Aopen+is%3Apr+label%3AEOF
+[solidity]: https://github.com/ethereum/solidity
 [vyper]: https://github.com/vyperlang/vyper/pull/3457
 [EELS]: https://github.com/ethereum/execution-specs/tree/eips/osaka/eip-7692
+[revm]: https://github.com/bluealloy/revm
+[erigon]: https://github.com/erigontech/erigon
 
 ## Testing readiness matrix
 
-|                                                      | [besu] |  erigon  | [ethereumjs] | [evmone] | [geth] | [nethermind] |  revm  | [EELS] |
-|------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|--------|--------|
-| [EEST] `eip7692@v2.3.0` - `state_tests`              |        | ✅       |              | ✅       |        | ✅            | ✅      | ✅     |
-| [EEST] `eip7692@v2.3.0` - `blockchain_tests`         |        | ✅       |              | ✅       |        | ✅            |         | ✅    |
-| [EEST] `eip7692@v2.3.0` - `eof_tests`                |        | ✅       |              | ✅       |        | ✅            | ✅     | ✅     |
-| \[\*\] [EEST] `eip7692@v2.2.0` - `state_tests`       |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
-| \[\*\] [EEST] `eip7692@v2.2.0` - `blockchain_tests`  |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
-| \[\*\] [EEST] `eip7692@v2.2.0` - `eof_tests`         |        | ✅       | ✅           | ✅       |        | ✅           |        | ✅     |
-| \[\*\] [tests] `v14.1` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
-| [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅     | ✅     |
-| [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
-| [`evmone` exported] `v0.13.0` - `eof_tests`          | ❓     |          |              | ✅       |        |              | ✅     | ✅     |
+|                                                      | [besu] |  [erigon]| [ethereumjs] | [evmone] | [geth] | [nethermind] |  [revm]  | [EELS] |
+|------------------------------------------------------|--------|----------|--------------|----------|--------|--------------|----------|--------|
+| [EEST] `v4.3.0` - `state_tests`                      | ✅     |          |              | ✅       | ✅     |              |          |        |
+| [EEST] `v4.3.0` - `blockchain_tests`                 | ✅     |          |              | ✅       | ✅     |              |          |        |
+| [EEST] `v4.3.0` - `eof_tests`                        | ✅     |          |              | ✅       | ✅     |              |          |        |
+| [EEST] `eip7692@v2.3.0` - `state_tests`              | ✅     | ✅       |              | ✅       |        | ✅           | ✅       | ✅     |
+| [EEST] `eip7692@v2.3.0` - `blockchain_tests`         | ✅     | ✅       |              | ✅       |        | ✅           |          | ✅     |
+| [EEST] `eip7692@v2.3.0` - `eof_tests`                | ✅     | ✅       |              | ✅       |        | ✅           | ✅       | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `state_tests`       |        | ✅       | ✅           | ✅       | ✅     | ✅           |          | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `blockchain_tests`  |        | ✅       | ✅           | ✅       | ✅     | ✅           |          | ✅     |
+| \[\*\] [EEST] `eip7692@v2.2.0` - `eof_tests`         |        | ✅       | ✅           | ✅       | ✅     | ✅           |          | ✅     |
+| \[\*\] [tests] `v14.1` - `EIPTests/StateTests/stEOF` | ✅     |          |              | ✅       |        |              | ✅       | ✅     |
+| [tests] `v14.1` - `EOFTests`                         | ✅     |          |              | ✅       |        |              | ✅       | ✅     |
+| [`evmone` exported] `v0.13.0` - `state_tests`        | ❓     |          |              | ✅       |        |              | ✅       | ✅     |
+| [`evmone` exported] `v0.13.0` - `eof_tests`          | ❓     |          |              | ✅       |        |              | ✅       | ✅     |
 
 [EEST]: https://github.com/ethereum/execution-spec-tests/releases/
 [tests]: https://github.com/ethereum/tests/releases/
 [`evmone` exported]: https://github.com/ethereum/evmone/releases/ 
 
 \[\*\] **NOTE:** old version, will be dropped once clients report back with recent version passing.
+**NOTE:** [EEST eip7692@v2.3.0] release follows [eof-devnet-0] spec
+**NOTE:** [EEST v4.3.0] release follows [eof-devnet-1] spec
+
 
 # Specs
 
