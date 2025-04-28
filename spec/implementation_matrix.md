@@ -5,11 +5,11 @@
 | Megaspec       | ✅ [Megaspec v0.1.1]     | ✅ [Megaspec main]   | 🚧           |
 | **EIP**        | ✅ [EIP-7692]            | ✅ [EIP-7692]        | 🚧           |
 | **testing**    | ✅ [EEST eip7692@v2.3.0] | ✅ [EEST v4.3.0]     | 🚧           |
-| [besu]         | ❓                       |                      |              |
+| [besu]         | ✅                       | ✅                   |              |
 | [erigon]       | ✅                       |                      |              |
 | [ethereumjs]   | ✅                       |                      |              |
 | [evmone]       | ✅                       | ✅                   |              |
-| [geth]         | ❓                       | ✅                   |              |
+| [geth]         | ✅                       | ✅                   |              |
 | [nethermind]   | ✅                       |                      |              |
 | [revm]         | ✅                       |                      |              |
 | [EELS]         | ✅                       |                      |              |
