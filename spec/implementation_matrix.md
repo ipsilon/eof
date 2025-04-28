@@ -3,7 +3,7 @@
 |                | [eof-devnet-0]           | [eof-devnet-1]       | eof-devnet-2 |
 |----------------|--------------------------|----------------------|--------------|
 | Megaspec       | ✅ [Megaspec v0.1.1]     | ✅ [Megaspec main]   | 🚧           |
-| **EIP**        | ✅ [EIP-7692]            | ✅ [EIP-7692]        | 🚧           |
+| **EIP**        | ✅ [EIP-7692 `8580af`]   | ✅ [EIP-7692]        | 🚧           |
 | **testing**    | ✅ [EEST eip7692@v2.3.0] | ✅ [EEST v4.3.0]     | 🚧           |
 | [besu]         | ✅                       | ✅                   |              |
 | [erigon]       | ✅                       |                      |              |
@@ -24,6 +24,7 @@
 [Megaspec v0.1.1]: https://github.com/ipsilon/eof/blob/v0.1.1/spec/eof.md
 [Megaspec main]: https://github.com/ipsilon/eof/blob/main/spec/eof.md
 
+[EIP-7692 `8580af`]: https://github.com/ethereum/EIPs/blob/8580af761332f72cdb8b90232d31e85c70f87423/EIPS/eip-7692.md
 [EIP-7692]: https://eips.ethereum.org/EIPS/eip-7692
 
 [EEST eip7692@v2.3.0]: https://github.com/ethereum/execution-spec-tests/releases/tag/eip7692%40v2.3.0
